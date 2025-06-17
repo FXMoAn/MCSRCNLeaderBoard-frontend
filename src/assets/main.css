@@ -1,0 +1,40 @@
+:root{
+    --bgcolor:#222
+}
+
+*{
+    padding: 0;
+    margin: 0;
+}
+
+a{
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.router-link-active{
+        color: #fff;
+    }
+
+.router-link-active:hover{
+    color: aqua;
+}
+
+a:hover{
+    color: aqua;
+}
+
+.leftfix{
+    float: left;
+}
+
+.rightfix{
+    float: right;
+}
+
+.clearfix{
+    content: '';
+    display: block;
+    clear: both;
+}
+
