@@ -3,10 +3,10 @@
     <div class="logo">
         <span> MCSR-CN </span>
     </div>
-    <div class="links">
+    <!-- <div class="links">
         <div><router-link to="/rank" class="nav-link">排行榜</router-link></div>
         <div><a>管理员</a></div>
-    </div>
+    </div> -->
     <div class="search-form">
         <input id="search-user" type="text" placeholder="输入用户名..." v-model="nickName"/>
         <el-button :icon="Search" circle @click="routeToSpace"/>
