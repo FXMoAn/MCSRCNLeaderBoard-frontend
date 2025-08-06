@@ -4,8 +4,8 @@
         <span> MCSR-CN </span>
     </div>
     <div class="links">
-        <div><router-link to="/leaderboard/rank" class="nav-link">排行榜</router-link></div>
-        <div><a>API文档</a></div>
+        <div><router-link to="/rank" class="nav-link">排行榜</router-link></div>
+        <div><a>管理员</a></div>
     </div>
     <div class="search-form">
         <input id="search-user" type="text" placeholder="输入用户名..." v-model="nickName"/>
@@ -13,13 +13,13 @@
     </div> 
   </nav>
   <div class="container">
-    <RouterView/>
+    <Rank />
   </div>
 </template>
 
 <script setup lang='ts'>
 import '@/assets/main.css'
-import Rank from './views/Rank.vue';
+import Rank from '@/views/Rank.vue';
 import {ref} from 'vue'
 import {useRouter} from 'vue-router'
 const router = useRouter()

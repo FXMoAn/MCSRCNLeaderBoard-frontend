@@ -14,4 +14,4 @@ const nickName = route.query.nickname
 
 <style scoped>
 
-</style>
+</style> 

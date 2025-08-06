@@ -65,4 +65,4 @@ const updateSelection = () => {
   outline: none;
   box-shadow: 0 0 10px rgba(52, 152, 219, 0.5);
 }
-</style>
+</style> 

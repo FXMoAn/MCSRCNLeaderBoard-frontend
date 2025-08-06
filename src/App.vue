@@ -5,7 +5,7 @@ import SvgIcon from '@/components/icons/index.vue'
 </script>
 
 <template>
-  <RouterView/>
+  <LeaderBoard />
 </template>
 
 <style scoped>

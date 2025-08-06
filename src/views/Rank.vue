@@ -32,7 +32,7 @@
 <script setup lang='ts'>
 import '@/assets/main.css'
 import request from '@/utils/request';
-import ButtonGroup from '../components/SelectionGroup.vue';
+import ButtonGroup from '@/components/SelectionGroup.vue';
 import {ref,onMounted, computed, watch, watchEffect} from 'vue'
 import type UserInfo from '@/types/LeaderBoardTypes.ts';
 import { useStatsStore } from '@/stores/stats.ts'
@@ -46,7 +46,7 @@ const page = ref(1)
 const pages = computed(() => statsStore.pages)
 
 //获取数据
-const handleSelectionChange = ({ version, type }) => {
+const handleSelectionChange = ({ version, type }: { version: string, type: string }) => {
   statsStore.getStats(version, type)
 }
 
@@ -144,4 +144,4 @@ onMounted(()=>{
 
 }
 
-</style>
+</style> 
