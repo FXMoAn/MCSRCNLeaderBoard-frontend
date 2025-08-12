@@ -1,56 +1,76 @@
-import { ref, computed } from 'vue'
-import { defineStore } from 'pinia'
-import request from '@/utils/request'
-import type UserInfo from '@/types/LeaderBoardTypes'
+import { ref, computed } from "vue";
+import { defineStore } from "pinia";
+import request from "@/utils/request";
+import type UserInfo from "@/types/LeaderBoardTypes";
+import { supabase } from "@/lib/supabaseClient";
 
-export const useStatsStore = defineStore('stats', ()=>{
-    const cache = ref(new Map())
-    const currStats = ref<UserInfo[]>([])
-    const isLoading = ref(false)
-    const pages = ref(0)
+interface Run {
+  id: number;
+  userid: string;
+  nickname: string;
+  igt: string;
+  date: string;
+  version: string;
+  type: string;
+  videolink: string;
+  remarks: string;
+  seed: string;
+}
 
-    const fetchStats = async (version:String, type:String):Promise<UserInfo[]>=>{
-        try{
-            const res = await request({
-                url:'/getStats',
-                method:'get',
-                params:{
-                    version:version,
-                    type:type
-                }
-            })
-            pages.value = Math.ceil(res.data.length/10)
-            return res.data
-        }catch(err){
-            console.log('获取错误',err)
-            return []
-        }
-    }
+export const useStatsStore = defineStore("stats", () => {
+  const cache = ref(new Map());
+  const currStats = ref<Run[]>([]);
+  const isLoading = ref(false);
+  const pages = ref(0);
 
-    const getStats = async (version:String, type:String)=>{
-        let key = `${version}${type}`
-        if (isLoading.value) return
-        isLoading.value = true
-        
-        try{
-            if(cache.value.has(key)){
-                currStats.value = cache.value.get(key)
-            }
-            const data:UserInfo[] = await fetchStats(version,type)
-            cache.value.set(key,data)
-            currStats.value = data
-        }catch(err){
-            console.log(err)
-        }finally{
-            isLoading.value = false
-        }
+  const getLeaderboard = async ({ version = "1.16.1", type = "RSG" } = {}) => {
+    try {
+      const { data, error } = await supabase.rpc("get_leaderboard", {
+        p_version: version,
+        p_type: type,
+      });
+
+      if (error) {
+        console.error("get_leaderboard error", error);
+        return [];
+      }
+      return data;
+    } catch (err) {
+      console.error("get_leaderboard error", err);
+      return [];
     }
-    return {
-        cache,
-        currStats, 
-        isLoading, 
-        pages, 
-        fetchStats, 
-        getStats
+  };
+
+  const fetchStats = async (version: string, type: string) => {
+    const data = await getLeaderboard({ version, type });
+    pages.value = Math.ceil(data.length / 10);
+    return data;
+  };
+
+  const getStats = async (version: string, type: string) => {
+    let key = `${version}${type}`;
+    if (isLoading.value) return;
+    isLoading.value = true;
+
+    try {
+      if (cache.value.has(key)) {
+        currStats.value = cache.value.get(key);
+      }
+      const data = await fetchStats(version, type);
+      cache.value.set(key, data);
+      currStats.value = data;
+    } catch (err) {
+      console.log(err);
+    } finally {
+      isLoading.value = false;
     }
-})
+  };
+  return {
+    cache,
+    currStats,
+    isLoading,
+    pages,
+    fetchStats,
+    getStats,
+  };
+});
