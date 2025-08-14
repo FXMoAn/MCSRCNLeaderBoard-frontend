@@ -4,8 +4,8 @@ import request from "@/utils/request";
 import type UserInfo from "@/types/LeaderBoardTypes";
 import { supabase } from "@/lib/supabaseClient";
 
-interface Run {
-  id: number;
+export interface Run {
+  run_id: number;
   userid: string;
   nickname: string;
   igt: string;

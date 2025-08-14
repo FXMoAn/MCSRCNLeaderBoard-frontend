@@ -1,40 +1,41 @@
-:root{
-    --bgcolor:#222
+:root {
+  --bgcolor: #222;
+  --hovercolor: #333;
 }
 
-*{
-    padding: 0;
-    margin: 0;
+* {
+  padding: 0;
+  margin: 0;
+  color: #fff;
 }
 
-a{
-    text-decoration: none;
-    cursor: pointer;
+a {
+  text-decoration: none;
+  cursor: pointer;
 }
 
-.router-link-active{
-        color: #fff;
-    }
-
-.router-link-active:hover{
-    color: aqua;
+.router-link-active {
+  color: #fff;
 }
 
-a:hover{
-    color: aqua;
+.router-link-active:hover {
+  color: aqua;
 }
 
-.leftfix{
-    float: left;
+a:hover {
+  color: aqua;
 }
 
-.rightfix{
-    float: right;
+.leftfix {
+  float: left;
 }
 
-.clearfix{
-    content: '';
-    display: block;
-    clear: both;
+.rightfix {
+  float: right;
 }
 
+.clearfix {
+  content: "";
+  display: block;
+  clear: both;
+}

@@ -1,42 +1,44 @@
 <template>
-  <div class="content">
-    <!-- <ButtonGroup
+  <!-- <ButtonGroup
       class="button-group"
       @selection-changed="handleSelectionChange"
     /> -->
-    <div v-if="isLoading" class="content-container">
-      <p class="loading">加载中...</p>
+  <div v-if="isLoading" class="content-container">
+    <p class="loading">加载中...</p>
+  </div>
+  <div v-else class="content-container">
+    <div class="container">
+      <table class="leaderboard">
+        <tbody class="leaderboard-body">
+          <tr class="head">
+            <th>排名</th>
+            <th>玩家</th>
+            <th>IGT</th>
+            <th>记录时间</th>
+            <th>记录视频</th>
+          </tr>
+          <tr
+            v-for="(info, index) in slicedata"
+            class="stats"
+            @click="navToRunDetail(info.run_id)"
+          >
+            <td>{{ getRank(index) }}</td>
+            <td>{{ info.nickname }}</td>
+            <td>{{ info.igt }}</td>
+            <td>{{ info.date }}</td>
+            <td>
+              <a :href="info.videolink" target="_blank"
+                ><SvgIcon name="vedio" color="white"></SvgIcon
+              ></a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-    <div v-else class="content-container">
-      <div class="container">
-        <table class="leaderboard">
-          <tbody>
-            <tr class="head">
-              <th>排名</th>
-              <th>玩家</th>
-              <th>IGT</th>
-              <th>记录时间</th>
-              <th>记录视频</th>
-            </tr>
-            <tr v-for="(info, index) in slicedata" class="stats">
-              <td>{{ getRank(index) }}</td>
-              <td>{{ info.nickname }}</td>
-              <td>{{ info.igt }}</td>
-              <td>{{ info.date }}</td>
-              <td>
-                <a :href="info.videolink" target="_blank"
-                  ><SvgIcon name="vedio" color="white"></SvgIcon
-                ></a>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="choosepage">
-        <button class="control prev" @click="prevpage"><</button>
-        <div class="pagenumber">{{ page }}/{{ pages }}</div>
-        <button class="control next" @click="nextpage">></button>
-      </div>
+    <div class="choosepage">
+      <button class="control prev" @click="prevpage"><</button>
+      <div class="pagenumber">{{ page }}/{{ pages }}</div>
+      <button class="control next" @click="nextpage">></button>
     </div>
   </div>
 </template>
@@ -47,7 +49,9 @@ import ButtonGroup from "@/components/SelectionGroup.vue";
 import { ref, onMounted, computed, watch, watchEffect } from "vue";
 import { useStatsStore } from "@/stores/stats.ts";
 import SvgIcon from "@/components/icons/index.vue";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 const statsStore = useStatsStore();
 const isLoading = computed(() => statsStore.isLoading);
 const statsdata = computed(() => statsStore.currStats);
@@ -86,6 +90,10 @@ const nextpage = () => {
   }
 };
 
+const navToRunDetail = (id: number) => {
+  router.push(`/run/${id}`);
+};
+
 onMounted(() => {
   statsStore.getStats("1.16.1", "RSG");
 });
@@ -99,6 +107,11 @@ onMounted(() => {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  padding-bottom: 100px;
+
+  .container {
+    height: 100%;
+  }
 }
 
 .loading {
@@ -107,24 +120,32 @@ onMounted(() => {
   text-align: center;
   margin-top: 100px;
 }
+
 .button-group {
   margin-top: 10px;
 }
 
 .leaderboard {
   width: 90vw;
+  height: 100%;
   margin-top: 10px;
   color: white;
   text-align: center;
   border-collapse: collapse;
   table-layout: fixed;
-  .head {
-    font-size: 1.5em;
-    height: 7vh;
-  }
-  .stats td {
-    font-size: 1.5em;
-    height: 7vh;
+
+  .leaderboard-body {
+    height: 100%;
+
+    .head {
+      font-size: 1.5em;
+      height: 50px;
+    }
+
+    .stats {
+      font-size: 1.5em;
+      height: 50px;
+    }
   }
 }
 .choosepage {
@@ -145,6 +166,14 @@ onMounted(() => {
   }
   .pagenumber {
     color: white;
+  }
+}
+
+.stats {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  &:hover {
+    background-color: var(--hovercolor);
   }
 }
 
