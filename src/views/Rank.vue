@@ -27,9 +27,14 @@
             <td>{{ info.igt }}</td>
             <td>{{ info.date }}</td>
             <td>
-              <a :href="info.videolink" target="_blank"
-                ><SvgIcon name="vedio" color="white"></SvgIcon
-              ></a>
+              <a
+                :href="info.videolink"
+                target="_blank"
+                @click.stop
+                @click.prevent="openVideo(info.videolink)"
+              >
+                <SvgIcon name="vedio" color="white"></SvgIcon>
+              </a>
             </td>
           </tr>
         </tbody>
@@ -92,6 +97,10 @@ const nextpage = () => {
 
 const navToRunDetail = (id: number) => {
   router.push(`/run/${id}`);
+};
+
+const openVideo = (url: string) => {
+  window.open(url, "_blank");
 };
 
 onMounted(() => {
