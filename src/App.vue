@@ -1,6 +1,6 @@
 <template>
   <nav>
-    <div class="logo">
+    <div class="logo" @click="backToHome">
       <span> MCSR-CN </span>
     </div>
     <!-- <div class="links">
@@ -11,6 +11,10 @@
         <input id="search-user" type="text" placeholder="输入用户名..." v-model="nickName"/>
         <el-button :icon="Search" circle @click="routeToSpace"/>
     </div>  -->
+    <div v-if="isLogin" class="user-name">
+      <span>username</span>
+    </div>
+    <UserControl v-else />
   </nav>
   <div class="container">
     <router-view />
@@ -19,17 +23,16 @@
 
 <script setup lang="ts">
 import "@/assets/main.css";
+import { ref } from "vue";
+import UserControl from "@/components/UserControl.vue";
+import { useRouter } from "vue-router";
 
-// const routeToSpace = () => {
-//   if (nickName.value.trim()) {
-//     router.push({
-//       name: "space",
-//       query: { nickname: nickName.value.trim() },
-//     });
-//   } else {
-//     alert("请先输入玩家名字");
-//   }
-// };
+const router = useRouter();
+const isLogin = ref(false);
+
+const backToHome = () => {
+  router.push("/");
+};
 </script>
 
 <style scoped>
@@ -38,13 +41,16 @@ import "@/assets/main.css";
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
+  padding-top: 10px;
   min-height: calc(100vh - 80px);
   background-color: var(--bgcolor);
 }
 
 nav {
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
+  padding: 0 1rem;
+  align-items: center;
   height: 80px;
   background-color: #333;
   color: white !important;
@@ -57,10 +63,10 @@ nav {
 
 .logo {
   font-size: larger;
-  margin-left: 1rem;
   display: flex;
   justify-content: center;
   align-items: center;
+  cursor: pointer;
 }
 
 .links {
@@ -72,24 +78,6 @@ nav {
   .nav-link.router-link-active {
     color: #fff;
   }
-}
-
-.search-form {
-  flex: 1;
-  margin-right: 2rem;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 1rem;
-}
-
-#search-user {
-  width: 10rem;
-  height: 5vh;
-  border: 0;
-  margin-left: 1rem;
-  text-indent: 0.5rem;
-  border-radius: 5px;
 }
 
 @media (max-width: 780px) {

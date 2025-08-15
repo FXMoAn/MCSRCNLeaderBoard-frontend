@@ -5,18 +5,23 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
+      path: "/",
+      redirect: "/rank",
+    },
+    {
       path: "/rank",
       name: "rank",
       component: Rank,
     },
     {
-      path: "/",
-      redirect: "/rank",
-    },
-    {
       path: "/run/:id",
       name: "run",
       component: () => import("../views/Run.vue"),
+    },
+    {
+      path: "/login",
+      name: "login",
+      component: () => import("../views/Login.vue"),
     },
   ],
 });
