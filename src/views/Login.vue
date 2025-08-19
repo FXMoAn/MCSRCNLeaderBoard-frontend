@@ -1,24 +1,31 @@
 <template>
   <div class="login-container">
-    <form class="login-form">
-      <div class="form-item">
-        <label for="email">邮箱</label>
-        <input type="text" id="email" v-model="email" />
-      </div>
-      <div class="form-item">
-        <label for="password">密码</label>
-        <input type="password" id="password" v-model="password" />
-      </div>
-      <div class="form-item">
-        <label for="confirm-password">确认密码</label>
+    <form class="login-form" @submit.prevent="handleLogin">
+      <div class="email-item">
         <input
-          type="password"
-          id="confirm-password"
-          v-model="confirmPassword"
+          class="email-input"
+          type="email"
+          id="email"
+          v-model="email"
+          placeholder="请输入邮箱"
+          required
         />
       </div>
-      <button type="submit">登录</button>
+      <div class="password-item">
+        <input
+          class="password-input"
+          type="password"
+          id="password"
+          v-model="password"
+          placeholder="请输入密码"
+          required
+        />
+        <button class="login-button" type="submit">登录</button>
+      </div>
     </form>
+    <div class="signup-container">
+      <a href="/signup">还没有账号?去注册</a>
+    </div>
   </div>
 </template>
 
@@ -27,32 +34,71 @@ import { ref } from "vue";
 
 const email = ref("");
 const password = ref("");
-const confirmPassword = ref("");
+
+const handleLogin = () => {
+  console.log(email.value, password.value);
+};
 </script>
 
 <style scoped>
 .login-container {
   display: flex;
+  flex-direction: column;
+  padding: 20px;
   width: 300px;
+  height: 200px;
+  margin-top: 100px;
   justify-content: center;
   align-items: center;
+  background-color: #a1a5a9;
+  border-radius: 20px;
 }
 
 .login-form {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: space-around;
   width: 100%;
+  height: 100%;
   font-size: 1.5rem;
+  padding: 20px;
 }
 
-.form-item {
+.email-item {
+  width: 100%;
+
+  .email-input {
+    width: 100%;
+    box-sizing: border-box;
+    background-color: #d6d8d9;
+    color: #929493;
+    border-radius: 20px;
+    padding: 10px;
+  }
+}
+
+.password-item {
+  width: 100%;
   display: flex;
-  flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
-  margin-bottom: 10px;
+
+  .password-input {
+    flex: 1;
+    margin-right: 10px;
+    background-color: #d6d8d9;
+    color: #929493;
+    border-radius: 20px;
+    padding: 10px;
+  }
+
+  .login-button {
+    background-color: #fff;
+    color: #000;
+    border-radius: 20px;
+    padding: 10px;
+    width: 70px;
+  }
 }
 </style>
