@@ -46,7 +46,6 @@ const useUserStore = defineStore("user", () => {
       throw error;
     } else {
       alert("绑定成功");
-      console.log(data);
       await initUserInfo();
     }
   };

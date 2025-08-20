@@ -50,7 +50,6 @@
 
 <script setup lang="ts">
 import "@/assets/main.css";
-import ButtonGroup from "@/components/SelectionGroup.vue";
 import { ref, onMounted, computed, watch, watchEffect } from "vue";
 import { useStatsStore } from "@/stores/stats.ts";
 import SvgIcon from "@/components/icons/index.vue";

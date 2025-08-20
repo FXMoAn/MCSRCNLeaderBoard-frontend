@@ -69,7 +69,7 @@ onMounted(() => {
 }
 
 .unbinded-user-list {
-  width: 100%;
+  width: 50%;
   display: flex;
   flex-direction: column;
   align-items: center;
