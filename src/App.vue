@@ -11,10 +11,7 @@
         <input id="search-user" type="text" placeholder="输入用户名..." v-model="nickName"/>
         <el-button :icon="Search" circle @click="routeToSpace"/>
     </div>  -->
-    <UserPanel
-      v-if="userStore.isLoggedin"
-      @signOut="userStore.isLoggedin = false"
-    />
+    <UserPanel v-if="authStore.isLoggedIn" @signOut="authStore.logout" />
     <AuthControl v-else />
   </nav>
   <div class="container">
@@ -26,22 +23,20 @@
 import "@/assets/main.css";
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import authManager from "@/utils/auth";
-import userService from "@/utils/user";
 // 用户登录控制
 import AuthControl from "@/components/AuthControl.vue";
 import UserPanel from "@/components/UserPanel.vue";
-import useUserStore from "@/stores/user";
+import useAuthStore from "@/stores/auth";
 
 const router = useRouter();
-const userStore = useUserStore();
+const authStore = useAuthStore();
 
 const backToHome = () => {
   router.push("/");
 };
 
 onMounted(() => {
-  userStore.isLoggedin = authManager.isLoggedin();
+  authStore.initializeAuth();
 });
 </script>
 
