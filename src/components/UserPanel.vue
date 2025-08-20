@@ -3,6 +3,7 @@
     class="user-panel"
     @mouseenter="hovered = true"
     @mouseleave="hovered = false"
+    @click="routeToBinding"
   >
     <div class="user-name">
       <span>{{ authStore.user?.email }}</span>
@@ -16,10 +17,16 @@
 <script setup lang="ts">
 import { ref, defineEmits } from "vue";
 import useAuthStore from "@/stores/auth";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 const authStore = useAuthStore();
 const emit = defineEmits(["signOut"]);
 const hovered = ref(false);
+
+const routeToBinding = () => {
+  router.push("/binding");
+};
 
 const signOut = () => {
   authStore.logout();

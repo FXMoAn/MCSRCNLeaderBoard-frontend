@@ -26,17 +26,24 @@ import { useRouter } from "vue-router";
 // 用户登录控制
 import AuthControl from "@/components/AuthControl.vue";
 import UserPanel from "@/components/UserPanel.vue";
-import useAuthStore from "@/stores/auth";
+import { useAuthStore, useUserStore } from "@/stores";
 
 const router = useRouter();
 const authStore = useAuthStore();
+const userStore = useUserStore();
 
 const backToHome = () => {
   router.push("/");
 };
 
-onMounted(() => {
-  authStore.initializeAuth();
+onMounted(async () => {
+  // 先初始化认证状态
+  await authStore.initializeAuth();
+
+  // 等待认证完成后再初始化用户信息
+  if (authStore.isLoggedIn) {
+    await userStore.initUserInfo();
+  }
 });
 </script>
 
