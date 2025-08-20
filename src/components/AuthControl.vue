@@ -1,7 +1,7 @@
 <template>
   <div class="user-control">
     <button class="login" @click="navigateToSignin">登录</button>
-    <button class="register" @click="navigateToSignup">注册</button>
+    <button class="signup" @click="navigateToSignup">注册</button>
   </div>
 </template>
 
@@ -15,7 +15,7 @@ const navigateToSignin = () => {
 };
 
 const navigateToSignup = () => {
-  router.push("/register");
+  router.push("/signup");
 };
 </script>
 
@@ -33,7 +33,7 @@ const navigateToSignup = () => {
     cursor: pointer;
   }
 
-  .register {
+  .signup {
     background-color: #fff;
     color: #000;
     border: none;

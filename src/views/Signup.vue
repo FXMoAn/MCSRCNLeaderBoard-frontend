@@ -1,6 +1,6 @@
 <template>
-  <div class="login-container">
-    <form class="login-form" @submit.prevent="handleLogin">
+  <div class="signup-container">
+    <form class="signup-form" @submit.prevent="handleSignup">
       <div class="email-item">
         <input
           class="email-input"
@@ -20,40 +20,56 @@
           placeholder="请输入密码"
           required
         />
-        <button class="login-button" type="submit">登录</button>
       </div>
+      <div class="confirm-password-item">
+        <input
+          class="confirm-password-input"
+          type="password"
+          id="confirm-password"
+          v-model="confirmPassword"
+          placeholder="请确认密码"
+          required
+        />
+      </div>
+      <button class="signup-button" type="submit">注册</button>
     </form>
-    <div class="signup-container">
-      <a href="/signup">还没有账号?去注册</a>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from "vue";
 import authManager from "@/utils/auth";
-import useUserStore from "@/stores/user";
-import { useRouter } from "vue-router";
-
-const router = useRouter();
-const userStore = useUserStore();
 
 const email = ref("");
 const password = ref("");
+const confirmPassword = ref("");
 
-const handleLogin = async () => {
-  const { data, error } = await authManager.login(email.value, password.value);
+const checkPassword = () => {
+  if (password.value !== confirmPassword.value) {
+    alert("密码不一致");
+    return false;
+  }
+  return true;
+};
+
+const signUpNewUser = async () => {
+  const { data, error } = await authManager.signup(email.value, password.value);
   if (error) {
     alert(error.message);
   } else {
-    userStore.isLoggedin = true;
-    router.push("/");
+    alert("注册成功");
+  }
+};
+
+const handleSignup = async () => {
+  if (checkPassword()) {
+    await signUpNewUser();
   }
 };
 </script>
 
 <style scoped>
-.login-container {
+.signup-container {
   display: flex;
   flex-direction: column;
   padding: 20px;
@@ -66,7 +82,7 @@ const handleLogin = async () => {
   border-radius: 20px;
 }
 
-.login-form {
+.signup-form {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -92,25 +108,41 @@ const handleLogin = async () => {
 
 .password-item {
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
 
   .password-input {
-    flex: 1;
-    margin-right: 10px;
+    width: 100%;
+    box-sizing: border-box;
     background-color: #d6d8d9;
     color: #929493;
     border-radius: 20px;
     padding: 10px;
   }
+}
 
-  .login-button {
-    background-color: #fff;
-    color: #000;
+.confirm-password-item {
+  width: 100%;
+
+  .confirm-password-input {
+    width: 100%;
+    box-sizing: border-box;
+    background-color: #d6d8d9;
+    color: #929493;
     border-radius: 20px;
     padding: 10px;
-    width: 70px;
   }
+}
+
+.confirm-password-input {
+  width: 100%;
+  height: 30px;
+}
+
+.signup-button {
+  width: 100%;
+  height: 30px;
+  background-color: #d6d8d9;
+  color: #929493;
+  border-radius: 20px;
+  padding: 10px;
 }
 </style>
