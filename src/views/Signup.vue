@@ -38,7 +38,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import authManager from "@/utils/auth";
+import useAuthStore from "@/stores/auth";
 
 const email = ref("");
 const password = ref("");
@@ -52,8 +52,10 @@ const checkPassword = () => {
   return true;
 };
 
+const authStore = useAuthStore();
+
 const signUpNewUser = async () => {
-  const { data, error } = await authManager.signup(email.value, password.value);
+  const { data, error } = await authStore.signup(email.value, password.value);
   if (error) {
     alert(error.message);
   } else {

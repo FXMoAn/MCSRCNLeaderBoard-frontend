@@ -5,7 +5,7 @@
     @mouseleave="hovered = false"
   >
     <div class="user-name">
-      <span>{{ user.email }}</span>
+      <span>{{ authStore.user?.email }}</span>
     </div>
     <div class="user-panel-button" v-show="hovered">
       <button @click="signOut">退出登录</button>
@@ -14,16 +14,15 @@
 </template>
 
 <script setup lang="ts">
-import authManager from "@/utils/auth";
-import userService from "@/utils/user";
 import { ref, defineEmits } from "vue";
+import useAuthStore from "@/stores/auth";
 
-const user = ref(userService.getUserInfo());
+const authStore = useAuthStore();
 const emit = defineEmits(["signOut"]);
 const hovered = ref(false);
 
 const signOut = () => {
-  authManager.signOut();
+  authStore.logout();
   emit("signOut");
 };
 </script>

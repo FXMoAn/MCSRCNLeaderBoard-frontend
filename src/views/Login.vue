@@ -31,22 +31,20 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import authManager from "@/utils/auth";
-import useUserStore from "@/stores/user";
+import useAuthStore from "@/stores/auth";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
-const userStore = useUserStore();
+const authStore = useAuthStore();
 
 const email = ref("");
 const password = ref("");
 
 const handleLogin = async () => {
-  const { data, error } = await authManager.login(email.value, password.value);
+  const { data, error } = await authStore.login(email.value, password.value);
   if (error) {
     alert(error.message);
   } else {
-    userStore.isLoggedin = true;
     router.push("/");
   }
 };
