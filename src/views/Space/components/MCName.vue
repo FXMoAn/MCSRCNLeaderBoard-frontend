@@ -1,12 +1,17 @@
 <template>
-  <div class="mcname-container">
+  <div class="mcname-container" v-if="!userStore.isBindMinecraftId">
     <input
       type="text"
       class="mcname-input"
       v-model="ingamename"
       placeholder="输入Minecraft用户名"
     />
-    <button class="button-common" @click="handleGetMCID">获取MCID</button>
+    <button class="button-common" @click="handleGetMCID">获取MCID并绑定</button>
+  </div>
+  <div class="mcname-container" v-else>
+    <p class="mcname-text">
+      您已绑定Minecraft用户名：{{ userStore.userInfo.ingamename }}
+    </p>
   </div>
 </template>
 
@@ -23,7 +28,7 @@ const handleGetMCID = async () => {
     alert("请输入Minecraft用户名");
     return;
   }
-  await userStore.getMinecraftId(ingamename.value);
+  await userStore.bindMinecraftId(ingamename.value);
 };
 </script>
 
@@ -42,5 +47,10 @@ const handleGetMCID = async () => {
   border: 1px solid #ccc;
   border-radius: 5px;
   padding: 0 10px;
+}
+
+.mcname-text {
+  font-size: 16px;
+  color: #fff;
 }
 </style>

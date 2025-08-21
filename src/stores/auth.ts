@@ -2,8 +2,10 @@ import { ref, computed } from "vue";
 import { defineStore } from "pinia";
 import { supabase } from "@/lib/supabaseClient";
 import type { User, Session, AuthError } from "@supabase/supabase-js";
+import { useRouter } from "vue-router";
 
 const useAuthStore = defineStore("auth", () => {
+  const router = useRouter();
   // 状态
   const user = ref<User | null>(null);
   const session = ref<Session | null>(null);
@@ -86,6 +88,8 @@ const useAuthStore = defineStore("auth", () => {
       // 清除本地状态
       user.value = null;
       session.value = null;
+      localStorage.removeItem("userInfo");
+      router.push("/");
 
       return { error: null };
     } catch (error) {

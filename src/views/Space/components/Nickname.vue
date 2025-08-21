@@ -21,8 +21,16 @@
     </div>
     <div class="new-user">
       <div class="new-user-title">新用户输入昵称</div>
-      <input type="text" class="new-user-input" placeholder="请输入你的昵称" />
-      <button class="button-common new-user-button" @click="handleBinding">
+      <input
+        type="text"
+        class="new-user-input"
+        placeholder="请输入你的昵称"
+        v-model="newUserNickname"
+      />
+      <button
+        class="button-common new-user-button"
+        @click="handleNewUserBinding"
+      >
         绑定
       </button>
     </div>
@@ -43,6 +51,7 @@ const router = useRouter();
 
 const unbindedUserList = ref<any[]>([]);
 const selectedUserId = ref<number>(0);
+const newUserNickname = ref<string>("");
 
 const getUnbindedUser = async () => {
   //uuser为空
@@ -65,7 +74,16 @@ const handleBinding = async () => {
     return;
   }
   await userStore.bindUser(selectedUserId.value);
-  router.push("/");
+  router.go(0);
+};
+
+const handleNewUserBinding = async () => {
+  if (!newUserNickname.value) {
+    alert("请输入昵称");
+    return;
+  }
+  await userStore.createNewUser(newUserNickname.value);
+  router.go(0);
 };
 
 onMounted(() => {

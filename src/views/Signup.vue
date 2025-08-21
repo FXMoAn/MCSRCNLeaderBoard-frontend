@@ -39,6 +39,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import useAuthStore from "@/stores/auth";
+import { useRouter } from "vue-router";
 
 const email = ref("");
 const password = ref("");
@@ -53,6 +54,7 @@ const checkPassword = () => {
 };
 
 const authStore = useAuthStore();
+const router = useRouter();
 
 const signUpNewUser = async () => {
   const { data, error } = await authStore.signup(email.value, password.value);
@@ -60,6 +62,7 @@ const signUpNewUser = async () => {
     alert(error.message);
   } else {
     alert("注册成功");
+    router.push("/login");
   }
 };
 
