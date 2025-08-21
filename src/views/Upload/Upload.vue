@@ -32,12 +32,12 @@ const fileSize = ref(0);
 const fileUrl = ref("");
 
 const handleFileChange = (e: Event) => {
-  const file = (e.target as HTMLInputElement).files?.[0];
-  if (file) {
-    file.value = file;
-    fileType.value = file.type;
-    fileSize.value = file.size;
-    fileUrl.value = URL.createObjectURL(file);
+  const selectedFile = (e.target as HTMLInputElement).files?.[0];
+  if (selectedFile) {
+    file.value = selectedFile;
+    fileType.value = selectedFile.type;
+    fileSize.value = selectedFile.size;
+    fileUrl.value = URL.createObjectURL(selectedFile);
   }
 };
 </script>
