@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { supabase } from "@/lib/supabaseClient";
 import useAuthStore from "./auth";
+import axios from "axios";
 
 interface UserInfo {
   id: number;
@@ -58,6 +59,21 @@ const useUserStore = defineStore("user", () => {
     }
   };
 
+  const getMinecraftId = async (ingamename: string) => {
+    try {
+      const res = await axios.get(
+        `https://api.mojang.com/users/profiles/minecraft/${ingamename}`
+      );
+      if (res.data && res.data.id) {
+        userInfo.value!.mc_uuid = res.data.id;
+      } else {
+        alert("获取Minecraft ID失败，请检查MC名称是否正确");
+      }
+    } catch (error) {
+      console.error("获取Minecraft ID失败:", error);
+    }
+  };
+
   return {
     userInfo,
     loading,
@@ -66,6 +82,7 @@ const useUserStore = defineStore("user", () => {
 
     initUserInfo,
     bindUser,
+    getMinecraftId,
   };
 });
 

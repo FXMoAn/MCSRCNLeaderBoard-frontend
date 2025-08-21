@@ -1,10 +1,11 @@
 <template>
-  <div class="binding-container">
-    <div class="binding-header">
-      <h1>{{ userStore.isBinding ? "修改" : "绑定" }}</h1>
-    </div>
+  <div class="nickname-container" v-if="!userStore.isBinding">
     <div class="unbinded-user-list">
+      <div class="unbinded-user-list-title">老用户绑定账号</div>
       <select v-model="selectedUserId" class="unbinded-user-select">
+        <option class="unbinded-user-item" value="" selected disabled>
+          请选择
+        </option>
         <option
           class="unbinded-user-item"
           v-for="user in unbindedUserList"
@@ -14,20 +15,30 @@
           {{ user.nickname }}
         </option>
       </select>
-      <button @click="handleBinding">绑定</button>
+      <button class="button-common unbinded-user-button" @click="handleBinding">
+        绑定
+      </button>
     </div>
+    <div class="new-user">
+      <div class="new-user-title">新用户输入昵称</div>
+      <input type="text" class="new-user-input" placeholder="请输入你的昵称" />
+      <button class="button-common new-user-button" @click="handleBinding">
+        绑定
+      </button>
+    </div>
+  </div>
+  <div class="nickname-container" v-else>
+    <div class="nickname-title">昵称:{{ userStore.userInfo?.nickname }}</div>
   </div>
 </template>
 
 <script setup lang="ts">
-import useUserStore from "@/stores/user";
-import useAuthStore from "@/stores/auth";
-import { onMounted, ref } from "vue";
+import { ref, onMounted } from "vue";
 import { supabase } from "@/lib/supabaseClient";
+import useUserStore from "@/stores/user";
 import { useRouter } from "vue-router";
 
 const userStore = useUserStore();
-const authStore = useAuthStore();
 const router = useRouter();
 
 const unbindedUserList = ref<any[]>([]);
@@ -49,6 +60,10 @@ const getUnbindedUser = async () => {
 };
 
 const handleBinding = async () => {
+  if (!selectedUserId.value) {
+    alert("请选择一个用户");
+    return;
+  }
   await userStore.bindUser(selectedUserId.value);
   router.push("/");
 };
@@ -59,26 +74,22 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.binding-container {
-  width: 100%;
-  height: 100%;
+/* 绑定账号 */
+.nickname-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  gap: 20px;
 }
 
 .unbinded-user-list {
-  width: 50%;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  gap: 20px;
 }
 
 .unbinded-user-select {
   color: #000;
-  width: 100%;
+  min-width: 200px;
   height: 40px;
   border: 1px solid #ccc;
   border-radius: 5px;
@@ -92,5 +103,31 @@ onMounted(() => {
   border: 1px solid #ccc;
   border-radius: 5px;
   padding: 0 10px;
+}
+
+.unbinded-user-button,
+.new-user-button {
+  width: 100px;
+  height: 40px;
+}
+
+.new-user {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.new-user-title {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.new-user-input {
+  max-width: 200px;
+  height: 40px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 0 10px;
+  color: #000;
 }
 </style>

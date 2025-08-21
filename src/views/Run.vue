@@ -82,7 +82,6 @@ const getRunInfo = async () => {
     if (error) {
       console.error(error);
     } else {
-      console.log(data);
       runInfo.value = data[0];
     }
   } catch (error) {

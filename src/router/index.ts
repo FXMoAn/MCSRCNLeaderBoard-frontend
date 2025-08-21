@@ -29,9 +29,21 @@ const router = createRouter({
       component: () => import("../views/Signup.vue"),
     },
     {
-      path: "/binding",
-      name: "binding",
-      component: () => import("../views/Binding.vue"),
+      path: "/space",
+      name: "space",
+      component: () => import("../views/Space/Space.vue"),
+      children: [
+        {
+          path: "profile",
+          name: "profile",
+          component: () => import("../views/Space/views/Profile.vue"),
+        },
+        {
+          path: "binding",
+          name: "binding",
+          component: () => import("../views/Space/views/Binding.vue"),
+        },
+      ],
     },
   ],
 });

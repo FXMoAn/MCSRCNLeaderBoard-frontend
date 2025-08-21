@@ -33,7 +33,7 @@ const displayUserName = computed(() => {
 });
 
 const routeToBinding = () => {
-  router.push("/binding");
+  router.push("/space/profile");
 };
 
 const signOut = () => {
