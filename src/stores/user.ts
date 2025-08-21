@@ -3,11 +3,19 @@ import { ref, computed } from "vue";
 import { supabase } from "@/lib/supabaseClient";
 import useAuthStore from "./auth";
 
+interface UserInfo {
+  id: number;
+  ingamename: string;
+  mc_uuid: string;
+  nickname: string;
+  user_id: number;
+}
+
 const useUserStore = defineStore("user", () => {
   const authStore = useAuthStore();
   const userId = computed(() => authStore.user?.id);
 
-  const userInfo = ref(null);
+  const userInfo = ref<UserInfo | null>(null);
   const loading = ref(false);
 
   const isBinding = computed(() => !!userInfo.value);

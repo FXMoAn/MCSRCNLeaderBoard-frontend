@@ -50,7 +50,7 @@
 
 <script setup lang="ts">
 import "@/assets/main.css";
-import { ref, onMounted, computed, watch, watchEffect } from "vue";
+import { ref, onMounted, computed, onActivated } from "vue";
 import { useStatsStore } from "@/stores/stats.ts";
 import SvgIcon from "@/components/icons/index.vue";
 import { useRouter } from "vue-router";
@@ -104,6 +104,14 @@ const openVideo = (url: string) => {
 
 onMounted(() => {
   statsStore.getStats("1.16.1", "RSG");
+});
+
+// 当页面被激活时（从其他页面返回），检查是否需要重新获取数据
+onActivated(() => {
+  // 如果当前没有数据，则重新获取
+  if (statsdata.value.length === 0) {
+    statsStore.getStats("1.16.1", "RSG");
+  }
 });
 </script>
 

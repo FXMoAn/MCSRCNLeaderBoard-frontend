@@ -6,7 +6,7 @@
     @click="routeToBinding"
   >
     <div class="user-name">
-      <span>{{ authStore.user?.email }}</span>
+      <span>{{ displayUserName }}</span>
     </div>
     <div class="user-panel-button" v-show="hovered">
       <button @click="signOut">退出登录</button>
@@ -15,14 +15,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineEmits } from "vue";
+import { ref, defineEmits, computed } from "vue";
 import useAuthStore from "@/stores/auth";
+import useUserStore from "@/stores/user";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
 const authStore = useAuthStore();
 const emit = defineEmits(["signOut"]);
 const hovered = ref(false);
+const userStore = useUserStore();
+
+const displayUserName = computed(() => {
+  return userStore.isBinding
+    ? userStore.userInfo?.nickname
+    : authStore.user?.email;
+});
 
 const routeToBinding = () => {
   router.push("/binding");

@@ -50,12 +50,17 @@ export const useStatsStore = defineStore("stats", () => {
   const getStats = async (version: string, type: string) => {
     let key = `${version}${type}`;
     if (isLoading.value) return;
+
+    // 如果缓存存在，直接使用缓存数据
+    if (cache.value.has(key)) {
+      currStats.value = cache.value.get(key);
+      pages.value = Math.ceil(currStats.value.length / 10);
+      return; // 直接返回，不重新请求
+    }
+
     isLoading.value = true;
 
     try {
-      if (cache.value.has(key)) {
-        currStats.value = cache.value.get(key);
-      }
       const data = await fetchStats(version, type);
       cache.value.set(key, data);
       currStats.value = data;
@@ -65,6 +70,36 @@ export const useStatsStore = defineStore("stats", () => {
       isLoading.value = false;
     }
   };
+
+  // 强制刷新数据，忽略缓存
+  const refreshStats = async (version: string, type: string) => {
+    let key = `${version}${type}`;
+    if (isLoading.value) return;
+
+    isLoading.value = true;
+
+    try {
+      const data = await fetchStats(version, type);
+      cache.value.set(key, data);
+      currStats.value = data;
+    } catch (err) {
+      console.log(err);
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  // 清除特定缓存
+  const clearCache = (version?: string, type?: string) => {
+    if (version && type) {
+      const key = `${version}${type}`;
+      cache.value.delete(key);
+    } else {
+      // 清除所有缓存
+      cache.value.clear();
+    }
+  };
+
   return {
     cache,
     currStats,
@@ -72,5 +107,7 @@ export const useStatsStore = defineStore("stats", () => {
     pages,
     fetchStats,
     getStats,
+    refreshStats,
+    clearCache,
   };
 });
