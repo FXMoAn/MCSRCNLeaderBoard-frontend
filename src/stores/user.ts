@@ -62,7 +62,7 @@ const useUserStore = defineStore("user", () => {
   const getMinecraftId = async (ingamename: string) => {
     try {
       const res = await axios.get(
-        `https://api.mojang.com/users/profiles/minecraft/${ingamename}`
+        `https://corsproxy.io/?https://api.mojang.com/users/profiles/minecraft/${ingamename}`
       );
       if (res.data && res.data.id) {
         userInfo.value!.mc_uuid = res.data.id;
