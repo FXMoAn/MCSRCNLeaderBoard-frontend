@@ -3,10 +3,12 @@
     <div class="logo" @click="backToHome">
       <span> MCSR-CN </span>
     </div>
-    <!-- <div class="links">
-        <div><router-link to="/rank" class="nav-link">排行榜</router-link></div>
-        <div><a>管理员</a></div>
-    </div> -->
+    <div class="links">
+      <div><router-link to="/rank" class="nav-link">排行榜</router-link></div>
+      <div v-if="userStore.userInfo.role === 'admin'">
+        <router-link to="/manage/upload" class="nav-link">管理员</router-link>
+      </div>
+    </div>
     <!-- <div class="search-form">
         <input id="search-user" type="text" placeholder="输入用户名..." v-model="nickName"/>
         <el-button :icon="Search" circle @click="routeToSpace"/>
@@ -84,9 +86,10 @@ nav {
 .links {
   flex: 1;
   display: flex;
-  justify-content: center;
   align-items: center;
   gap: 2rem;
+  margin-left: 2rem;
+
   .nav-link.router-link-active {
     color: #fff;
   }

@@ -49,27 +49,10 @@ import { supabase } from "@/lib/supabaseClient";
 import { onBeforeMount, ref, computed } from "vue";
 import type { Run } from "@/stores/stats";
 import { extractBVId, buildPlayerUrl } from "@/utils/bilibili";
+import type { RunInfo } from "@/types/CommonTypes";
 
 const route = useRoute();
 const id = route.params.id;
-
-interface RunInfo {
-  id: number;
-  userid: string;
-  nickname: string;
-  igt: string;
-  date: string;
-  version: string;
-  type: string;
-  videolink: string;
-  remarks: string;
-  seed: string;
-  users: {
-    id: string;
-    nickname: string;
-    ingamename: string;
-  };
-}
 
 const runInfo = ref<RunInfo>();
 
