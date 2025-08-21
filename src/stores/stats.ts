@@ -23,11 +23,16 @@ export const useStatsStore = defineStore("stats", () => {
   const isLoading = ref(false);
   const pages = ref(0);
 
-  const getLeaderboard = async ({ version = "1.16.1", type = "RSG" } = {}) => {
+  const getLeaderboard = async ({
+    version = "1.16.1",
+    type = "RSG",
+    status = "verified",
+  } = {}) => {
     try {
       const { data, error } = await supabase.rpc("get_leaderboard", {
         p_version: version,
         p_type: type,
+        p_status: status,
       });
 
       if (error) {
@@ -41,13 +46,17 @@ export const useStatsStore = defineStore("stats", () => {
     }
   };
 
-  const fetchStats = async (version: string, type: string) => {
-    const data = await getLeaderboard({ version, type });
+  const fetchStats = async (version: string, type: string, status: string) => {
+    const data = await getLeaderboard({ version, type, status });
     pages.value = Math.ceil(data.length / 10);
     return data;
   };
 
-  const getStats = async (version: string, type: string) => {
+  const getStats = async (
+    version: string,
+    type: string,
+    status: string = "verified"
+  ) => {
     let key = `${version}${type}`;
     if (isLoading.value) return;
 
@@ -61,7 +70,7 @@ export const useStatsStore = defineStore("stats", () => {
     isLoading.value = true;
 
     try {
-      const data = await fetchStats(version, type);
+      const data = await fetchStats(version, type, status);
       cache.value.set(key, data);
       currStats.value = data;
     } catch (err) {
@@ -79,7 +88,7 @@ export const useStatsStore = defineStore("stats", () => {
     isLoading.value = true;
 
     try {
-      const data = await fetchStats(version, type);
+      const data = await fetchStats(version, type, status);
       cache.value.set(key, data);
       currStats.value = data;
     } catch (err) {
