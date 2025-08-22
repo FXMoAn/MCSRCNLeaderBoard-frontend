@@ -5,7 +5,7 @@
     </div>
     <div class="links">
       <div><router-link to="/rank" class="nav-link">排行榜</router-link></div>
-      <div v-if="userStore.userInfo.role === 'admin'">
+      <div v-if="isAdmin">
         <router-link to="/manage/upload" class="nav-link">管理员</router-link>
       </div>
     </div>
@@ -23,7 +23,7 @@
 
 <script setup lang="ts">
 import "@/assets/main.css";
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 // 用户登录控制
 import AuthControl from "@/components/AuthControl.vue";
@@ -33,6 +33,10 @@ import { useAuthStore, useUserStore } from "@/stores";
 const router = useRouter();
 const authStore = useAuthStore();
 const userStore = useUserStore();
+
+const isAdmin = computed(() => {
+  return userStore.userInfo?.role === "admin";
+});
 
 const backToHome = () => {
   router.push("/");
