@@ -3,9 +3,11 @@ import { defineStore } from "pinia";
 import { supabase } from "@/lib/supabaseClient";
 import type { User, Session, AuthError } from "@supabase/supabase-js";
 import { useRouter } from "vue-router";
+import useUserStore from "./user";
 
 const useAuthStore = defineStore("auth", () => {
   const router = useRouter();
+  const userStore = useUserStore();
   // 状态
   const user = ref<User | null>(null);
   const session = ref<Session | null>(null);
@@ -89,6 +91,7 @@ const useAuthStore = defineStore("auth", () => {
       user.value = null;
       session.value = null;
       localStorage.removeItem("userInfo");
+      userStore.setUserInfo(null);
       router.push("/");
 
       return { error: null };
