@@ -5,7 +5,7 @@
     </div>
     <div class="links">
       <div><router-link to="/rank" class="nav-link">排行榜</router-link></div>
-      <div v-if="isAdmin">
+      <div v-if="userStore.isAdmin">
         <router-link to="/manage/upload" class="nav-link">管理员</router-link>
       </div>
     </div>
@@ -23,32 +23,40 @@
 
 <script setup lang="ts">
 import "@/assets/main.css";
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 // 用户登录控制
 import AuthControl from "@/components/AuthControl.vue";
 import UserPanel from "@/components/UserPanel.vue";
 import { useAuthStore, useUserStore } from "@/stores";
+import { eventBus, AUTH_EVENTS } from "@/stores/eventBus";
 
 const router = useRouter();
 const authStore = useAuthStore();
 const userStore = useUserStore();
 
-const isAdmin = computed(() => {
-  return userStore.userInfo?.role === "admin";
-});
-
 const backToHome = () => {
   router.push("/");
 };
+
+// 监听认证状态变化，自动更新用户信息
+watch(
+  () => authStore.isLoggedIn,
+  async (newValue) => {
+    if (newValue && authStore.user) {
+      // 用户登录后，通过事件总线通知用户信息初始化
+      eventBus.emit(AUTH_EVENTS.USER_LOGGED_IN, authStore.user);
+    }
+  }
+);
 
 onMounted(async () => {
   // 先初始化认证状态
   await authStore.initializeAuth();
 
   // 等待认证完成后再初始化用户信息
-  if (authStore.isLoggedIn) {
-    await userStore.initUserInfo();
+  if (authStore.isLoggedIn && authStore.user) {
+    eventBus.emit(AUTH_EVENTS.USER_LOGGED_IN, authStore.user);
   }
 });
 </script>

@@ -45,6 +45,8 @@ const handleLogin = async () => {
   if (error) {
     alert(error.message);
   } else {
+    // 等待一下让认证状态更新完成
+    await new Promise((resolve) => setTimeout(resolve, 100));
     router.push("/");
   }
 };

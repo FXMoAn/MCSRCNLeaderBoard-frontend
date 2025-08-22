@@ -3,9 +3,8 @@
     class="user-panel"
     @mouseenter="hovered = true"
     @mouseleave="hovered = false"
-    @click="routeToBinding"
   >
-    <div class="user-name">
+    <div class="user-name" @click="routeToBinding">
       <span>{{ displayUserName }}</span>
     </div>
     <div class="user-panel-button" v-show="hovered">
