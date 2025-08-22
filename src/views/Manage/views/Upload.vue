@@ -169,7 +169,7 @@ const insertVerifiedRun = async () => {
     version: version.value,
     type: type.value,
     igt: igt.value,
-    date: date.value,
+    date: date.value.replace(/-/g, "/"),
     videolink: videoLink.value,
     remarks: remarks.value,
     seed: seed.value,
