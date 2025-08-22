@@ -85,6 +85,16 @@ nav {
 .nav-link {
   color: inherit;
   text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  position: relative;
+  font-weight: 500;
+}
+
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #00bcd4;
 }
 
 .logo {
@@ -93,6 +103,11 @@ nav {
   justify-content: center;
   align-items: center;
   cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.logo:hover {
+  transform: scale(1.05);
 }
 
 .links {
@@ -103,13 +118,25 @@ nav {
   margin-left: 2rem;
 
   .nav-link.router-link-active {
-    color: #fff;
+    color: #00bcd4;
+    background-color: rgba(0, 188, 212, 0.1);
+    border: 1px solid rgba(0, 188, 212, 0.3);
   }
 }
 
 @media (max-width: 780px) {
   .container {
     width: 100%;
+  }
+
+  .links {
+    gap: 1rem;
+    margin-left: 1rem;
+  }
+
+  .nav-link {
+    padding: 6px 12px;
+    font-size: 14px;
   }
 }
 </style>

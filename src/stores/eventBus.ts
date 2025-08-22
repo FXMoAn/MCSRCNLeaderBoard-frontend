@@ -2,6 +2,19 @@ import { ref } from "vue";
 
 type EventCallback = (...args: any[]) => void;
 
+/**
+ * 事件总线
+ * 用于在组件之间传递事件
+ * 使用方法：
+ * 1. 在组件中订阅事件
+ * eventBus.on(event, callback);
+ * 2. 在组件中发布事件
+ * eventBus.emit(event, ...args);
+ * 3. 在组件中取消订阅事件
+ * eventBus.off(event, callback);
+ * 4. 在组件中清理所有事件
+ * eventBus.clear();
+ */
 class EventBus {
   private events = ref<Map<string, EventCallback[]>>(new Map());
 

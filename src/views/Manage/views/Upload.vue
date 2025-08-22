@@ -1,95 +1,108 @@
 <template>
   <div class="upload-container">
-    <form class="upload-form">
-      <div class="upload-form-item">
-        <label class="upload-form-item-label" for="title">版本</label>
-        <select class="upload-form-item-select" id="version" v-model="version">
-          <option value="1.16.1" class="upload-form-item-option">1.16.1</option>
-        </select>
+    <h2 class="upload-title">上传成绩记录</h2>
+    <form class="upload-form" @submit.prevent="uploadRun">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label" for="version">版本</label>
+          <select class="form-select" id="version" v-model="version">
+            <option value="1.16.1">1.16.1</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="type">类型</label>
+          <select class="form-select" id="type" v-model="type">
+            <option value="RSG">RSG</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="nickname">用户名</label>
+          <input
+            class="form-input"
+            type="text"
+            id="nickname"
+            v-model="nickname"
+            placeholder="请输入用户名"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="igt">游戏时间IGT</label>
+          <div class="igt-inputs">
+            <input
+              class="form-input igt-input"
+              type="number"
+              id="igt-minute"
+              v-model="igtMinute"
+              placeholder="分"
+              min="0"
+            />
+            <span class="igt-separator">:</span>
+            <input
+              class="form-input igt-input"
+              type="number"
+              id="igt-second"
+              v-model="igtSecond"
+              placeholder="秒"
+              min="0"
+              max="59"
+            />
+            <span class="igt-separator">:</span>
+            <input
+              class="form-input igt-input"
+              type="number"
+              id="igt-millisecond"
+              v-model="igtMillisecond"
+              placeholder="毫秒"
+              min="0"
+              max="999"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="date">日期</label>
+          <input class="form-input" type="date" id="date" v-model="date" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="video-link">视频链接</label>
+          <input
+            class="form-input"
+            type="text"
+            id="video-link"
+            v-model="videoLink"
+            placeholder="请输入视频链接"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="seed">种子</label>
+          <input
+            class="form-input"
+            type="text"
+            id="seed"
+            v-model="seed"
+            placeholder="请输入种子"
+          />
+        </div>
+
+        <div class="form-group full-width">
+          <label class="form-label" for="remarks">备注</label>
+          <textarea
+            class="form-textarea"
+            id="remarks"
+            v-model="remarks"
+            placeholder="请输入备注信息"
+            rows="3"
+          />
+        </div>
       </div>
-      <div class="upload-form-item">
-        <label class="upload-form-item-label" for="title">类型</label>
-        <select class="upload-form-item-select" id="type" v-model="type">
-          <option value="RSG" class="upload-form-item-option">RSG</option>
-        </select>
-      </div>
-      <div class="upload-form-item">
-        <label class="upload-form-item-label" for="title">用户名</label>
-        <input
-          class="upload-form-item-input"
-          type="text"
-          id="nickname"
-          v-model="nickname"
-        />
-      </div>
-      <div class="upload-form-item">
-        <label class="upload-form-item-label" for="title">游戏时间IGT</label>
-        <input
-          class="upload-form-item-input igt-input"
-          type="number"
-          id="igt"
-          v-model="igtMinute"
-        />分
-        <input
-          class="upload-form-item-input igt-input"
-          type="number"
-          min="00"
-          max="59"
-          id="igt"
-          v-model="igtSecond"
-        />秒
-        <input
-          class="upload-form-item-input igt-input"
-          type="number"
-          min="000"
-          max="999"
-          id="igt"
-          v-model="igtMillisecond"
-        />毫秒
-      </div>
-      <div class="upload-form-item">
-        <label class="upload-form-item-label" for="title">日期</label>
-        <input
-          class="upload-form-item-input"
-          type="date"
-          id="date"
-          v-model="date"
-        />
-      </div>
-      <div class="upload-form-item">
-        <label class="upload-form-item-label" for="title">视频链接</label>
-        <input
-          class="upload-form-item-input"
-          type="text"
-          id="video-link"
-          v-model="videoLink"
-        />
-      </div>
-      <div class="upload-form-item">
-        <label class="upload-form-item-label" for="title">备注</label>
-        <textarea
-          class="upload-form-item-input"
-          type="text"
-          id="remarks"
-          v-model="remarks"
-        />
-      </div>
-      <div class="upload-form-item">
-        <label class="upload-form-item-label" for="title">种子</label>
-        <input
-          class="upload-form-item-input"
-          type="text"
-          id="seed"
-          v-model="seed"
-        />
-      </div>
-      <div class="upload-form-item">
-        <button
-          class="upload-form-item-button button-common"
-          @click.prevent="uploadRun"
-        >
-          上传
-        </button>
+
+      <div class="form-actions">
+        <button class="submit-button" type="submit">上传记录</button>
       </div>
     </form>
   </div>
@@ -202,63 +215,162 @@ const uploadRun = () => {
 <style scoped>
 .upload-container {
   width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
   padding: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+}
+
+.upload-title {
+  color: #fff;
+  font-size: 1.8em;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 30px;
 }
 
 .upload-form {
   width: 100%;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.form-group {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
-.upload-form-item {
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-label {
+  color: #ccc;
+  font-size: 0.9em;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-input,
+.form-select {
   width: 100%;
+  padding: 12px 16px;
+  background-color: #333;
+  border: 1px solid #444;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.form-input::placeholder {
+  color: #666;
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: #00bcd4;
+  box-shadow: 0 0 0 2px rgba(0, 188, 212, 0.1);
+}
+
+.igt-inputs {
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-
-.upload-form-item-label {
-  min-width: 50px;
-}
-
-.upload-form-item-option {
-  width: 100%;
-  color: #000;
-}
-
-.upload-form-item-select {
-  width: 200px;
-  color: #000;
-  height: 40px;
-}
-
-.upload-form-item-input {
-  width: 200px;
-  color: #000;
-  height: 40px;
-  max-width: 200px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  padding: 0 10px;
+  gap: 8px;
 }
 
 .igt-input {
-  width: 50px;
+  width: 80px;
+  text-align: center;
 }
 
-.upload-form-item-button {
-  width: 100px;
-  color: #000;
-  height: 40px;
+.igt-separator {
+  color: #666;
+  font-weight: 600;
+  font-size: 16px;
 }
 
-.upload-form-item-button:hover {
-  background-color: #ccc;
+.form-textarea {
+  width: 100%;
+  padding: 12px 16px;
+  background-color: #333;
+  border: 1px solid #444;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+
+.form-textarea:focus {
+  outline: none;
+  border-color: #00bcd4;
+  box-shadow: 0 0 0 2px rgba(0, 188, 212, 0.1);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: center;
+  padding-top: 20px;
+}
+
+.submit-button {
+  background: linear-gradient(135deg, #00bcd4, #0097a7);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 14px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.submit-button:hover {
+  background: linear-gradient(135deg, #00acc1, #00838f);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 188, 212, 0.3);
+}
+
+.submit-button:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+  .upload-container {
+    padding: 16px;
+  }
+
+  .upload-title {
+    font-size: 1.5em;
+    margin-bottom: 24px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .form-input,
+  .form-select,
+  .form-textarea {
+    padding: 10px 14px;
+  }
+
+  .submit-button {
+    padding: 12px 24px;
+    font-size: 14px;
+  }
 }
 </style>

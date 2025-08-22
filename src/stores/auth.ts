@@ -24,7 +24,6 @@ const useAuthStore = defineStore("auth", () => {
    * 当用户登出时，清除用户信息
    * 当token刷新时，可能需要重新验证用户信息
    * 当用户信息更新时，更新用户信息
-   * 当用户信息更新时，更新用户信息
    */
   const initializeAuth = async () => {
     try {

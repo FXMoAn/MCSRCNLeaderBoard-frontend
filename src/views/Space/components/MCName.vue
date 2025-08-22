@@ -1,17 +1,22 @@
 <template>
   <div class="mcname-container" v-if="!userStore.isBindMinecraftId">
-    <input
-      type="text"
-      class="mcname-input"
-      v-model="ingamename"
-      placeholder="输入Minecraft用户名"
-    />
-    <button class="button-common" @click="handleGetMCID">获取MCID并绑定</button>
+    <h4 class="section-subtitle">绑定Minecraft用户名</h4>
+    <div class="form-row">
+      <input
+        type="text"
+        class="form-input"
+        v-model="ingamename"
+        placeholder="输入Minecraft用户名"
+      />
+      <button class="form-button" @click="handleGetMCID">获取MCID并绑定</button>
+    </div>
   </div>
+
   <div class="mcname-container" v-else>
-    <p class="mcname-text">
-      您已绑定Minecraft用户名：{{ userStore.userInfo.ingamename }}
-    </p>
+    <div class="mcname-info">
+      <h4 class="section-subtitle">已绑定Minecraft用户名</h4>
+      <p class="mcname-display">{{ userStore.userInfo.ingamename }}</p>
+    </div>
   </div>
 </template>
 
@@ -34,23 +39,106 @@ const handleGetMCID = async () => {
 
 <style scoped>
 .mcname-container {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.section-subtitle {
+  color: #ccc;
+  font-size: 1.1em;
+  font-weight: 500;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-row {
   display: flex;
+  gap: 16px;
   align-items: center;
-  gap: 10px;
 }
 
-.mcname-input {
-  width: 200px;
-  color: #000;
-  height: 40px;
-  max-width: 200px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  padding: 0 10px;
-}
-
-.mcname-text {
-  font-size: 16px;
+.form-input {
+  flex: 1;
+  padding: 12px 16px;
+  background-color: #333;
+  border: 1px solid #444;
+  border-radius: 8px;
   color: #fff;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.form-input::placeholder {
+  color: #666;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #00bcd4;
+  box-shadow: 0 0 0 2px rgba(0, 188, 212, 0.1);
+}
+
+.form-button {
+  background: linear-gradient(135deg, #00bcd4, #0097a7);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.form-button:hover {
+  background: linear-gradient(135deg, #00acc1, #00838f);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 188, 212, 0.3);
+}
+
+.form-button:active {
+  transform: translateY(0);
+}
+
+.mcname-info {
+  text-align: center;
+  padding: 20px;
+}
+
+.mcname-display {
+  color: #00bcd4;
+  font-size: 1.2em;
+  font-weight: 600;
+  margin: 0;
+  padding: 16px;
+  background-color: rgba(0, 188, 212, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 188, 212, 0.3);
+}
+
+@media (max-width: 768px) {
+  .mcname-container {
+    padding: 0 16px;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .form-button {
+    width: 100%;
+  }
+
+  .mcname-display {
+    font-size: 1.1em;
+    padding: 14px;
+  }
 }
 </style>
