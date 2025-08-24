@@ -55,6 +55,11 @@ const router = createRouter({
           name: "upload",
           component: () => import("../views/Manage/views/Upload.vue"),
         },
+        {
+          path: "user",
+          name: "user",
+          component: () => import("../views/Manage/views/User.vue"),
+        },
       ],
     },
   ],

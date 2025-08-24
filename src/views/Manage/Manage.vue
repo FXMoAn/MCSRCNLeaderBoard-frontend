@@ -10,5 +10,9 @@ const navItems = [
     path: "/manage/upload",
     label: "上传成绩",
   },
+  {
+    path: "/manage/user",
+    label: "管理用户",
+  },
 ];
 </script>
