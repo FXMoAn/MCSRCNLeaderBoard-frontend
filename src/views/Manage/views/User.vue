@@ -2,47 +2,47 @@
   <div class="user-container">
     <div class="binding-section">
       <h4 class="section-subtitle">创建新用户</h4>
-        <div class="form-row">
-          <input
+      <div class="form-row">
+        <input
           type="text"
           class="form-input"
           placeholder="请输入新用户的昵称"
           v-model="newUserNickname"
-          />
-            <button class="form-button" @click="handleNewUserCreate">创建</button>
-          </div>
+        />
+        <button class="form-button" @click="handleNewUserCreate">创建</button>
       </div>
     </div>
+  </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import useUserStore from "@/stores/user";
-import { useRouter } from "vue-router";
-import { supabase } from "@/lib/supabaseClient";
+import { ref } from 'vue';
+import useUserStore from '@/stores/user';
+import { useRouter } from 'vue-router';
+import { supabase } from '@/lib/supabaseClient';
 
 const userStore = useUserStore();
 const router = useRouter();
-const newUserNickname = ref('')
+const newUserNickname = ref('');
 
 const handleNewUserCreate = async () => {
   if (!newUserNickname.value) {
-    alert("请输入昵称");
+    alert('请输入昵称');
     return;
   }
   try {
-      const { data, error } = await supabase
-        .from("users")
-        .insert({ nickname: newUserNickname.value})
-        .select();
-      if (error) {
-        console.error(error);
-      } else {
-        alert("创建成功");
-      }
-    } catch (error) {
+    const { data, error } = await supabase
+      .from('users')
+      .insert({ nickname: newUserNickname.value })
+      .select();
+    if (error) {
       console.error(error);
+    } else {
+      alert('创建成功');
     }
+  } catch (error) {
+    console.error(error);
+  }
   router.go(0);
 };
 </script>

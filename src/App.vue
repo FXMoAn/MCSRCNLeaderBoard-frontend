@@ -22,21 +22,21 @@
 </template>
 
 <script setup lang="ts">
-import "@/assets/main.css";
-import { ref, onMounted, watch } from "vue";
-import { useRouter } from "vue-router";
+import '@/assets/main.css';
+import { ref, onMounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
 // 用户登录控制
-import AuthControl from "@/components/AuthControl.vue";
-import UserPanel from "@/components/UserPanel.vue";
-import { useAuthStore, useUserStore } from "@/stores";
-import { eventBus, AUTH_EVENTS } from "@/stores/eventBus";
+import AuthControl from '@/components/AuthControl.vue';
+import UserPanel from '@/components/UserPanel.vue';
+import { useAuthStore, useUserStore } from '@/stores';
+import { eventBus, AUTH_EVENTS } from '@/stores/eventBus';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const userStore = useUserStore();
 
 const backToHome = () => {
-  router.push("/");
+  router.push('/');
 };
 
 // 监听认证状态变化，自动更新用户信息
