@@ -132,6 +132,7 @@ const handleConfirmFilter = (filter: { igt: string; nickname: string }) => {
       );
     });
   }
+  page.value = 1;
 };
 
 watch(statsdata, (newVal) => {
