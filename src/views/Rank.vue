@@ -1,4 +1,13 @@
 <template>
+  <!-- 错误提示 -->
+  <div v-if="errorMessage" class="error-message">
+    <div class="error-content">
+      <span class="error-icon">⚠️</span>
+      <span class="error-text">{{ errorMessage }}</span>
+      <button class="error-close" @click="clearError">×</button>
+    </div>
+  </div>
+  
   <RankedFilter @confirmFilter="handleConfirmFilter" />
   <div v-if="isLoading" class="content-container">
     <div class="loading-container">
@@ -55,12 +64,16 @@ import "@/assets/main.css";
 import { ref, onMounted, computed, onActivated, watch } from "vue";
 import { useStatsStore } from "@/stores/stats.ts";
 import SvgIcon from "@/components/icons/index.vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import RankedFilter from "@/components/RankedFilter.vue";
 import Pagination from "@/components/Pagination.vue";
 
 const router = useRouter();
+const route = useRoute();
 const statsStore = useStatsStore();
+
+// 错误提示相关
+const errorMessage = ref<string>('');
 const isLoading = computed(() => statsStore.isLoading);
 const statsdata = computed(() => statsStore.currStats);
 const filteredData = ref<any[]>([]);
@@ -92,6 +105,20 @@ const openVideo = (url: string) => {
   window.open(url, "_blank");
 };
 
+// 清除错误提示
+const clearError = () => {
+  errorMessage.value = '';
+};
+
+// 检查URL中的错误参数
+const checkUrlError = () => {
+  if (route.query.error === 'unauthorized') {
+    errorMessage.value = '您没有权限访问该页面，需要管理员权限';
+    // 清除URL中的错误参数
+    router.replace({ query: {} });
+  }
+};
+
 const handleConfirmFilter = (filter: { igt: string; nickname: string }) => {
   if (filter.igt === "0,99" && filter.nickname === "") {
     filteredData.value = statsdata.value;
@@ -118,6 +145,8 @@ onMounted(async () => {
   if (statsdata.value.length > 0) {
     filteredData.value = statsdata.value;
   }
+  // 检查URL中的错误参数
+  checkUrlError();
 });
 
 onActivated(() => {
@@ -130,6 +159,8 @@ onActivated(() => {
     filteredData.value = statsdata.value;
     page.value = 1; // 重置到第一页
   }
+  // 检查URL中的错误参数
+  checkUrlError();
 });
 </script>
 
@@ -295,7 +326,56 @@ onActivated(() => {
     padding: 12px 6px;
     font-size: 0.9em;
   }
+}
 
+/* 错误提示样式 */
+.error-message {
+  position: fixed;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  max-width: 90%;
+}
 
+.error-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: #ff4444;
+  color: white;
+  padding: 16px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(255, 68, 68, 0.3);
+  border: 1px solid #ff6666;
+}
+
+.error-icon {
+  font-size: 18px;
+}
+
+.error-text {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.error-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.error-close:hover {
+  background-color: rgba(255, 255, 255, 0.2);
 }
 </style>

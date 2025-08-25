@@ -38,9 +38,11 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import useAuthStore from "@/stores/auth";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
+import { getRedirectPath, clearRedirectPath } from "@/router/guards";
 
 const router = useRouter();
+const route = useRoute();
 const authStore = useAuthStore();
 
 const email = ref("");
@@ -53,7 +55,13 @@ const handleLogin = async () => {
   } else {
     // 等待一下让认证状态更新完成
     await new Promise((resolve) => setTimeout(resolve, 100));
-    router.push("/");
+    
+    // 获取重定向路径
+    const redirectPath = getRedirectPath();
+    clearRedirectPath();
+    
+    // 跳转到目标页面或首页
+    router.push(redirectPath);
   }
 };
 </script>

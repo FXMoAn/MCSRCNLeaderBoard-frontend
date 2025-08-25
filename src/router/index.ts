@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Rank from "@/views/Rank.vue";
+import { setupRouteGuards, setupRouteErrorHandling } from "./guards";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -64,5 +65,9 @@ const router = createRouter({
     },
   ],
 });
+
+// 设置路由守卫
+setupRouteGuards(router);
+setupRouteErrorHandling(router);
 
 export default router;
