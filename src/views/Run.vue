@@ -35,6 +35,10 @@
           <span class="info-value">{{ runInfo.type }}</span>
         </div>
         <div class="info-item">
+          <span class="info-label">种子</span>
+          <span class="info-value">{{ runInfo.seed || "无" }}</span>
+        </div>
+        <div class="info-item">
           <span class="info-label">备注</span>
           <span class="info-value">{{ runInfo.remarks || "无" }}</span>
         </div>
@@ -146,10 +150,20 @@ onBeforeMount(() => {
 
 .info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   width: 100%;
   box-sizing: border-box;
+}
+
+.info-grid .info-item:nth-child(7) {
+  grid-column: 1 / -1;
+}
+
+.info-grid .info-item:nth-child(7) .info-value {
+  white-space: normal;
+  word-wrap: break-word;
+  overflow: visible;
 }
 
 .info-item {
@@ -163,6 +177,7 @@ onBeforeMount(() => {
   transition: all 0.2s ease;
   box-sizing: border-box;
   min-width: 0;
+  overflow: hidden;
 }
 
 .info-item:hover {
@@ -183,6 +198,9 @@ onBeforeMount(() => {
   color: #fff;
   font-size: 1.2em;
   font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .igt-value {
@@ -190,6 +208,9 @@ onBeforeMount(() => {
   font-family: "Courier New", monospace;
   font-weight: 600;
   font-size: 1.4em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .loading-container {
@@ -237,6 +258,10 @@ onBeforeMount(() => {
   .info-grid {
     grid-template-columns: 1fr;
     gap: 12px;
+  }
+  
+  .info-grid .info-item:nth-child(7) {
+    grid-column: 1;
   }
 
   .info-item {

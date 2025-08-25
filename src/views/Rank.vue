@@ -1,8 +1,5 @@
 <template>
-  <!-- <ButtonGroup
-      class="button-group"
-      @selection-changed="handleSelectionChange"
-    /> -->
+  <RankedFilter @confirmFilter="handleConfirmFilter" />
   <div v-if="isLoading" class="content-container">
     <div class="loading-container">
       <div class="loading-spinner"></div>
@@ -27,7 +24,7 @@
             class="stats"
             @click="navToRunDetail(info.run_id)"
           >
-            <td class="rank-cell">{{ getRank(index) }}</td>
+            <td class="rank-cell">{{ info.rank }}</td>
             <td class="player-cell">{{ info.nickname }}</td>
             <td class="igt-cell">{{ info.igt }}</td>
             <td class="date-cell">{{ info.date }}</td>
@@ -60,20 +57,22 @@
 
 <script setup lang="ts">
 import "@/assets/main.css";
-import { ref, onMounted, computed, onActivated } from "vue";
+import { ref, onMounted, computed, onActivated, watch } from "vue";
 import { useStatsStore } from "@/stores/stats.ts";
 import SvgIcon from "@/components/icons/index.vue";
 import { useRouter } from "vue-router";
+import RankedFilter from "@/components/RankedFilter.vue";
 
 const router = useRouter();
 const statsStore = useStatsStore();
 const isLoading = computed(() => statsStore.isLoading);
 const statsdata = computed(() => statsStore.currStats);
+const filteredData = ref<any[]>([]);
 const slicedata = computed(() =>
-  statsdata.value.slice((page.value - 1) * 10, page.value * 10)
+  filteredData.value.slice((page.value - 1) * 10, page.value * 10)
 );
 const page = ref(1);
-const pages = computed(() => statsStore.pages);
+const pages = computed(() => Math.ceil(filteredData.value.length / 10));
 
 //获取数据
 const handleSelectionChange = ({
@@ -84,11 +83,6 @@ const handleSelectionChange = ({
   type: string;
 }) => {
   statsStore.getStats(version, type);
-};
-
-// 规范每个数据的格式
-const getRank = (index: number) => {
-  return index + 1 + (page.value - 1) * 10;
 };
 
 // 实现页码增减，内容改变
@@ -112,11 +106,28 @@ const openVideo = (url: string) => {
   window.open(url, "_blank");
 };
 
+const handleConfirmFilter = (filter: { igt: string; nickname: string }) => {
+  if (filter.igt === "0,99" && filter.nickname === "") {
+    filteredData.value = statsdata.value;
+  } else {
+  filteredData.value = statsdata.value.filter((item) => {
+    return (
+      Number(item.igt.split(":")[0]) >= Number(filter.igt.split(",")[0]) &&
+      Number(item.igt.split(":")[0]) < Number(filter.igt.split(",")[1]) &&
+        item.nickname.toLowerCase().includes(filter.nickname.toLowerCase())
+      );
+    });
+  }
+};
+
+watch(statsdata, (newVal) => {
+  filteredData.value = newVal;
+});
+
 onMounted(() => {
   statsStore.getStats("1.16.1", "RSG");
 });
 
-// 当页面被激活时（从其他页面返回），检查是否需要重新获取数据
 onActivated(() => {
   // 如果当前没有数据，则重新获取
   if (statsdata.value.length === 0) {

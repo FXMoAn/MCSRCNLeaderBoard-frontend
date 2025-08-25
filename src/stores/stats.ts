@@ -15,6 +15,7 @@ export interface Run {
   videolink: string;
   remarks: string;
   seed: string;
+  rank: number;
 }
 
 export const useStatsStore = defineStore('stats', () => {
@@ -35,6 +36,10 @@ export const useStatsStore = defineStore('stats', () => {
         console.error('get_leaderboard error', error);
         return [];
       }
+      data.map((item: Run, index: number) => {
+        item.rank = index + 1
+        return item;
+      });
       return data;
     } catch (err) {
       console.error('get_leaderboard error', err);
