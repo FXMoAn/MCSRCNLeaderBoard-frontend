@@ -43,15 +43,10 @@
         </tbody>
       </table>
     </div>
-    <div class="choosepage">
-      <button class="control prev" @click="prevpage" :disabled="page <= 1">
-        <span>&lt;</span>
-      </button>
-      <div class="pagenumber">{{ page }}/{{ pages }}</div>
-      <button class="control next" @click="nextpage" :disabled="page >= pages">
-        <span>&gt;</span>
-      </button>
-    </div>
+    <Pagination 
+      v-model:currentPage="page"
+      :totalPages="pages"
+    />
   </div>
 </template>
 
@@ -62,6 +57,7 @@ import { useStatsStore } from "@/stores/stats.ts";
 import SvgIcon from "@/components/icons/index.vue";
 import { useRouter } from "vue-router";
 import RankedFilter from "@/components/RankedFilter.vue";
+import Pagination from "@/components/Pagination.vue";
 
 const router = useRouter();
 const statsStore = useStatsStore();
@@ -85,18 +81,8 @@ const handleSelectionChange = ({
   statsStore.getStats(version, type);
 };
 
-// 实现页码增减，内容改变
-const prevpage = () => {
-  if (page.value > 1) {
-    page.value -= 1;
-  }
-};
-
-const nextpage = () => {
-  if (page.value < pages.value) {
-    page.value += 1;
-  }
-};
+// 页码变化时重置到第一页（如果需要的话）
+// 新的分页组件会自动处理页码变化
 
 const navToRunDetail = (id: number) => {
   router.push(`/run/${id}`);
@@ -122,16 +108,27 @@ const handleConfirmFilter = (filter: { igt: string; nickname: string }) => {
 
 watch(statsdata, (newVal) => {
   filteredData.value = newVal;
-});
+  // 数据变化时重置页码
+  page.value = 1;
+}, { immediate: true }); 
 
-onMounted(() => {
-  statsStore.getStats("1.16.1", "RSG");
+onMounted(async () => {
+  await statsStore.getStats("1.16.1", "RSG");
+  // 确保数据初始化
+  if (statsdata.value.length > 0) {
+    filteredData.value = statsdata.value;
+  }
 });
 
 onActivated(() => {
-  // 如果当前没有数据，则重新获取
+  // 每次激活页面时，确保数据正确显示
   if (statsdata.value.length === 0) {
+    // 如果没有数据，重新获取
     statsStore.getStats("1.16.1", "RSG");
+  } else {
+    // 如果有数据，重新初始化filteredData和页码
+    filteredData.value = statsdata.value;
+    page.value = 1; // 重置到第一页
   }
 });
 </script>
@@ -278,49 +275,7 @@ onActivated(() => {
   transform: scale(1.05);
 }
 
-.choosepage {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 30px;
-  gap: 16px;
-  font-size: 1rem;
-}
 
-.control {
-  background-color: #333;
-  color: white;
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  border: 1px solid #555;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.control:hover:not(:disabled) {
-  background-color: #444;
-  border-color: #00bcd4;
-  transform: translateY(-2px);
-}
-
-.control:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.pagenumber {
-  color: white;
-  font-weight: 500;
-  min-width: 60px;
-  text-align: center;
-}
 
 @media (max-width: 780px) {
   .content-container {
@@ -341,14 +296,6 @@ onActivated(() => {
     font-size: 0.9em;
   }
 
-  .choosepage {
-    margin-top: 20px;
-    gap: 12px;
-  }
 
-  .control {
-    width: 36px;
-    height: 36px;
-  }
 }
 </style>
