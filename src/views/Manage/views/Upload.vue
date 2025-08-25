@@ -109,7 +109,24 @@
       </div>
 
       <div class="form-actions">
-        <button class="submit-button" type="submit">上传记录</button>
+        <button 
+          class="submit-button" 
+          type="submit"
+          :disabled="isSubmitting"
+          :class="{ 'submitting': isSubmitting }"
+        >
+          <span v-if="!isSubmitting">上传记录</span>
+          <span v-else>上传中...</span>
+        </button>
+        
+        <button 
+          type="button"
+          class="clear-button"
+          @click="clearForm"
+          :disabled="isSubmitting"
+        >
+          清空表单
+        </button>
       </div>
     </form>
   </div>
@@ -138,6 +155,9 @@ const videoLink = ref("");
 const remarks = ref("");
 const seed = ref("");
 const nickname = ref("");
+
+// 防重复提交状态
+const isSubmitting = ref(false);
 
 const igt = computed(() => {
   return (
@@ -225,22 +245,48 @@ const insertVerifiedRun = async () => {
     return;
   }
   alert("上传成功");
+  
+  // 上传成功后清空表单
+  clearForm();
 };
 
-const uploadRun = () => {
+/**
+ * 清空所有表单输入
+ */
+const clearForm = () => {
+  // 重置为默认值
+  version.value = "1.16.1";
+  type.value = "RSG";
+  igtMinute.value = 0;
+  igtSecond.value = 0;
+  igtMillisecond.value = 0;
+  date.value = new Date().toISOString().split("T")[0];
+  videoLink.value = "";
+  remarks.value = "";
+  seed.value = "";
+  nickname.value = "";
+};
+
+const uploadRun = async () => {
+  // 防重复提交检查
+  if (isSubmitting.value) {
+    alert("正在上传中，请勿重复提交");
+    return;
+  }
+  
   if (!checkRequiredInfo()) {
     return;
   }
-  insertVerifiedRun();
-  console.log(
-    version.value,
-    type.value,
-    igt.value,
-    date.value,
-    videoLink.value,
-    remarks.value,
-    seed.value
-  );
+  
+  try {
+    isSubmitting.value = true; // 设置提交状态
+    await insertVerifiedRun();
+  } catch (error) {
+    console.error("上传过程中出现错误:", error);
+    alert("上传失败，请重试");
+  } finally {
+    isSubmitting.value = false; // 重置提交状态
+  }
 };
 </script>
 
@@ -354,6 +400,7 @@ const uploadRun = () => {
 .form-actions {
   display: flex;
   justify-content: center;
+  gap: 16px;
   padding-top: 20px;
 }
 
@@ -376,6 +423,53 @@ const uploadRun = () => {
 }
 
 .submit-button:active {
+  transform: translateY(0);
+}
+
+.submit-button:disabled {
+  background: linear-gradient(135deg, #666, #555);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  opacity: 0.7;
+}
+
+.submit-button.submitting {
+  background: linear-gradient(135deg, #0097a7, #00695f);
+  cursor: wait;
+}
+
+.submit-button.submitting:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.clear-button {
+  background: linear-gradient(135deg, #666, #555);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 14px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clear-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #777, #666);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(102, 102, 102, 0.3);
+}
+
+.clear-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.clear-button:active:not(:disabled) {
   transform: translateY(0);
 }
 
