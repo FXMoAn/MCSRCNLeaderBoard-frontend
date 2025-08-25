@@ -39,3 +39,12 @@ a:hover {
   display: block;
   clear: both;
 }
+
+.button-common {
+  border: 1px solid #fff;
+  border-radius: 5px;
+  padding: 0 10px;
+  background-color: #fff;
+  color: #000;
+  cursor: pointer;
+}
