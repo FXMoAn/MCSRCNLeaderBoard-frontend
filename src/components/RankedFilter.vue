@@ -2,7 +2,7 @@
   <div class="ranked-filter">
     <div class="filter-group">
       <label class="filter-label">IGT筛选</label>
-      <select v-model="igt" class="filter-select">
+      <select v-model="igt" class="filter-select" @change="confirmFilter">
         <option value="0,99" selected>全部</option>
         <option value="0,10">sub10</option>
         <option value="10,13">sub10-13</option>
@@ -19,11 +19,12 @@
         v-model="nickname" 
         class="filter-input"
         placeholder="输入用户名筛选"
+        @keydown.enter="confirmFilter"
       />
     </div>
     
     <div class="filter-actions">
-      <button @click="confirmFilter" @keydown.enter="confirmFilter" class="filter-button confirm">
+      <button @click="confirmFilter" class="filter-button confirm">
         确定
       </button>
       <button @click="clearFilter" class="filter-button clear">
