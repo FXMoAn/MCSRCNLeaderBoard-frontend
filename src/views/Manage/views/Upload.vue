@@ -25,6 +25,7 @@
             id="nickname"
             v-model="nickname"
             placeholder="请输入用户名"
+            autocomplete="off"
           />
         </div>
 
@@ -38,6 +39,7 @@
               v-model="igtMinute"
               placeholder="分"
               min="0"
+              autocomplete="off"
             />
             <span class="igt-separator">:</span>
             <input
@@ -48,6 +50,7 @@
               placeholder="秒"
               min="0"
               max="59"
+              autocomplete="off"
             />
             <span class="igt-separator">:</span>
             <input
@@ -58,13 +61,14 @@
               placeholder="毫秒"
               min="0"
               max="999"
+              autocomplete="off"
             />
           </div>
         </div>
 
         <div class="form-group">
           <label class="form-label" for="date">日期</label>
-          <input class="form-input" type="date" id="date" v-model="date" />
+          <input class="form-input" type="date" id="date" v-model="date" autocomplete="off" />
         </div>
 
         <div class="form-group">
@@ -75,6 +79,7 @@
             id="video-link"
             v-model="videoLink"
             placeholder="请输入视频链接"
+            autocomplete="off"
           />
         </div>
 
@@ -86,6 +91,7 @@
             id="seed"
             v-model="seed"
             placeholder="请输入种子"
+            autocomplete="off"
           />
         </div>
 
@@ -97,6 +103,7 @@
             v-model="remarks"
             placeholder="请输入备注信息"
             rows="3"
+            autocomplete="off"
           />
         </div>
       </div>

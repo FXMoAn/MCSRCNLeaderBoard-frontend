@@ -8,6 +8,7 @@
           class="form-input"
           placeholder="请输入新用户的昵称"
           v-model="newUserNickname"
+          autocomplete="off"
         />
         <button class="form-button" @click="handleNewUserCreate">创建</button>
       </div>
