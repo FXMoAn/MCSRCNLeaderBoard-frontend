@@ -3,7 +3,7 @@
     <div class="section-title">账号绑定</div>
 
     <div class="binding-section">
-      <div class="section-subtitle">老用户绑定账号（如果之前投过成绩，可以先搜一下）</div>
+      <div class="section-subtitle">老用户绑定账号（如果之前投过成绩，可以先搜一下）如果找不到或错绑，请联系管理员</div>
       <div class="form-row">
         <div class="custom-select-container">
           <input
@@ -45,7 +45,7 @@
     </div>
 
     <div class="binding-section">
-      <div class="section-subtitle">新用户输入昵称</div>
+      <div class="section-subtitle">新用户输入昵称（如果没有投过榜，可以在这里绑定，最好是B站名）</div>
       <div class="form-row">
         <input
           type="text"
