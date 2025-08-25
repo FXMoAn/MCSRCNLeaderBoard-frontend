@@ -23,7 +23,7 @@
     </div>
     
     <div class="filter-actions">
-      <button @click="confirmFilter" class="filter-button confirm">
+      <button @click="confirmFilter" @keydown.enter="confirmFilter" class="filter-button confirm">
         确定
       </button>
       <button @click="clearFilter" class="filter-button clear">
