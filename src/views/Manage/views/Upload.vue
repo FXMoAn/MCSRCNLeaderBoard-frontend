@@ -1,6 +1,6 @@
 <template>
   <div class="upload-container">
-    <h2 class="upload-title">上传成绩记录</h2>
+    <div class="upload-title">上传成绩记录</div>
     <form class="upload-form" @submit.prevent="uploadRun">
       <div class="form-grid">
         <div class="form-group">

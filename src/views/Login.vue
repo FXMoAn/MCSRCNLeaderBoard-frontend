@@ -1,7 +1,7 @@
 <template>
   <div class="login-container">
     <div class="form-card">
-      <h2 class="form-title">登录</h2>
+      <div class="form-title">登录</div>
       <form class="login-form" @submit.prevent="handleLogin">
         <div class="form-group">
           <label for="email" class="form-label">邮箱</label>

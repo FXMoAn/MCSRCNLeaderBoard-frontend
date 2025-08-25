@@ -1,6 +1,6 @@
 <template>
   <div class="mcname-container" v-if="!userStore.isBindMinecraftId">
-    <h4 class="section-subtitle">绑定Minecraft用户名</h4>
+    <div class="section-subtitle">绑定Minecraft用户名（paceman绑定的账号/ranked使用账号）</div>
     <div class="form-row">
       <input
         type="text"
@@ -14,7 +14,7 @@
 
   <div class="mcname-container" v-else>
     <div class="mcname-info">
-      <h4 class="section-subtitle">已绑定Minecraft用户名</h4>
+      <div class="section-subtitle">已绑定Minecraft用户名</div>
       <p class="mcname-display">{{ userStore.userInfo.ingamename }}</p>
     </div>
   </div>

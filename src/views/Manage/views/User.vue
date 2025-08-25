@@ -1,7 +1,7 @@
 <template>
   <div class="user-container">
     <div class="binding-section">
-      <h4 class="section-subtitle">创建新用户</h4>
+      <div class="section-subtitle">创建新用户</div>
       <div class="form-row">
         <input
           type="text"

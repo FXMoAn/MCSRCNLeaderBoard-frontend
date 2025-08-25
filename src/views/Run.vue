@@ -12,7 +12,7 @@
       ></iframe>
     </div>
     <div class="info-container">
-      <h2 class="info-title">记录详情</h2>
+      <div class="info-title">记录详情</div>
       <div class="info-grid">
         <div class="info-item">
           <span class="info-label">玩家</span>

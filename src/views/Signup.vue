@@ -1,7 +1,7 @@
 <template>
   <div class="signup-container">
     <div class="form-card">
-      <h2 class="form-title">注册</h2>
+      <div class="form-title">注册</div>
       <form class="signup-form" @submit.prevent="handleSignup">
         <div class="form-group">
           <label for="email" class="form-label">邮箱</label>

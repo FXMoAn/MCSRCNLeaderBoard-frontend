@@ -1,9 +1,20 @@
 <template>
   <div class="profile-container">
-    <h1>Profile</h1>
+    <div>开发中</div>
   </div>
 </template>
 
 <script setup lang="ts"></script>
 
-<style scoped></style>
+<style scoped>
+.profile-container {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  font-size: 24px;
+  font-weight: bold;
+  color: #fff;
+  border-radius: 10px;
+  padding: 20px;
+}
+</style>
