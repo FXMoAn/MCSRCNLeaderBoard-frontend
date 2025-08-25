@@ -34,9 +34,9 @@
             @click="navToRunDetail(info.run_id)"
           >
             <td class="rank-cell">{{ info.rank }}</td>
-            <td class="player-cell">{{ info.nickname }}</td>
-            <td class="igt-cell">{{ info.igt }}</td>
-            <td class="date-cell">{{ info.date }}</td>
+            <td class="player-cell" v-html="safeDisplay(info.nickname)"></td>
+            <td class="igt-cell" v-html="safeDisplay(info.igt)"></td>
+            <td class="date-cell" v-html="safeDisplay(info.date)"></td>
             <td class="video-cell">
               <a
                 :href="info.videolink"
@@ -67,6 +67,7 @@ import SvgIcon from "@/components/icons/index.vue";
 import { useRouter, useRoute } from "vue-router";
 import RankedFilter from "@/components/RankedFilter.vue";
 import Pagination from "@/components/Pagination.vue";
+import { safeDisplay } from "@/utils/security";
 
 const router = useRouter();
 const route = useRoute();

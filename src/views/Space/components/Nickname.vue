@@ -71,6 +71,7 @@ import { ref, onMounted, computed } from "vue";
 import { supabase } from "@/lib/supabaseClient";
 import useUserStore from "@/stores/user";
 import { useRouter } from "vue-router";
+import { validateNickname, sanitizeInput } from "@/utils/security";
 
 const userStore = useUserStore();
 const router = useRouter();
@@ -142,11 +143,19 @@ const handleBinding = async () => {
 };
 
 const handleNewUserBinding = async () => {
-  if (!newUserNickname.value) {
-    alert("请输入昵称");
+  // 使用安全工具函数进行输入验证
+  const validation = validateNickname(newUserNickname.value);
+  
+  if (!validation.isValid) {
+    alert(validation.message);
     return;
   }
-  await userStore.createNewUser(newUserNickname.value);
+  
+  // 清理输入
+  const sanitizedNickname = sanitizeInput(newUserNickname.value.trim());
+  
+  await userStore.createNewUser(sanitizedNickname);
+  newUserNickname.value = ''; // 清空输入
   router.go(0);
 };
 

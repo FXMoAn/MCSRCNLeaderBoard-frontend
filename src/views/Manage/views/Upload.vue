@@ -118,6 +118,15 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { supabase } from "@/lib/supabaseClient";
+import { 
+  validateNickname, 
+  validateRemarks, 
+  validateSeed, 
+  validateVideoLink,
+  sanitizeInput,
+  sanitizeVideoLink,
+  sanitizeTextInput
+} from "@/utils/security";
 
 const version = ref("1.16.1");
 const type = ref("RSG");
@@ -157,10 +166,20 @@ const checkRequiredInfo = () => {
     alert("日期不能为空");
     return false;
   }
-  if (videoLink.value === "") {
-    alert("视频链接不能为空");
+  
+  // 使用安全工具函数验证输入
+  const nicknameValidation = validateNickname(nickname.value);
+  if (!nicknameValidation.isValid) {
+    alert(nicknameValidation.message);
     return false;
   }
+  
+  const videoLinkValidation = validateVideoLink(videoLink.value);
+  if (!videoLinkValidation.isValid) {
+    alert(videoLinkValidation.message);
+    return false;
+  }
+  
   return true;
 };
 
@@ -183,16 +202,22 @@ const getNameIdByNickname = async (nickname: string) => {
 };
 
 const insertVerifiedRun = async () => {
-  const userId = await getNameIdByNickname(nickname.value);
+  // 使用安全工具函数清理输入
+  const sanitizedNickname = sanitizeInput(nickname.value.trim());
+  const sanitizedRemarks = sanitizeTextInput(remarks.value.trim());
+  const sanitizedSeed = sanitizeTextInput(seed.value.trim());
+  const sanitizedVideoLink = sanitizeVideoLink(videoLink.value.trim());
+  
+  const userId = await getNameIdByNickname(sanitizedNickname);
   const { data, error } = await supabase.from("runs").insert({
     userid: userId,
     version: version.value,
     type: type.value,
     igt: igt.value,
     date: date.value.replace(/-/g, "/"),
-    videolink: videoLink.value,
-    remarks: remarks.value,
-    seed: seed.value,
+    videolink: sanitizedVideoLink,
+    remarks: sanitizedRemarks,
+    seed: sanitizedSeed,
     status: "verified",
   });
   if (error) {

@@ -21,28 +21,39 @@ import { ref } from 'vue';
 import useUserStore from '@/stores/user';
 import { useRouter } from 'vue-router';
 import { supabase } from '@/lib/supabaseClient';
+import { validateNickname, sanitizeInput } from '@/utils/security';
 
 const userStore = useUserStore();
 const router = useRouter();
 const newUserNickname = ref('');
 
 const handleNewUserCreate = async () => {
-  if (!newUserNickname.value) {
-    alert('请输入昵称');
+  // 使用安全工具函数进行输入验证
+  const validation = validateNickname(newUserNickname.value);
+  
+  if (!validation.isValid) {
+    alert(validation.message);
     return;
   }
+  
+  // 清理输入
+  const sanitizedNickname = sanitizeInput(newUserNickname.value.trim());
+  
   try {
     const { data, error } = await supabase
       .from('users')
-      .insert({ nickname: newUserNickname.value })
+      .insert({ nickname: sanitizedNickname })
       .select();
     if (error) {
       console.error(error);
+      alert('创建失败，请重试');
     } else {
       alert('创建成功');
+      newUserNickname.value = ''; // 清空输入
     }
   } catch (error) {
     console.error(error);
+    alert('创建失败，请重试');
   }
   router.go(0);
 };
