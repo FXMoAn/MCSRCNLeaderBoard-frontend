@@ -15,7 +15,10 @@
   <div class="mcname-container" v-else>
     <div class="mcname-info">
       <div class="section-subtitle">已绑定Minecraft用户名</div>
-      <p class="mcname-display">{{ userStore.userInfo.ingamename }}</p>
+      <div class="mcname-display-container">
+        <p class="mcname-display">{{ userStore.userInfo.ingamename }}</p>
+        <button class="form-button refresh-button" @click="handleRefreshMCID">刷新</button>
+      </div>
     </div>
   </div>
 </template>
@@ -34,6 +37,10 @@ const handleGetMCID = async () => {
     return;
   }
   await userStore.bindMinecraftId(ingamename.value);
+};
+
+const handleRefreshMCID = async () => {
+  await userStore.refreshMinecraftId();
 };
 </script>
 
@@ -110,6 +117,13 @@ const handleGetMCID = async () => {
   padding: 20px;
 }
 
+.mcname-display-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
 .mcname-display {
   color: #00bcd4;
   font-size: 1.2em;
@@ -119,6 +133,11 @@ const handleGetMCID = async () => {
   background-color: rgba(0, 188, 212, 0.1);
   border-radius: 8px;
   border: 1px solid rgba(0, 188, 212, 0.3);
+  flex: 1;
+}
+
+.refresh-button {
+  max-width: 100px;
 }
 
 @media (max-width: 768px) {
