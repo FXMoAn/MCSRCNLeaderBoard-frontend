@@ -11,35 +11,64 @@
         <option value="20,99">20min+</option>
       </select>
     </div>
-    
+
     <div class="filter-group">
       <label class="filter-label">用户名</label>
-      <input 
-        type="text" 
-        v-model="nickname" 
+      <input
+        type="text"
+        v-model="nickname"
         class="filter-input"
         placeholder="输入用户名筛选"
         @keydown.enter="confirmFilter"
       />
     </div>
-    
+
     <div class="filter-actions">
-      <button @click="confirmFilter" class="filter-button confirm">
-        确定
-      </button>
-      <button @click="clearFilter" class="filter-button clear">
-        清空
-      </button>
+      <button @click="confirmFilter" class="filter-button confirm">确定</button>
+      <button @click="clearFilter" class="filter-button clear">清空</button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, defineEmits } from 'vue';
+import { ref, watch } from 'vue';
 
-const nickname = ref('');
-const igt = ref('0,99');
-const emit = defineEmits(['confirmFilter']);
+interface Props {
+  initialIgt?: string;
+  initialNickname?: string;
+}
+
+interface Emits {
+  (e: 'confirmFilter', filter: { igt: string; nickname: string }): void;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  initialIgt: '0,99',
+  initialNickname: '',
+});
+
+const emit = defineEmits<Emits>();
+
+// 使用props初始化本地状态
+const nickname = ref(props.initialNickname);
+const igt = ref(props.initialIgt);
+
+// 监听props变化，同步本地状态
+watch(
+  () => props.initialIgt,
+  (newVal) => {
+    igt.value = newVal;
+  },
+  { immediate: true }
+);
+
+watch(
+  () => props.initialNickname,
+  (newVal) => {
+    nickname.value = newVal;
+  },
+  { immediate: true }
+);
 
 const clearFilter = () => {
   igt.value = '0,99';
@@ -56,8 +85,6 @@ const confirmFilter = () => {
     nickname: nickname.value,
   });
 };
-
-
 </script>
 
 <style scoped>
@@ -164,16 +191,16 @@ const confirmFilter = () => {
     gap: 16px;
     padding: 16px;
   }
-  
+
   .filter-group {
     min-width: auto;
   }
-  
+
   .filter-actions {
     margin-left: 0;
     justify-content: center;
   }
-  
+
   .filter-button {
     flex: 1;
     max-width: 120px;
@@ -185,13 +212,13 @@ const confirmFilter = () => {
     padding: 12px;
     gap: 12px;
   }
-  
+
   .filter-select,
   .filter-input {
     padding: 8px 10px;
     font-size: 13px;
   }
-  
+
   .filter-button {
     padding: 8px 16px;
     font-size: 13px;

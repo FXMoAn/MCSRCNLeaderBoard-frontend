@@ -1,6 +1,6 @@
 <template>
   <div class="user-container">
-    <div class="binding-section">
+    <div class="operation-section">
       <div class="section-subtitle">创建新用户</div>
       <div class="form-row">
         <input
@@ -13,32 +13,61 @@
         <button class="form-button" @click="handleNewUserCreate">创建</button>
       </div>
     </div>
+    <div class="operation-section">
+      <div class="section-subtitle">修改用户名</div>
+      <div class="form-row">
+        <SearchSelect
+          v-model="oldNickname"
+          :options="userList"
+          option-key="id"
+          option-label="nickname"
+          :search-fields="['nickname']"
+          placeholder="请选择用户"
+          @select="handleUserSelect"
+        />
+        <input
+          type="text"
+          class="form-input"
+          placeholder="请输入新用户名"
+          v-model="newNickname"
+          autocomplete="off"
+        />
+        <button class="form-button" @click="handleUserUpdate">修改</button>
+      </div>
+    </div>
   </div>
 </template>
 
-<script setup>
-import { ref } from 'vue';
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
 import useUserStore from '@/stores/user';
 import { useRouter } from 'vue-router';
 import { supabase } from '@/lib/supabaseClient';
 import { validateNickname, sanitizeInput } from '@/utils/security';
+import SearchSelect from '@/components/common/SearchSelect.vue';
 
 const userStore = useUserStore();
 const router = useRouter();
+// 创建新用户
 const newUserNickname = ref('');
+
+// 修改用户名
+const userList = ref<any[]>([]);
+const oldNickname = ref('');
+const newNickname = ref('');
 
 const handleNewUserCreate = async () => {
   // 使用安全工具函数进行输入验证
   const validation = validateNickname(newUserNickname.value);
-  
+
   if (!validation.isValid) {
     alert(validation.message);
     return;
   }
-  
+
   // 清理输入
   const sanitizedNickname = sanitizeInput(newUserNickname.value.trim());
-  
+
   try {
     const { data, error } = await supabase
       .from('users')
@@ -57,10 +86,43 @@ const handleNewUserCreate = async () => {
   }
   router.go(0);
 };
+
+const getUserList = async () => {
+  const { data, error } = await supabase.from('users').select('*');
+  if (error) {
+    alert('获取用户列表失败');
+    return;
+  }
+  userList.value = data.map((user) => ({
+    id: user.id,
+    nickname: user.nickname,
+  }));
+};
+
+const handleUserSelect = (user: any) => {
+  oldNickname.value = user.nickname;
+};
+
+const handleUserUpdate = async () => {
+  const { data, error } = await supabase
+    .from('users')
+    .update({ nickname: newNickname.value })
+    .eq('nickname', oldNickname.value);
+  if (error) {
+    alert('修改失败');
+    return;
+  }
+  alert('修改成功');
+  router.go(0);
+};
+
+onMounted(() => {
+  getUserList();
+});
 </script>
 
 <style scoped>
-.binding-section {
+.operation-section {
   margin-bottom: 30px;
   padding: 20px;
   background-color: rgba(255, 255, 255, 0.02);

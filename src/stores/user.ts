@@ -26,6 +26,7 @@ const useUserStore = defineStore('user', () => {
     return localUserId.value && userInfo.value.role === 'admin';
   });
 
+  // 用于获取用户信息
   const initUserInfo = async () => {
     try {
       loading.value = true;
@@ -86,13 +87,15 @@ const useUserStore = defineStore('user', () => {
     }
   };
 
+  // 用于操作Minecraft ID
   const getMinecraftId = async (ingamename: string) => {
     try {
       const res = await axios.get(
-        `https://mcsrcors.fxmoan148.workers.dev/?url=https://api.mojang.com/users/profiles/minecraft/${ingamename}`
+        // `https://mcsrcors.fxmoan148.workers.dev/?url=https://api.mojang.com/users/profiles/minecraft/${ingamename}`
+        `https://playerdb.co/api/player/minecraft/${ingamename}`
       );
-      if (res.data && res.data.id) {
-        userInfo.value.mc_uuid = res.data.id;
+      if (res.data.success = true) {
+        userInfo.value.mc_uuid = res.data.data.player.raw_id;
         userInfo.value!.ingamename = ingamename;
         return true;
       } else {
@@ -101,6 +104,24 @@ const useUserStore = defineStore('user', () => {
       }
     } catch (error) {
       console.error('获取Minecraft ID失败:', error);
+      return false;
+    }
+  };
+
+  const getMinecraftNickname = async (mc_uuid: string) => {
+    try {
+      const res = await axios.get(
+        `https://mcsrcors.fxmoan148.workers.dev/?url=https://sessionserver.mojang.com/session/minecraft/profile/${mc_uuid}`
+      );
+      if (res.data.id && res.data.name) {
+        userInfo.value.ingamename = res.data.name;
+        return true;
+      } else {
+        alert('获取Minecraft昵称失败，请检查MC ID是否正确');
+        return false;
+      }
+    } catch (error) {
+      console.error('获取Minecraft昵称失败:', error);
       return false;
     }
   };
@@ -119,6 +140,28 @@ const useUserStore = defineStore('user', () => {
         console.error(error);
       } else {
         alert('绑定成功');
+        // 更新本地存储
+        localStorage.setItem('userInfo', JSON.stringify(userInfo.value));
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const refreshMinecraftId = async () => {
+    const success = await getMinecraftNickname(userInfo.value.mc_uuid);
+    if (!success) {
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .update({ ingamename: userInfo.value.ingamename })
+        .eq('user_id', localUserId.value);
+      if (error) {
+        console.error(error);
+      } else {
+        alert('刷新成功');
         // 更新本地存储
         localStorage.setItem('userInfo', JSON.stringify(userInfo.value));
       }
@@ -191,6 +234,7 @@ const useUserStore = defineStore('user', () => {
     bindUser,
     getMinecraftId,
     bindMinecraftId,
+    refreshMinecraftId,
     createNewUser,
     setUserInfo,
     clearUserInfo,

@@ -19,13 +19,14 @@
 
         <div class="form-group">
           <label class="form-label" for="nickname">用户名</label>
-          <input
-            class="form-input"
-            type="text"
-            id="nickname"
+          <SearchSelect
             v-model="nickname"
-            placeholder="请输入用户名"
-            autocomplete="off"
+            :options="userList"
+            option-key="id"
+            option-label="nickname"
+            :search-fields="['nickname']"
+            placeholder="请选择用户"
+            @select="handleUserSelect"
           />
         </div>
 
@@ -133,7 +134,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { supabase } from "@/lib/supabaseClient";
 import { 
   validateNickname, 
@@ -144,6 +145,7 @@ import {
   sanitizeVideoLink,
   sanitizeTextInput
 } from "@/utils/security";
+import SearchSelect from "@/components/common/SearchSelect.vue";
 
 const version = ref("1.16.1");
 const type = ref("RSG");
@@ -155,6 +157,8 @@ const videoLink = ref("");
 const remarks = ref("");
 const seed = ref("");
 const nickname = ref("");
+
+const userList = ref<any[]>([]);
 
 // 防重复提交状态
 const isSubmitting = ref(false);
@@ -219,6 +223,22 @@ const getNameIdByNickname = async (nickname: string) => {
     alert("获取用户ID失败");
     return;
   }
+};
+
+const getUserList = async () => {
+  const { data, error } = await supabase.from("users").select("*")
+  if (error) {
+    alert("获取用户列表失败");
+    return;
+  }
+  userList.value = data.map((user) => ({
+    id: user.id,
+    nickname: user.nickname,
+  }));
+};
+
+const handleUserSelect = (user: any) => {
+  nickname.value = user.nickname;
 };
 
 const insertVerifiedRun = async () => {
@@ -288,6 +308,10 @@ const uploadRun = async () => {
     isSubmitting.value = false; // 重置提交状态
   }
 };
+
+onMounted(() => {
+  getUserList();
+});
 </script>
 
 <style scoped>
