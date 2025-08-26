@@ -1,6 +1,6 @@
 <template>
   <div class="user-container">
-    <div class="binding-section">
+    <div class="operation-section">
       <div class="section-subtitle">创建新用户</div>
       <div class="form-row">
         <input
@@ -60,7 +60,7 @@ const handleNewUserCreate = async () => {
 </script>
 
 <style scoped>
-.binding-section {
+.operation-section {
   margin-bottom: 30px;
   padding: 20px;
   background-color: rgba(255, 255, 255, 0.02);
