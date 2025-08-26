@@ -89,10 +89,11 @@ const useUserStore = defineStore('user', () => {
   const getMinecraftId = async (ingamename: string) => {
     try {
       const res = await axios.get(
-        `https://mcsrcors.fxmoan148.workers.dev/?url=https://api.mojang.com/users/profiles/minecraft/${ingamename}`
+        // `https://mcsrcors.fxmoan148.workers.dev/?url=https://api.mojang.com/users/profiles/minecraft/${ingamename}`
+        `https://playerdb.co/api/player/minecraft/${ingamename}`
       );
-      if (res.data && res.data.id) {
-        userInfo.value.mc_uuid = res.data.id;
+      if (res.data.success = true) {
+        userInfo.value.mc_uuid = res.data.data.player.raw_id;
         userInfo.value!.ingamename = ingamename;
         return true;
       } else {
