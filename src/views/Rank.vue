@@ -1,14 +1,18 @@
 <template>
   <!-- 通知提示 -->
-  <Notification 
+  <Notification
     v-model:visible="showNotification"
     :message="notificationMessage"
     :type="notificationType"
     :duration="5000"
     @close="hideNotification"
   />
-  
-  <RankedFilter @confirmFilter="handleConfirmFilter" />
+
+  <RankedFilter
+    @confirmFilter="handleConfirmFilter"
+    :initialIgt="state.igt"
+    :initialNickname="state.nickname"
+  />
   <div v-if="isLoading" class="content-container">
     <div class="loading-container">
       <div class="loading-spinner"></div>
@@ -28,11 +32,7 @@
           </tr>
         </thead>
         <tbody class="leaderboard-body">
-          <tr
-            v-for="(info, index) in slicedata"
-            class="stats"
-            @click="navToRunDetail(info.run_id)"
-          >
+          <tr v-for="(info, index) in slicedata" class="stats" @click="navToRunDetail(info.run_id)">
             <td class="rank-cell">{{ info.rank }}</td>
             <td class="player-cell" v-html="safeDisplay(info.nickname)"></td>
             <td class="igt-cell" v-html="safeDisplay(info.igt)"></td>
@@ -52,61 +52,90 @@
         </tbody>
       </table>
     </div>
-    <Pagination 
-      v-model:currentPage="page"
-      :totalPages="pages"
-    />
+    <Pagination v-model:currentPage="state.page" :totalPages="pages" />
   </div>
 </template>
 
 <script setup lang="ts">
-import "@/assets/main.css";
-import { ref, onMounted, computed, onActivated, watch } from "vue";
-import { useStatsStore } from "@/stores/stats.ts";
-import SvgIcon from "@/components/icons/index.vue";
-import { useRouter, useRoute } from "vue-router";
-import RankedFilter from "@/components/RankedFilter.vue";
-import Pagination from "@/components/Pagination.vue";
-import Notification from "@/components/Notification.vue";
-import { safeDisplay } from "@/utils/security";
+import '@/assets/main.css';
+import { ref, onMounted, computed, onActivated, watch } from 'vue';
+import { useStatsStore } from '@/stores/stats.ts';
+import SvgIcon from '@/components/icons/index.vue';
+import { useRouter, useRoute } from 'vue-router';
+import RankedFilter from '@/components/RankedFilter.vue';
+import Pagination from '@/components/Pagination.vue';
+import Notification from '@/components/Notification.vue';
+import { safeDisplay } from '@/utils/security';
+import { createURLStateManager } from '@/utils/urlStateManage';
+
+// 定义状态类型
+interface RankState {
+  version: string;
+  type: string;
+  igt: string;
+  nickname: string;
+  page: number;
+}
+
+// 创建状态管理器
+const stateManager = createURLStateManager<RankState>({
+  defaultState: {
+    version: '1.16.1',
+    type: 'RSG',
+    igt: '0,99',
+    nickname: '',
+    page: 1,
+  },
+  urlFields: ['version', 'type', 'igt', 'nickname', 'page'],
+  transformers: {
+    page: {
+      toUrl: (value) => value.toString(),
+      fromUrl: (value) => Number(value) || 1,
+    },
+  },
+  storageKey: 'rank_state',
+  storageExpiry: 24 * 60 * 60 * 1000,
+});
 
 const router = useRouter();
 const route = useRoute();
 const statsStore = useStatsStore();
+const state = stateManager.getState();
 
 // 通知提示相关
 const showNotification = ref<boolean>(false);
 const notificationMessage = ref<string>('');
 const notificationType = ref<'error' | 'success' | 'info'>('info');
+// 排名数据
 const isLoading = computed(() => statsStore.isLoading);
 const statsdata = computed(() => statsStore.currStats);
 const filteredData = ref<any[]>([]);
 const slicedata = computed(() =>
-  filteredData.value.slice((page.value - 1) * 10, page.value * 10)
+  filteredData.value.slice((state.value.page - 1) * 10, state.value.page * 10)
 );
-const page = ref(1);
+// 分页
 const pages = computed(() => Math.ceil(filteredData.value.length / 10));
 
-//获取数据
-const handleSelectionChange = ({
-  version,
-  type,
-}: {
-  version: string;
-  type: string;
-}) => {
+// 版本选择(暂时没用)
+const handleSelectionChange = ({ version, type }: { version: string; type: string }) => {
+  stateManager.setMultiple({
+    version,
+    type,
+    page: 1,
+  });
+
   statsStore.getStats(version, type);
+  stateManager.saveToStorage();
 };
 
-// 页码变化时重置到第一页（如果需要的话）
-// 新的分页组件会自动处理页码变化
-
+// 跳转至详情页
 const navToRunDetail = (id: number) => {
   router.push(`/run/${id}`);
 };
 
+// 打开视频链接
 const openVideo = (url: string) => {
-  window.open(url, "_blank");
+  window.open(url, '_blank');
 };
 
 // 显示通知
@@ -130,48 +159,84 @@ const checkUrlError = () => {
   }
 };
 
+// 确认筛选
 const handleConfirmFilter = (filter: { igt: string; nickname: string }) => {
-  if (filter.igt === "0,99" && filter.nickname === "") {
+  // 检查筛选条件是否真的改变了
+  const filterChanged = filter.igt !== state.value.igt || filter.nickname !== state.value.nickname;
+
+  // 只有在筛选条件改变时才重置页码
+  const updates: Partial<RankState> = {
+    igt: filter.igt,
+    nickname: filter.nickname,
+  };
+
+  if (filterChanged) {
+    updates.page = 1;
+  }
+
+  stateManager.setMultiple(updates);
+
+  if (filter.igt === '0,99' && filter.nickname === '') {
     filteredData.value = statsdata.value;
   } else {
-  filteredData.value = statsdata.value.filter((item) => {
-    return (
-      Number(item.igt.split(":")[0]) >= Number(filter.igt.split(",")[0]) &&
-      Number(item.igt.split(":")[0]) < Number(filter.igt.split(",")[1]) &&
+    filteredData.value = statsdata.value.filter((item) => {
+      return (
+        Number(item.igt.split(':')[0]) >= Number(filter.igt.split(',')[0]) &&
+        Number(item.igt.split(':')[0]) < Number(filter.igt.split(',')[1]) &&
         item.nickname.toLowerCase().includes(filter.nickname.toLowerCase())
       );
     });
   }
-  page.value = 1;
+
+  stateManager.saveToStorage();
 };
 
-watch(statsdata, (newVal) => {
-  filteredData.value = newVal;
-  // 数据变化时重置页码
-  page.value = 1;
-}, { immediate: true }); 
-
+// 初始化
 onMounted(async () => {
-  await statsStore.getStats("1.16.1", "RSG");
-  // 确保数据初始化
-  if (statsdata.value.length > 0) {
-    filteredData.value = statsdata.value;
+  const restoredState = stateManager.initialize();
+  state.value.page = restoredState.page;
+
+  await statsStore.getStats(restoredState.version, restoredState.type);
+  filteredData.value = statsdata.value;
+
+  if (restoredState.igt !== '0,99' || restoredState.nickname !== '') {
+    handleConfirmFilter({
+      igt: restoredState.igt,
+      nickname: restoredState.nickname,
+    });
   }
-  // 检查URL中的错误参数
   checkUrlError();
 });
 
-onActivated(() => {
-  // 每次激活页面时，确保数据正确显示
-  if (statsdata.value.length === 0) {
-    // 如果没有数据，重新获取
-    statsStore.getStats("1.16.1", "RSG");
-  } else {
-    // 如果有数据，重新初始化filteredData和页码
-    filteredData.value = statsdata.value;
-    page.value = 1; // 重置到第一页
+// 监听分页变化
+watch(
+  () => state.value.page,
+  (newPage) => {
+    stateManager.set('page', newPage);
+    stateManager.saveToStorage();
   }
-  // 检查URL中的错误参数
+);
+
+// 监听数据变化
+watch(
+  statsdata,
+  (newVal) => {
+    filteredData.value = newVal;
+    // 只有在没有筛选条件时才重置页码，避免覆盖用户设置的分页
+    if (state.value.igt === '0,99' && state.value.nickname === '') {
+      state.value.page = 1;
+    }
+  },
+  { immediate: true }
+);
+
+// 每次激活页面时，确保数据正确显示
+onActivated(() => {
+  if (statsdata.value.length === 0) {
+    statsStore.getStats('1.16.1', 'RSG');
+  } else {
+    filteredData.value = statsdata.value;
+  }
   checkUrlError();
 });
 </script>
@@ -287,7 +352,7 @@ onActivated(() => {
 }
 
 .igt-cell {
-  font-family: "Courier New", monospace;
+  font-family: 'Courier New', monospace;
   font-weight: 600;
 }
 
@@ -318,8 +383,6 @@ onActivated(() => {
   transform: scale(1.05);
 }
 
-
-
 @media (max-width: 780px) {
   .content-container {
     padding: 10px 0 80px 0;
@@ -339,6 +402,4 @@ onActivated(() => {
     font-size: 0.9em;
   }
 }
-
-
 </style>
