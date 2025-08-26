@@ -1,12 +1,12 @@
 <template>
-  <!-- 错误提示 -->
-  <div v-if="errorMessage" class="error-message">
-    <div class="error-content">
-      <span class="error-icon">⚠️</span>
-      <span class="error-text">{{ errorMessage }}</span>
-      <button class="error-close" @click="clearError">×</button>
-    </div>
-  </div>
+  <!-- 通知提示 -->
+  <Notification 
+    v-model:visible="showNotification"
+    :message="notificationMessage"
+    :type="notificationType"
+    :duration="5000"
+    @close="hideNotification"
+  />
   
   <RankedFilter @confirmFilter="handleConfirmFilter" />
   <div v-if="isLoading" class="content-container">
@@ -67,14 +67,17 @@ import SvgIcon from "@/components/icons/index.vue";
 import { useRouter, useRoute } from "vue-router";
 import RankedFilter from "@/components/RankedFilter.vue";
 import Pagination from "@/components/Pagination.vue";
+import Notification from "@/components/Notification.vue";
 import { safeDisplay } from "@/utils/security";
 
 const router = useRouter();
 const route = useRoute();
 const statsStore = useStatsStore();
 
-// 错误提示相关
-const errorMessage = ref<string>('');
+// 通知提示相关
+const showNotification = ref<boolean>(false);
+const notificationMessage = ref<string>('');
+const notificationType = ref<'error' | 'success' | 'info'>('info');
 const isLoading = computed(() => statsStore.isLoading);
 const statsdata = computed(() => statsStore.currStats);
 const filteredData = ref<any[]>([]);
@@ -106,15 +109,22 @@ const openVideo = (url: string) => {
   window.open(url, "_blank");
 };
 
-// 清除错误提示
-const clearError = () => {
-  errorMessage.value = '';
+// 显示通知
+const showNotificationMessage = (message: string, type: 'error' | 'success' | 'info' = 'info') => {
+  notificationMessage.value = message;
+  notificationType.value = type;
+  showNotification.value = true;
+};
+
+// 隐藏通知
+const hideNotification = () => {
+  showNotification.value = false;
 };
 
 // 检查URL中的错误参数
 const checkUrlError = () => {
   if (route.query.error === 'unauthorized') {
-    errorMessage.value = '您没有权限访问该页面，需要管理员权限';
+    showNotificationMessage('您没有权限访问该页面，需要管理员权限', 'error');
     // 清除URL中的错误参数
     router.replace({ query: {} });
   }
@@ -330,54 +340,5 @@ onActivated(() => {
   }
 }
 
-/* 错误提示样式 */
-.error-message {
-  position: fixed;
-  top: 100px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1000;
-  max-width: 90%;
-}
 
-.error-content {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background-color: #ff4444;
-  color: white;
-  padding: 16px 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(255, 68, 68, 0.3);
-  border: 1px solid #ff6666;
-}
-
-.error-icon {
-  font-size: 18px;
-}
-
-.error-text {
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.error-close {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 20px;
-  cursor: pointer;
-  padding: 0;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  transition: background-color 0.2s ease;
-}
-
-.error-close:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-}
 </style>
