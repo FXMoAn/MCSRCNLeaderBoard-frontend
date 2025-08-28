@@ -11,6 +11,8 @@ interface UserInfo {
   nickname: string;
   user_id: number;
   role: string;
+  bili_id: string | null;
+  bili_name: string | null;
 }
 
 const useUserStore = defineStore('user', () => {
@@ -94,7 +96,7 @@ const useUserStore = defineStore('user', () => {
         // `https://mcsrcors.fxmoan148.workers.dev/?url=https://api.mojang.com/users/profiles/minecraft/${ingamename}`
         `https://playerdb.co/api/player/minecraft/${ingamename}`
       );
-      if (res.data.success = true) {
+      if ((res.data.success = true)) {
         userInfo.value.mc_uuid = res.data.data.player.raw_id;
         userInfo.value!.ingamename = ingamename;
         return true;

@@ -7,6 +7,10 @@
           <label class="form-label" for="version">版本</label>
           <select class="form-select" id="version" v-model="version">
             <option value="1.16.1">1.16.1</option>
+            <option value="1.15.2">1.15.2</option>
+            <option value="1.12.2">1.12.2</option>
+            <option value="1.8.9">1.8.9</option>
+            <option value="1.7.10">1.7.10</option>
           </select>
         </div>
 
@@ -110,22 +114,17 @@
       </div>
 
       <div class="form-actions">
-        <button 
-          class="submit-button" 
+        <button
+          class="submit-button"
           type="submit"
           :disabled="isSubmitting"
-          :class="{ 'submitting': isSubmitting }"
+          :class="{ submitting: isSubmitting }"
         >
           <span v-if="!isSubmitting">上传记录</span>
           <span v-else>上传中...</span>
         </button>
-        
-        <button 
-          type="button"
-          class="clear-button"
-          @click="clearForm"
-          :disabled="isSubmitting"
-        >
+
+        <button type="button" class="clear-button" @click="clearForm" :disabled="isSubmitting">
           清空表单
         </button>
       </div>
@@ -134,29 +133,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import { supabase } from "@/lib/supabaseClient";
-import { 
-  validateNickname, 
-  validateRemarks, 
-  validateSeed, 
+import { ref, computed, onMounted } from 'vue';
+import { supabase } from '@/lib/supabaseClient';
+import {
+  validateNickname,
+  validateRemarks,
+  validateSeed,
   validateVideoLink,
   sanitizeInput,
   sanitizeVideoLink,
-  sanitizeTextInput
-} from "@/utils/security";
-import SearchSelect from "@/components/common/SearchSelect.vue";
+  sanitizeTextInput,
+} from '@/utils/security';
+import SearchSelect from '@/components/common/SearchSelect.vue';
 
-const version = ref("1.16.1");
-const type = ref("RSG");
+const version = ref('1.16.1');
+const type = ref('RSG');
 const igtMinute = ref(0);
 const igtSecond = ref(0);
 const igtMillisecond = ref(0);
-const date = ref(new Date().toISOString().split("T")[0]);
-const videoLink = ref("");
-const remarks = ref("");
-const seed = ref("");
-const nickname = ref("");
+const date = ref(new Date().toISOString().split('T')[0]);
+const videoLink = ref('');
+const remarks = ref('');
+const seed = ref('');
+const nickname = ref('');
 
 const userList = ref<any[]>([]);
 
@@ -165,70 +164,70 @@ const isSubmitting = ref(false);
 
 const igt = computed(() => {
   return (
-    igtMinute.value.toString().padStart(2, "0") +
-    ":" +
-    igtSecond.value.toString().padStart(2, "0") +
-    ":" +
-    igtMillisecond.value.toString().padStart(3, "0")
+    igtMinute.value.toString().padStart(2, '0') +
+    ':' +
+    igtSecond.value.toString().padStart(2, '0') +
+    ':' +
+    igtMillisecond.value.toString().padStart(3, '0')
   );
 });
 
 const checkRequiredInfo = () => {
-  if (version.value === "") {
-    alert("版本不能为空");
+  if (version.value === '') {
+    alert('版本不能为空');
     return false;
   }
-  if (type.value === "") {
-    alert("类型不能为空");
+  if (type.value === '') {
+    alert('类型不能为空');
     return false;
   }
-  if (igt.value === "") {
-    alert("游戏时间不能为空");
+  if (igt.value === '') {
+    alert('游戏时间不能为空');
     return false;
   }
-  if (date.value === "") {
-    alert("日期不能为空");
+  if (date.value === '') {
+    alert('日期不能为空');
     return false;
   }
-  
+
   // 使用安全工具函数验证输入
   const nicknameValidation = validateNickname(nickname.value);
   if (!nicknameValidation.isValid) {
     alert(nicknameValidation.message);
     return false;
   }
-  
+
   const videoLinkValidation = validateVideoLink(videoLink.value);
   if (!videoLinkValidation.isValid) {
     alert(videoLinkValidation.message);
     return false;
   }
-  
+
   return true;
 };
 
 const getNameIdByNickname = async (nickname: string) => {
   try {
     const { data, error } = await supabase
-      .from("users")
-      .select("id")
-      .eq("nickname", nickname)
+      .from('users')
+      .select('id')
+      .eq('nickname', nickname)
       .single();
     if (error) {
-      alert("获取用户ID失败");
+      alert('获取用户ID失败');
       return;
     }
     return data.id;
   } catch (error) {
-    alert("获取用户ID失败");
+    alert('获取用户ID失败');
     return;
   }
 };
 
 const getUserList = async () => {
-  const { data, error } = await supabase.from("users").select("*")
+  const { data, error } = await supabase.from('users').select('*');
   if (error) {
-    alert("获取用户列表失败");
+    alert('获取用户列表失败');
     return;
   }
   userList.value = data.map((user) => ({
@@ -247,25 +246,25 @@ const insertVerifiedRun = async () => {
   const sanitizedRemarks = sanitizeTextInput(remarks.value.trim());
   const sanitizedSeed = sanitizeTextInput(seed.value.trim());
   const sanitizedVideoLink = sanitizeVideoLink(videoLink.value.trim());
-  
+
   const userId = await getNameIdByNickname(sanitizedNickname);
-  const { data, error } = await supabase.from("runs").insert({
+  const { data, error } = await supabase.from('runs').insert({
     userid: userId,
     version: version.value,
     type: type.value,
     igt: igt.value,
-    date: date.value.replace(/-/g, "/"),
+    date: date.value.replace(/-/g, '/'),
     videolink: sanitizedVideoLink,
     remarks: sanitizedRemarks,
     seed: sanitizedSeed,
-    status: "verified",
+    status: 'verified',
   });
   if (error) {
-    alert("上传失败");
+    alert('上传失败');
     return;
   }
-  alert("上传成功");
-  
+  alert('上传成功');
+
   // 上传成功后清空表单
   clearForm();
 };
@@ -275,35 +274,35 @@ const insertVerifiedRun = async () => {
  */
 const clearForm = () => {
   // 重置为默认值
-  version.value = "1.16.1";
-  type.value = "RSG";
+  version.value = '1.16.1';
+  type.value = 'RSG';
   igtMinute.value = 0;
   igtSecond.value = 0;
   igtMillisecond.value = 0;
-  date.value = new Date().toISOString().split("T")[0];
-  videoLink.value = "";
-  remarks.value = "";
-  seed.value = "";
-  nickname.value = "";
+  date.value = new Date().toISOString().split('T')[0];
+  videoLink.value = '';
+  remarks.value = '';
+  seed.value = '';
+  nickname.value = '';
 };
 
 const uploadRun = async () => {
   // 防重复提交检查
   if (isSubmitting.value) {
-    alert("正在上传中，请勿重复提交");
+    alert('正在上传中，请勿重复提交');
     return;
   }
-  
+
   if (!checkRequiredInfo()) {
     return;
   }
-  
+
   try {
     isSubmitting.value = true; // 设置提交状态
     await insertVerifiedRun();
   } catch (error) {
-    console.error("上传过程中出现错误:", error);
-    alert("上传失败，请重试");
+    console.error('上传过程中出现错误:', error);
+    alert('上传失败，请重试');
   } finally {
     isSubmitting.value = false; // 重置提交状态
   }
