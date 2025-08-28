@@ -9,21 +9,23 @@ const requireAuthRoutes = [
   '/space/binding',
   '/manage',
   '/manage/upload',
-  '/manage/user'
+  '/manage/user',
+  '/manage/verify',
+  '/upload',
+  '/pending-run/:id',
 ];
 
 // 需要管理员权限的路由
 const requireAdminRoutes = [
   '/manage',
   '/manage/upload',
-  '/manage/user'
+  '/manage/user',
+  '/manage/verify',
+  '/pending-run/:id',
 ];
 
 // 已登录用户不能访问的路由（如登录、注册页面）
-const redirectIfAuthenticatedRoutes = [
-  '/login',
-  '/signup'
-];
+const redirectIfAuthenticatedRoutes = ['/login', '/signup'];
 
 /**
  * 检查用户是否已登录
@@ -45,74 +47,80 @@ const isAdmin = (): boolean => {
  * 检查路由是否需要认证
  */
 const requiresAuth = (to: RouteLocationNormalized): boolean => {
-  return requireAuthRoutes.some(route => to.path.startsWith(route));
+  return requireAuthRoutes.some((route) => to.path.startsWith(route));
 };
 
 /**
  * 检查路由是否需要管理员权限
  */
 const requiresAdmin = (to: RouteLocationNormalized): boolean => {
-  return requireAdminRoutes.some(route => to.path.startsWith(route));
+  return requireAdminRoutes.some((route) => to.path.startsWith(route));
 };
 
 /**
  * 检查是否应该重定向已登录用户
  */
 const shouldRedirectIfAuthenticated = (to: RouteLocationNormalized): boolean => {
-  return redirectIfAuthenticatedRoutes.some(route => to.path === route);
+  return redirectIfAuthenticatedRoutes.some((route) => to.path === route);
 };
 
 /**
  * 全局前置守卫
  */
 export const setupRouteGuards = (router: Router) => {
-  router.beforeEach(async (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
-    try {
-      // 等待认证状态初始化完成
-      const authStore = useAuthStore();
-      if (authStore.loading) {
-        // 如果认证还在初始化中，等待一下
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
+  router.beforeEach(
+    async (
+      to: RouteLocationNormalized,
+      from: RouteLocationNormalized,
+      next: NavigationGuardNext
+    ) => {
+      try {
+        // 等待认证状态初始化完成
+        const authStore = useAuthStore();
+        if (authStore.loading) {
+          // 如果认证还在初始化中，等待一下
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
 
-      // 检查是否需要重定向已登录用户
-      if (shouldRedirectIfAuthenticated(to) && isAuthenticated()) {
-        next('/rank');
-        return;
-      }
-
-      // 检查是否需要认证
-      if (requiresAuth(to)) {
-        if (!isAuthenticated()) {
-          // 未登录，重定向到登录页面
-          next({
-            path: '/login',
-            query: { redirect: to.fullPath }
-          });
+        // 检查是否需要重定向已登录用户
+        if (shouldRedirectIfAuthenticated(to) && isAuthenticated()) {
+          next('/rank');
           return;
         }
 
-        // 检查是否需要管理员权限
-        if (requiresAdmin(to)) {
-          if (!isAdmin()) {
-            // 不是管理员，重定向到首页并显示错误信息
+        // 检查是否需要认证
+        if (requiresAuth(to)) {
+          if (!isAuthenticated()) {
+            // 未登录，重定向到登录页面
             next({
-              path: '/rank',
-              query: { error: 'unauthorized' }
+              path: '/login',
+              query: { redirect: to.fullPath },
             });
             return;
           }
-        }
-      }
 
-      // 所有检查通过，允许导航
-      next();
-    } catch (error) {
-      console.error('路由守卫错误:', error);
-      // 发生错误时重定向到首页
-      next('/rank');
+          // 检查是否需要管理员权限
+          if (requiresAdmin(to)) {
+            if (!isAdmin()) {
+              // 不是管理员，重定向到首页并显示错误信息
+              next({
+                path: '/rank',
+                query: { error: 'unauthorized' },
+              });
+              return;
+            }
+          }
+        }
+
+        // 所有检查通过，允许导航
+        next();
+      } catch (error) {
+        console.error('路由守卫错误:', error);
+        // 发生错误时重定向到首页
+        next('/rank');
+      }
     }
-  });
+  );
 };
 
 /**

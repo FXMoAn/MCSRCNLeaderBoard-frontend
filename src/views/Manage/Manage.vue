@@ -3,16 +3,20 @@
 </template>
 
 <script setup lang="ts">
-import SecondaryNav from "@/components/SecondaryNav.vue";
+import SecondaryNav from '@/components/SecondaryNav.vue';
 
 const navItems = [
   {
-    path: "/manage/upload",
-    label: "上传成绩",
+    path: '/manage/upload',
+    label: '上传成绩',
   },
   {
-    path: "/manage/user",
-    label: "管理用户",
+    path: '/manage/user',
+    label: '管理用户',
+  },
+  {
+    path: '/manage/verify',
+    label: '审核记录',
   },
 ];
 </script>

@@ -16,33 +16,80 @@
       <div class="info-grid">
         <div class="info-item">
           <span class="info-label">玩家</span>
-          <span class="info-value">{{ runInfo.users.nickname }}</span>
+          <input
+            v-model="runInfo.users.nickname"
+            :placeholder="runInfo.users.nickname"
+            class="info-value"
+            type="text"
+            disabled
+          />
         </div>
         <div class="info-item">
           <span class="info-label">日期</span>
-          <span class="info-value">{{ runInfo.date }}</span>
+          <input
+            v-model="runInfo.date"
+            :placeholder="runInfo.date"
+            class="info-value"
+            type="text"
+            :disabled="!isEditing"
+          />
         </div>
         <div class="info-item">
           <span class="info-label">IGT</span>
-          <span class="info-value igt-value">{{ runInfo.igt }}</span>
+          <input
+            v-model="runInfo.igt"
+            :placeholder="runInfo.igt"
+            class="info-value"
+            type="text"
+            :disabled="!isEditing"
+          />
         </div>
         <div class="info-item">
           <span class="info-label">版本</span>
-          <span class="info-value">{{ runInfo.version }}</span>
+          <input
+            v-model="runInfo.version"
+            :placeholder="runInfo.version"
+            class="info-value"
+            type="text"
+            :disabled="!isEditing"
+          />
         </div>
         <div class="info-item">
           <span class="info-label">类型</span>
-          <span class="info-value">{{ runInfo.type }}</span>
+          <input
+            v-model="runInfo.type"
+            :placeholder="runInfo.type"
+            class="info-value"
+            type="text"
+            :disabled="!isEditing"
+          />
         </div>
         <div class="info-item">
           <span class="info-label">种子</span>
-          <span class="info-value">{{ runInfo.seed || '无' }}</span>
+          <input
+            v-model="runInfo.seed"
+            :placeholder="runInfo.seed || '无'"
+            class="info-value"
+            type="text"
+            :disabled="!isEditing"
+          />
         </div>
         <div class="info-item">
           <span class="info-label">备注</span>
-          <span class="info-value">{{ runInfo.remarks || '无' }}</span>
+          <textarea
+            v-model="runInfo.remarks"
+            :placeholder="runInfo.remarks || '无'"
+            class="info-value"
+            :disabled="!isEditing"
+          />
         </div>
       </div>
+    </div>
+    <div class="action-container">
+      <button class="action-button verify-button" @click="verifyRun">通过</button>
+      <button class="action-button reject-button" @click="rejectRun">拒绝</button>
+      <button v-if="isEditing" class="action-button edit-button" @click="saveRun">保存</button>
+      <button v-else class="action-button edit-button" @click="editRun">编辑</button>
     </div>
   </div>
   <div v-else class="content">
@@ -54,7 +101,7 @@
 </template>
 
 <script setup lang="ts">
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { supabase } from '@/lib/supabaseClient';
 import { onBeforeMount, ref, computed } from 'vue';
 import { extractBVId, buildPlayerUrl } from '@/utils/bilibili';
@@ -62,8 +109,66 @@ import type { RunInfo } from '@/types/CommonTypes';
 
 const route = useRoute();
 const id = route.params.id;
-
+const router = useRouter();
 const runInfo = ref<RunInfo>();
+const isEditing = ref(false);
+
+const verifyRun = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('runs')
+      .update({
+        igt: runInfo.value?.igt,
+        date: runInfo.value?.date,
+        version: runInfo.value?.version,
+        type: runInfo.value?.type,
+        seed: runInfo.value?.seed,
+        remarks: runInfo.value?.remarks,
+        status: 'verified',
+      })
+      .eq('id', id);
+    if (error) {
+      console.error(error);
+      alert('通过失败' + error.message);
+    } else {
+      console.log('verifyRun success', data);
+      alert('通过成功');
+      router.push('/manage/verify');
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const rejectRun = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('runs')
+      .update({
+        status: 'rejected',
+        remarks: runInfo.value?.remarks,
+      })
+      .eq('id', id);
+    if (error) {
+      console.error(error);
+      alert('拒绝失败' + error.message);
+    } else {
+      console.log('rejectRun success', data);
+      alert('拒绝成功');
+      router.push('/manage/verify');
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const saveRun = () => {
+  isEditing.value = false;
+};
+
+const editRun = () => {
+  isEditing.value = true;
+};
 
 const getRunInfo = async () => {
   try {
@@ -197,6 +302,23 @@ onBeforeMount(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  background-color: transparent;
+  border: none;
+  outline: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+.info-value:not([disabled]) {
+  background-color: #333;
+  border: 1px solid #444;
+  border-radius: 12px;
+  padding: 10px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .igt-value {
@@ -224,6 +346,34 @@ onBeforeMount(() => {
   border-top: 3px solid #00bcd4;
   border-radius: 50%;
   animation: spin 1s linear infinite;
+}
+
+.action-container {
+  display: flex;
+  gap: 10px;
+}
+
+.verify-button {
+  background-color: #4caf50;
+}
+
+.reject-button {
+  background-color: #f44336;
+}
+
+.edit-button {
+  background-color: #00bcd4;
+}
+
+.action-button {
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+}
+
+.action-button:hover {
+  opacity: 0.8;
 }
 
 @keyframes spin {
