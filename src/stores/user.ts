@@ -89,6 +89,25 @@ const useUserStore = defineStore('user', () => {
     }
   };
 
+  const updateNickname = async (nickname: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .update({ nickname: nickname })
+        .eq('user_id', localUserId.value);
+      if (error) {
+        console.error(error);
+        alert('更新失败');
+      } else {
+        alert('更新成功');
+        await initUserInfo();
+      }
+    } catch (error) {
+      console.error(error);
+      alert('更新失败');
+    }
+  };
+
   // 用于操作Minecraft ID
   const getMinecraftId = async (ingamename: string) => {
     try {
@@ -234,6 +253,7 @@ const useUserStore = defineStore('user', () => {
     // 方法
     initUserInfo,
     bindUser,
+    updateNickname,
     getMinecraftId,
     bindMinecraftId,
     refreshMinecraftId,
