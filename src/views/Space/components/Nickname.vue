@@ -39,8 +39,19 @@
 
   <div class="nickname-container" v-else>
     <div class="user-info">
-      <div class="section-title">当前昵称</div>
-      <p class="nickname-display">{{ userStore.userInfo?.nickname }}</p>
+      <div class="section-subtitle">当前昵称</div>
+      <div class="nickname-display-container">
+        <input
+          type="text"
+          class="nickname-display"
+          v-model="changedNickname"
+          :disabled="!isEditing"
+        />
+        <button class="form-button refresh-button" @click="handleEditNickname" v-if="!isEditing">
+          修改
+        </button>
+        <button class="form-button refresh-button" @click="handleSaveNickname" v-else>保存</button>
+      </div>
     </div>
   </div>
 </template>
@@ -59,6 +70,9 @@ const router = useRouter();
 const unbindedUserList = ref<any[]>([]);
 const selectedUser = ref<any>(null);
 const newUserNickname = ref<string>('');
+
+const isEditing = ref(false);
+const changedNickname = ref(userStore.userInfo.nickname);
 
 // 处理用户选择
 const handleUserSelect = (user: any) => {
@@ -101,6 +115,19 @@ const handleNewUserBinding = async () => {
   await userStore.createNewUser(sanitizedNickname);
   newUserNickname.value = ''; // 清空输入
   router.go(0);
+};
+
+const handleEditNickname = () => {
+  isEditing.value = true;
+};
+
+const handleSaveNickname = async () => {
+  try {
+    await userStore.updateNickname(changedNickname.value);
+    isEditing.value = false;
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 onMounted(() => {
@@ -219,12 +246,20 @@ onMounted(() => {
   padding: 40px 20px;
 }
 
+.nickname-display-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
 .nickname-display {
+  flex: 1;
   color: #00bcd4;
   font-size: 1.4em;
   font-weight: 600;
   margin: 0;
-  padding: 20px;
+  padding: 15px;
   background-color: rgba(0, 188, 212, 0.1);
   border-radius: 8px;
   border: 1px solid rgba(0, 188, 212, 0.3);

@@ -24,6 +24,26 @@ export const useStatsStore = defineStore('stats', () => {
   const isLoading = ref(false);
   const pages = ref(0);
 
+  const getPendingRuns = async () => {
+    if (isLoading.value) return;
+    isLoading.value = true;
+    try {
+      const { data, error } = await supabase.rpc('get_runs_by_status', {
+        p_status: 'pending',
+      });
+      if (error) {
+        console.error('get_runs_by_status error', error);
+        return [];
+      }
+      return data;
+    } catch (error) {
+      console.error('get_runs_by_status error', error);
+      return [];
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
   const getLeaderboard = async ({ version = '1.16.1', type = 'RSG', status = 'verified' } = {}) => {
     try {
       const { data, error } = await supabase.rpc('get_leaderboard', {
@@ -37,7 +57,7 @@ export const useStatsStore = defineStore('stats', () => {
         return [];
       }
       data.map((item: Run, index: number) => {
-        item.rank = index + 1
+        item.rank = index + 1;
         return item;
       });
       return data;
@@ -54,7 +74,7 @@ export const useStatsStore = defineStore('stats', () => {
   };
 
   const getStats = async (version: string, type: string, status: string = 'verified') => {
-    let key = `${version}${type}`;
+    let key = `${version}${type}${status}`;
     if (isLoading.value) return;
 
     // 如果缓存存在，直接使用缓存数据
@@ -113,6 +133,7 @@ export const useStatsStore = defineStore('stats', () => {
     pages,
     fetchStats,
     getStats,
+    getPendingRuns,
     refreshStats,
     clearCache,
   };

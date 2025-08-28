@@ -5,6 +5,9 @@
     </div>
     <div class="links">
       <div><router-link to="/rank" class="nav-link">排行榜</router-link></div>
+      <div v-if="authStore.isLoggedIn">
+        <router-link to="/user-upload" class="nav-link">上传记录</router-link>
+      </div>
       <div><a href="https://wiki.mcspeedrun.cn" target="_blank" class="nav-link">速通wiki</a></div>
       <div v-if="userStore.isAdmin">
         <router-link to="/manage/upload" class="nav-link">管理员</router-link>

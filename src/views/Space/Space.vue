@@ -3,16 +3,16 @@
 </template>
 
 <script setup lang="ts">
-import SecondaryNav from "@/components/SecondaryNav.vue";
+import SecondaryNav from '@/components/SecondaryNav.vue';
 
 const navItems = [
   {
-    path: "/space/profile",
-    label: "个人信息",
+    path: '/space/profile',
+    label: '个人资料',
   },
   {
-    path: "/space/binding",
-    label: "绑定账号",
+    path: '/space/binding',
+    label: '账号信息管理',
   },
 ];
 </script>
