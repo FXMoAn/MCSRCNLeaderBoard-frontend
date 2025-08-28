@@ -1,6 +1,9 @@
 <template>
   <div class="run-card" @click="navToRunDetail(props.id)">
     <div class="player-cell" v-html="safeDisplay(props.nickname)"></div>
+    <div class="version-cell info-cell">{{ props.version }}</div>
+    <div class="type-cell info-cell">{{ props.type }}</div>
+    <div class="date-cell info-cell">{{ props.date }}</div>
     <div class="igt-cell" v-html="safeDisplay(props.igt)"></div>
     <div class="video-cell">
       <a
@@ -24,6 +27,9 @@ import { useRouter } from 'vue-router';
 interface Props {
   id: number;
   nickname: string;
+  version: string;
+  type: string;
+  date: string;
   igt: string;
   videolink: string;
 }
@@ -51,13 +57,17 @@ const openVideo = (url: string) => {
   border-radius: 12px;
   padding: 20px;
   display: flex;
-  gap: 20px;
+  justify-content: space-between;
   align-items: center;
   transition: all 0.2s ease;
   box-sizing: border-box;
   min-width: 0;
   overflow: hidden;
   cursor: pointer;
+}
+
+.info-cell {
+  font-size: 14px;
 }
 
 .player-cell {
