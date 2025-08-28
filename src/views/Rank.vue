@@ -7,12 +7,19 @@
     :duration="5000"
     @close="hideNotification"
   />
+  <div class="control-container">
+    <VersionTypeSelector
+      @confirmFilter="handleSelectionChange"
+      :initialVersion="state.version"
+      :initialType="state.type"
+    />
 
-  <RankedFilter
-    @confirmFilter="handleConfirmFilter"
-    :initialIgt="state.igt"
-    :initialNickname="state.nickname"
-  />
+    <RankedFilter
+      @confirmFilter="handleConfirmFilter"
+      :initialIgt="state.igt"
+      :initialNickname="state.nickname"
+    />
+  </div>
   <div v-if="isLoading" class="content-container">
     <div class="loading-container">
       <div class="loading-spinner"></div>
@@ -67,6 +74,7 @@ import Pagination from '@/components/Pagination.vue';
 import Notification from '@/components/Notification.vue';
 import { safeDisplay } from '@/utils/security';
 import { createURLStateManager } from '@/utils/urlStateManage';
+import VersionTypeSelector from '@/components/VersionTypeSelector.vue';
 
 // 定义状态类型
 interface RankState {
@@ -100,6 +108,9 @@ const stateManager = createURLStateManager<RankState>({
 const router = useRouter();
 const route = useRoute();
 const statsStore = useStatsStore();
+
+// 立即初始化状态管理器，获取恢复的状态
+const restoredState = stateManager.initialize();
 const state = stateManager.getState();
 
 // 通知提示相关
@@ -116,8 +127,8 @@ const slicedata = computed(() =>
 // 分页
 const pages = computed(() => Math.ceil(filteredData.value.length / 10));
 
-// 版本选择(暂时没用)
-const handleSelectionChange = ({ version, type }: { version: string; type: string }) => {
+// 版本选择
+const handleSelectionChange = (version: string, type: string) => {
   stateManager.setMultiple({
     version,
     type,
@@ -193,8 +204,9 @@ const handleConfirmFilter = (filter: { igt: string; nickname: string }) => {
 
 // 初始化
 onMounted(async () => {
-  const restoredState = stateManager.initialize();
   state.value.page = restoredState.page;
+  state.value.version = restoredState.version;
+  state.value.type = restoredState.type;
 
   await statsStore.getStats(restoredState.version, restoredState.type);
   filteredData.value = statsdata.value;
@@ -250,6 +262,12 @@ onActivated(() => {
   justify-content: center;
   align-items: center;
   padding: 20px 0 100px 0;
+}
+
+.control-container {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
 }
 
 .container {

@@ -1,9 +1,11 @@
 <template>
-  <div class="nickname-container" >
+  <div class="nickname-container" v-if="!userStore.isBinding">
     <div class="section-title">账号绑定</div>
 
     <div class="binding-section">
-      <div class="section-subtitle">老用户绑定账号（如果之前投过成绩，可以先搜一下）如果找不到或错绑，请联系管理员</div>
+      <div class="section-subtitle">
+        老用户绑定账号（如果之前投过成绩，可以在这里绑定，如果找不到或错绑，请联系管理员）
+      </div>
       <div class="form-row">
         <SearchSelect
           v-model="selectedUser"
@@ -20,7 +22,9 @@
     </div>
 
     <div class="binding-section">
-      <div class="section-subtitle">新用户输入昵称（如果没有投过榜，可以在这里绑定，最好是B站名）</div>
+      <div class="section-subtitle">
+        新用户输入昵称（如果没有投过榜，可以在这里绑定，榜单上会使用这个名字）
+      </div>
       <div class="form-row">
         <input
           type="text"
@@ -33,7 +37,7 @@
     </div>
   </div>
 
-  <div class="nickname-container" >
+  <div class="nickname-container" v-else>
     <div class="user-info">
       <div class="section-title">当前昵称</div>
       <p class="nickname-display">{{ userStore.userInfo?.nickname }}</p>
@@ -42,19 +46,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
-import { supabase } from "@/lib/supabaseClient";
-import useUserStore from "@/stores/user";
-import { useRouter } from "vue-router";
-import { validateNickname, sanitizeInput } from "@/utils/security";
-import SearchSelect from "@/components/common/SearchSelect.vue";
+import { ref, onMounted, computed } from 'vue';
+import { supabase } from '@/lib/supabaseClient';
+import useUserStore from '@/stores/user';
+import { useRouter } from 'vue-router';
+import { validateNickname, sanitizeInput } from '@/utils/security';
+import SearchSelect from '@/components/common/SearchSelect.vue';
 
 const userStore = useUserStore();
 const router = useRouter();
 
 const unbindedUserList = ref<any[]>([]);
 const selectedUser = ref<any>(null);
-const newUserNickname = ref<string>("");
+const newUserNickname = ref<string>('');
 
 // 处理用户选择
 const handleUserSelect = (user: any) => {
@@ -63,10 +67,7 @@ const handleUserSelect = (user: any) => {
 
 const getUnbindedUser = async () => {
   //uuser为空
-  const { data, error } = await supabase
-    .from("users")
-    .select("*")
-    .is("user_id", null);
+  const { data, error } = await supabase.from('users').select('*').is('user_id', null);
   if (error) {
     throw error;
   }
@@ -78,7 +79,7 @@ const getUnbindedUser = async () => {
 
 const handleBinding = async () => {
   if (!selectedUser.value) {
-    alert("请选择一个用户");
+    alert('请选择一个用户');
     return;
   }
   await userStore.bindUser(selectedUser.value.id);
@@ -88,15 +89,15 @@ const handleBinding = async () => {
 const handleNewUserBinding = async () => {
   // 使用安全工具函数进行输入验证
   const validation = validateNickname(newUserNickname.value);
-  
+
   if (!validation.isValid) {
     alert(validation.message);
     return;
   }
-  
+
   // 清理输入
   const sanitizedNickname = sanitizeInput(newUserNickname.value.trim());
-  
+
   await userStore.createNewUser(sanitizedNickname);
   newUserNickname.value = ''; // 清空输入
   router.go(0);
@@ -195,8 +196,6 @@ onMounted(() => {
   transform: translateY(0);
 }
 
-
-
 /* 滚动条样式 */
 .dropdown-options::-webkit-scrollbar {
   width: 6px;
@@ -255,11 +254,11 @@ onMounted(() => {
   .form-button {
     width: 100%;
   }
-  
+
   .custom-dropdown {
     max-height: 250px;
   }
-  
+
   .dropdown-options {
     max-height: 200px;
   }

@@ -4,10 +4,10 @@
       <label class="filter-label">IGT筛选</label>
       <select v-model="igt" class="filter-select" @change="confirmFilter">
         <option value="0,99" selected>全部</option>
-        <option value="0,10">sub10</option>
-        <option value="10,13">sub10-13</option>
-        <option value="13,15">sub13-15</option>
-        <option value="15,20">sub15-20</option>
+        <option value="0,10">0-10min</option>
+        <option value="10,13">10-13min</option>
+        <option value="13,15">13-15min</option>
+        <option value="15,20">15-20min</option>
         <option value="20,99">20min+</option>
       </select>
     </div>
