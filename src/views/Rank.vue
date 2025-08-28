@@ -367,11 +367,13 @@ onActivated(() => {
 
 .player-cell {
   font-weight: 500;
+  font-size: 1.2em;
 }
 
 .igt-cell {
   font-family: 'Courier New', monospace;
   font-weight: 600;
+  font-size: 1.2em;
 }
 
 .date-cell {

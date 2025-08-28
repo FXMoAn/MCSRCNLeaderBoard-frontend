@@ -86,8 +86,14 @@
       </div>
     </div>
     <div class="action-container">
-      <button class="action-button verify-button" @click="verifyRun">通过</button>
-      <button class="action-button reject-button" @click="rejectRun">拒绝</button>
+      <button class="action-button verify-button" @click="verifyRun" :disabled="isSubmitting">
+        <span v-if="!isSubmitting">通过</span>
+        <span v-else>操作中...</span>
+      </button>
+      <button class="action-button reject-button" @click="rejectRun" :disabled="isSubmitting">
+        <span v-if="!isSubmitting">拒绝</span>
+        <span v-else>操作中...</span>
+      </button>
       <button v-if="isEditing" class="action-button edit-button" @click="saveRun">保存</button>
       <button v-else class="action-button edit-button" @click="editRun">编辑</button>
     </div>
@@ -112,9 +118,11 @@ const id = route.params.id;
 const router = useRouter();
 const runInfo = ref<RunInfo>();
 const isEditing = ref(false);
+const isSubmitting = ref(false);
 
 const verifyRun = async () => {
   try {
+    isSubmitting.value = true;
     const { data, error } = await supabase
       .from('runs')
       .update({
@@ -137,11 +145,14 @@ const verifyRun = async () => {
     }
   } catch (error) {
     console.error(error);
+  } finally {
+    isSubmitting.value = false;
   }
 };
 
 const rejectRun = async () => {
   try {
+    isSubmitting.value = true;
     const { data, error } = await supabase
       .from('runs')
       .update({
@@ -159,6 +170,8 @@ const rejectRun = async () => {
     }
   } catch (error) {
     console.error(error);
+  } finally {
+    isSubmitting.value = false;
   }
 };
 

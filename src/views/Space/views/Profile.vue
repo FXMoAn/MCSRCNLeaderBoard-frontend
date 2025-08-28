@@ -1,6 +1,6 @@
 <template>
   <div class="profile-container">
-    <div>开发中</div>
+    <div class="section"></div>
   </div>
 </template>
 
