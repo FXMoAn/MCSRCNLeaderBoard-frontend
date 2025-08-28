@@ -13,6 +13,9 @@
       :nickname="item.nickname"
       :igt="item.igt"
       :videolink="item.videolink"
+      :version="item.version"
+      :type="item.type"
+      :date="item.date"
     />
   </div>
   <div v-else class="verify-container">
