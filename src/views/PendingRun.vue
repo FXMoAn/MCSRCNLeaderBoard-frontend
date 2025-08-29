@@ -74,6 +74,17 @@
             :disabled="!isEditing"
           />
         </div>
+        <div class="info-item" @click="openVideoLink">
+          <span class="info-label">视频链接</span>
+          <input
+            v-model="runInfo.videolink"
+            :placeholder="runInfo.videolink"
+            class="info-value"
+            type="text"
+            :disabled="!isEditing"
+            @click.stop
+          />
+        </div>
         <div class="info-item">
           <span class="info-label">备注</span>
           <textarea
@@ -132,6 +143,7 @@ const verifyRun = async () => {
         type: runInfo.value?.type,
         seed: runInfo.value?.seed,
         remarks: runInfo.value?.remarks,
+        videolink: runInfo.value?.videolink,
         status: 'verified',
       })
       .eq('id', id);
@@ -181,6 +193,11 @@ const saveRun = () => {
 
 const editRun = () => {
   isEditing.value = true;
+};
+
+const openVideoLink = () => {
+  if (isEditing.value) return;
+  window.open(runInfo.value?.videolink, '_blank');
 };
 
 const getRunInfo = async () => {
@@ -270,11 +287,13 @@ onBeforeMount(() => {
   box-sizing: border-box;
 }
 
-.info-grid .info-item:nth-child(7) {
+.info-grid .info-item:nth-child(7),
+.info-grid .info-item:nth-child(8) {
   grid-column: 1 / -1;
 }
 
-.info-grid .info-item:nth-child(7) .info-value {
+.info-grid .info-item:nth-child(7) .info-value,
+.info-grid .info-item:nth-child(8) .info-value {
   white-space: normal;
   word-wrap: break-word;
   overflow: visible;
