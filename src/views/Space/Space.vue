@@ -6,10 +6,10 @@
 import SecondaryNav from '@/components/SecondaryNav.vue';
 
 const navItems = [
-  {
-    path: '/space/profile',
-    label: '个人资料',
-  },
+  // {
+  //   path: '/space/profile',
+  //   label: '个人资料',
+  // },
   {
     path: '/space/binding',
     label: '账号信息管理',
