@@ -76,6 +76,11 @@ const router = createRouter({
           name: 'verify',
           component: () => import('../views/Manage/views/Verify.vue'),
         },
+        {
+          path: 'run',
+          name: 'run',
+          component: () => import('../views/Manage/views/Run.vue'),
+        },
       ],
     },
   ],

@@ -97,11 +97,21 @@
       </div>
     </div>
     <div class="action-container">
-      <button class="action-button verify-button" @click="verifyRun" :disabled="isSubmitting">
+      <button
+        class="action-button verify-button"
+        @click="verifyRun"
+        :disabled="isSubmitting"
+        v-show="runInfo.status !== 'verified'"
+      >
         <span v-if="!isSubmitting">通过</span>
         <span v-else>操作中...</span>
       </button>
-      <button class="action-button reject-button" @click="rejectRun" :disabled="isSubmitting">
+      <button
+        class="action-button reject-button"
+        @click="rejectRun"
+        :disabled="isSubmitting"
+        v-show="runInfo.status !== 'rejected'"
+      >
         <span v-if="!isSubmitting">拒绝</span>
         <span v-else>操作中...</span>
       </button>

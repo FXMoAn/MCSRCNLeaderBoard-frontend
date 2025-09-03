@@ -11,12 +11,16 @@ const navItems = [
     label: '上传成绩',
   },
   {
+    path: '/manage/verify',
+    label: '审核记录',
+  },
+  {
     path: '/manage/user',
     label: '管理用户',
   },
   {
-    path: '/manage/verify',
-    label: '审核记录',
+    path: '/manage/run',
+    label: '管理成绩',
   },
 ];
 </script>

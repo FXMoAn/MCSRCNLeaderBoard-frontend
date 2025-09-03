@@ -11,6 +11,7 @@ const requireAuthRoutes = [
   '/manage/upload',
   '/manage/user',
   '/manage/verify',
+  '/manage/run',
   '/upload',
   '/pending-run/:id',
 ];
@@ -21,6 +22,7 @@ const requireAdminRoutes = [
   '/manage/upload',
   '/manage/user',
   '/manage/verify',
+  '/manage/run',
   '/pending-run/:id',
 ];
 
