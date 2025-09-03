@@ -73,7 +73,7 @@ const handleLogin = async () => {
 const resetPassword = async () => {
   if (!email.value) return alert('请输入邮箱');
   const { error } = await supabase.auth.resetPasswordForEmail(email.value, {
-    redirectTo: 'https://www.mcspeedrun.com/reset-password',
+    redirectTo: 'https://www.mcspeedrun.cn/reset-password',
   });
   if (error) return alert(error.message);
   alert('已发送，请查收邮件');

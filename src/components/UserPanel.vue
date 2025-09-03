@@ -7,9 +7,7 @@
       @mouseleave="hideDropdown"
     >
       <div class="user-avatar">
-        <span class="avatar-text">{{
-          displayUserName?.charAt(0)?.toUpperCase()
-        }}</span>
+        <span class="avatar-text">{{ displayUserName?.charAt(0)?.toUpperCase() }}</span>
       </div>
       <span class="user-name">{{ displayUserName }}</span>
       <div class="dropdown-arrow">
@@ -46,31 +44,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineEmits, computed } from "vue";
-import useAuthStore from "@/stores/auth";
-import useUserStore from "@/stores/user";
-import { useRouter } from "vue-router";
+import { ref, defineEmits, computed } from 'vue';
+import useAuthStore from '@/stores/auth';
+import useUserStore from '@/stores/user';
+import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const authStore = useAuthStore();
-const emit = defineEmits(["signOut"]);
+const emit = defineEmits(['signOut']);
 const hovered = ref(false);
 const userStore = useUserStore();
 let hideTimeout: number | null = null;
 
 const displayUserName = computed(() => {
-  return userStore.isBinding
-    ? userStore.userInfo?.nickname
-    : authStore.user?.email;
+  return userStore.isBinding ? userStore.userInfo?.nickname : authStore.user?.email;
 });
 
 const routeToBinding = () => {
-  router.push("/space/profile");
+  router.push('/space/binding');
 };
 
 const signOut = () => {
   authStore.logout();
-  emit("signOut");
+  emit('signOut');
 };
 
 const showDropdown = () => {
