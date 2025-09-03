@@ -35,6 +35,11 @@ const router = createRouter({
       component: () => import('../views/Signup.vue'),
     },
     {
+      path: '/reset-password',
+      name: 'reset-password',
+      component: () => import('../views/ResetPassword.vue'),
+    },
+    {
       path: '/pending-run/:id',
       name: 'pending-run',
       component: () => import('../views/PendingRun.vue'),

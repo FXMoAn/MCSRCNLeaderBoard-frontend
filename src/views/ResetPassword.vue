@@ -1,87 +1,97 @@
 <template>
-  <div class="login-container">
+  <div class="reset-password-container">
     <div class="form-card">
-      <div class="form-title">登录</div>
-      <form class="login-form" @submit.prevent="handleLogin">
+      <div class="form-title">重置密码</div>
+      <form class="reset-password-form" @submit.prevent="handleResetPassword">
         <div class="form-group">
-          <label for="email" class="form-label">邮箱</label>
-          <input
-            class="form-input"
-            type="email"
-            id="email"
-            v-model="email"
-            placeholder="请输入邮箱"
-            required
-          />
-        </div>
-        <div class="form-group">
-          <label for="password" class="form-label">密码</label>
+          <label for="new-password" class="form-label">新密码</label>
           <input
             class="form-input"
             type="password"
-            id="password"
-            v-model="password"
-            placeholder="请输入密码"
+            id="new-password"
+            v-model="newPassword"
+            placeholder="请输入新密码"
             required
           />
         </div>
-        <button class="submit-button" type="submit">登录</button>
+        <div class="form-group">
+          <label for="confirm-password" class="form-label">确认密码</label>
+          <input
+            class="form-input"
+            type="password"
+            id="confirm-password"
+            v-model="confirmPassword"
+            placeholder="请确认新密码"
+            required
+          />
+        </div>
+        <button class="submit-button" type="submit" :disabled="loading">
+          {{ loading ? '重置中...' : '重置密码' }}
+        </button>
       </form>
-      <div class="signup-link">
-        <span>还没有账号？</span>
-        <a href="/signup">去注册</a>
-        <br />
-        <br />
-        <span>忘记密码？</span>
-        <button class="reset-password-button" @click="resetPassword">去重置</button>
+      <div class="login-link">
+        <span>密码重置成功？</span>
+        <a href="/login">去登录</a>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import useAuthStore from '@/stores/auth';
-import { useRouter, useRoute } from 'vue-router';
-import { getRedirectPath, clearRedirectPath } from '@/router/guards';
+import { useRouter } from 'vue-router';
 import { supabase } from '@/lib/supabaseClient';
 
+const newPassword = ref('');
+const confirmPassword = ref('');
+const loading = ref(false);
+
+const checkPassword = () => {
+  if (newPassword.value !== confirmPassword.value) {
+    alert('密码不一致');
+    return false;
+  }
+  if (newPassword.value.length < 6) {
+    alert('密码长度至少6位');
+    return false;
+  }
+  return true;
+};
+
 const router = useRouter();
-const route = useRoute();
-const authStore = useAuthStore();
 
-const email = ref('');
-const password = ref('');
+const handleReset = async () => {
+  const { error } = await supabase.auth.updateUser({ password: newPassword.value });
+  if (error) return alert(error.message);
+  alert('密码已重置，请重新登录');
+  await supabase.auth.signOut();
+  router.replace('/login');
+};
 
-const handleLogin = async () => {
-  const { data, error } = await authStore.login(email.value, password.value);
-  if (error) {
-    alert(error.message);
-  } else {
-    // 等待一下让认证状态更新完成
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    // 获取重定向路径
-    const redirectPath = getRedirectPath();
-    clearRedirectPath();
-
-    // 跳转到目标页面或首页
-    router.push(redirectPath);
+const handleResetPassword = async () => {
+  if (checkPassword()) {
+    loading.value = true;
+    try {
+      await handleReset();
+    } finally {
+      loading.value = false;
+    }
   }
 };
 
-const resetPassword = async () => {
-  if (!email.value) return alert('请输入邮箱');
-  const { error } = await supabase.auth.resetPasswordForEmail(email.value, {
-    redirectTo: 'https://www.mcspeedrun.com/reset-password',
-  });
-  if (error) return alert(error.message);
-  alert('已发送，请查收邮件');
-};
+onMounted(async () => {
+  // 当用户通过邮件进来时，URL 中带有 access_token，Supabase 会自动把 session 换好
+  const { data } = await supabase.auth.getSession();
+  if (!data.session) {
+    alert('链接已失效，请重新申请');
+    router.replace('/login');
+  }
+});
 </script>
 
 <style scoped>
-.login-container {
+.reset-password-container {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -108,7 +118,7 @@ const resetPassword = async () => {
   color: #fff;
 }
 
-.login-form {
+.reset-password-form {
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -162,24 +172,23 @@ const resetPassword = async () => {
   margin-top: 8px;
 }
 
-.submit-button:hover {
+.submit-button:hover:not(:disabled) {
   background: linear-gradient(135deg, #00acc1, #00838f);
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(0, 188, 212, 0.3);
 }
 
-.submit-button:active {
+.submit-button:active:not(:disabled) {
   transform: translateY(0);
 }
 
-.reset-password-button {
-  background: none;
-  border: none;
-  color: #00bcd4;
-  cursor: pointer;
+.submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
-.signup-link {
+.login-link {
   text-align: center;
   margin-top: 24px;
   padding-top: 24px;
@@ -188,7 +197,7 @@ const resetPassword = async () => {
   font-size: 14px;
 }
 
-.signup-link a {
+.login-link a {
   color: #00bcd4;
   text-decoration: none;
   font-weight: 500;
@@ -196,7 +205,7 @@ const resetPassword = async () => {
   transition: color 0.3s ease;
 }
 
-.signup-link a:hover {
+.login-link a:hover {
   color: #00acc1;
   text-decoration: underline;
 }
