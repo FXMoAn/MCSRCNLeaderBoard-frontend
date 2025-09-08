@@ -40,8 +40,8 @@ const router = createRouter({
       component: () => import('../views/ResetPassword.vue'),
     },
     {
-      path: '/pending/:id',
-      name: 'pending',
+      path: '/pending-run/:id',
+      name: 'pending-run',
       component: () => import('../views/PendingRun.vue'),
     },
     {
