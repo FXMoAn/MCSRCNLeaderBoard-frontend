@@ -43,6 +43,21 @@ const history = [
   { date: new Date().toISOString().split('T')[0], time: '08:03', player: 'Tenes9999', bv: '' },
 ];
 
+// 为不同玩家定义颜色方案
+const playerColors = {
+  PluginL: '#00bcd4', // 青色 - 主要玩家
+  '-2x-': '#ff9800', // 橙色
+  瑕玟: '#4caf50', // 绿色
+  xbd15: '#9c27b0', // 紫色
+  Acactus_: '#f44336', // 红色
+  Tenes9999: '#2196f3', // 蓝色
+};
+
+// 获取玩家颜色，如果未定义则使用默认颜色
+function getPlayerColor(player) {
+  return playerColors[player] || '#607d8b'; // 默认蓝灰色
+}
+
 const chartRef = ref(null);
 let chartInst = null;
 
@@ -127,6 +142,23 @@ function renderChart() {
       },
       data: [...history.map((d) => d.time), '06:50'],
     },
+    legend: {
+      show: true,
+      top: 10,
+      right: 20,
+      orient: 'vertical',
+      textStyle: {
+        color: '#fff',
+        fontSize: 12,
+      },
+      itemGap: 8,
+      data: Object.keys(playerColors).map((player) => ({
+        name: player,
+        itemStyle: {
+          color: playerColors[player],
+        },
+      })),
+    },
     dataZoom: {
       filterMode: 'none',
       type: 'inside',
@@ -145,26 +177,47 @@ function renderChart() {
         symbolSize: 10,
         lineStyle: {
           width: 3,
-          color: '#00bcd4',
+          color: function (params) {
+            return getPlayerColor(params.data.player);
+          },
         },
         itemStyle: {
-          color: '#00bcd4',
-          borderColor: '#00acc1',
+          color: function (params) {
+            return getPlayerColor(params.data.player);
+          },
+          borderColor: function (params) {
+            const baseColor = getPlayerColor(params.data.player);
+            // 创建更深的边框颜色
+            return baseColor;
+          },
           borderWidth: 2,
         },
         emphasis: {
           scale: 1.6,
           itemStyle: {
-            color: '#00acc1',
-            borderColor: '#0097a7',
+            color: function (params) {
+              const baseColor = getPlayerColor(params.data.player);
+              // 悬停时稍微变亮
+              return baseColor;
+            },
+            borderColor: function (params) {
+              const baseColor = getPlayerColor(params.data.player);
+              return baseColor;
+            },
           },
         },
-        data: history.map((d) => ({
+        data: history.map((d, index) => ({
           date: d.date,
           value: [new Date(d.date), d.time],
           time: d.time,
           player: d.player,
           bv: d.bv,
+          symbol: index === history.length - 1 ? 'diamond' : 'circle',
+          symbolSize: index === history.length - 1 ? 12 : 10,
+          itemStyle: {
+            color: getPlayerColor(d.player),
+            borderColor: getPlayerColor(d.player),
+          },
         })),
         markLine: {
           data: [
@@ -172,6 +225,7 @@ function renderChart() {
               player: '世界纪录',
               yAxis: '06:50',
               time: '06:50',
+              date: '2025-06-12',
               lineStyle: {
                 color: '#ff6b6b',
                 type: 'dashed',
