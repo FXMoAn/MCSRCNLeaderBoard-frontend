@@ -13,6 +13,7 @@
       :version="item.version"
       :type="item.type"
       :date="item.date"
+      :status="item.status"
     />
   </div>
   <div v-else class="verify-container">

@@ -45,6 +45,11 @@ const router = createRouter({
       component: () => import('../views/PendingRun.vue'),
     },
     {
+      path: '/stats',
+      name: 'stats',
+      component: () => import('../views/Stats/Stats.vue'),
+    },
+    {
       path: '/space',
       name: 'space',
       component: () => import('../views/Space/Space.vue'),
