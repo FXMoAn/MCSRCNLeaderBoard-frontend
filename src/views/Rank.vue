@@ -20,14 +20,9 @@
       :initialNickname="state.nickname"
     />
   </div>
-  <div v-if="isLoading" class="content-container">
-    <div class="loading-container">
-      <div class="loading-spinner"></div>
-      <p class="loading-text">加载中...</p>
-    </div>
-  </div>
-  <div v-else class="content-container">
-    <div class="container">
+  <div class="content-container">
+    <Loading v-if="isLoading" />
+    <div class="container" v-else>
       <table class="leaderboard">
         <thead class="leaderboard-head">
           <tr class="head">
@@ -67,14 +62,16 @@
 import '@/assets/main.css';
 import { ref, onMounted, computed, onActivated, watch } from 'vue';
 import { useStatsStore } from '@/stores/stats.ts';
+import { safeDisplay } from '@/utils/security';
+import { createURLStateManager } from '@/utils/urlStateManage';
+// 组件
 import SvgIcon from '@/components/icons/index.vue';
 import { useRouter, useRoute } from 'vue-router';
 import RankedFilter from '@/components/RankedFilter.vue';
 import Pagination from '@/components/Pagination.vue';
 import Notification from '@/components/Notification.vue';
-import { safeDisplay } from '@/utils/security';
-import { createURLStateManager } from '@/utils/urlStateManage';
 import VersionTypeSelector from '@/components/VersionTypeSelector.vue';
+import Loading from '@/components/common/Loading.vue';
 
 // 定义状态类型
 interface RankState {
@@ -274,38 +271,6 @@ onActivated(() => {
   height: 100%;
   width: 100%;
   max-width: 1200px;
-}
-
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  margin-top: 100px;
-}
-
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top: 3px solid #00bcd4;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.loading-text {
-  color: white;
-  font-size: 1.2em;
-  text-align: center;
 }
 
 .button-group {

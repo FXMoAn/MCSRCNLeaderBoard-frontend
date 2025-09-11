@@ -1,128 +1,125 @@
 <template>
-  <div v-if="runInfo" class="content">
-    <div class="video-container">
-      <iframe
-        class="video-iframe"
-        :src="getPlayerUrl"
-        scrolling="no"
-        border="0"
-        frameborder="no"
-        framespacing="0"
-        allowfullscreen="true"
-      ></iframe>
-    </div>
-    <div class="info-container">
-      <div class="info-title">记录详情</div>
-      <div class="info-grid">
-        <div class="info-item">
-          <span class="info-label">玩家</span>
-          <input
-            v-model="runInfo.users.nickname"
-            :placeholder="runInfo.users.nickname"
-            class="info-value"
-            type="text"
-            disabled
-          />
-        </div>
-        <div class="info-item">
-          <span class="info-label">日期</span>
-          <input
-            v-model="runInfo.date"
-            :placeholder="runInfo.date"
-            class="info-value"
-            type="text"
-            :disabled="!isEditing"
-          />
-        </div>
-        <div class="info-item">
-          <span class="info-label">IGT</span>
-          <input
-            v-model="runInfo.igt"
-            :placeholder="runInfo.igt"
-            class="info-value"
-            type="text"
-            :disabled="!isEditing"
-          />
-        </div>
-        <div class="info-item">
-          <span class="info-label">版本</span>
-          <input
-            v-model="runInfo.version"
-            :placeholder="runInfo.version"
-            class="info-value"
-            type="text"
-            :disabled="!isEditing"
-          />
-        </div>
-        <div class="info-item">
-          <span class="info-label">类型</span>
-          <input
-            v-model="runInfo.type"
-            :placeholder="runInfo.type"
-            class="info-value"
-            type="text"
-            :disabled="!isEditing"
-          />
-        </div>
-        <div class="info-item">
-          <span class="info-label">种子</span>
-          <input
-            v-model="runInfo.seed"
-            :placeholder="runInfo.seed || '无'"
-            class="info-value"
-            type="text"
-            :disabled="!isEditing"
-          />
-        </div>
-        <div class="info-item" @click="openVideoLink">
-          <span class="info-label">视频链接</span>
-          <input
-            v-model="runInfo.videolink"
-            :placeholder="runInfo.videolink"
-            class="info-value"
-            type="text"
-            :disabled="!isEditing"
-            @click.stop
-          />
-        </div>
-        <div class="info-item">
-          <span class="info-label">备注</span>
-          <textarea
-            v-model="runInfo.remarks"
-            :placeholder="runInfo.remarks || '无'"
-            class="info-value"
-            :disabled="!isEditing"
-          />
+  <div class="content">
+    <Loading v-if="!runInfo" />
+    <div v-else class="content">
+      <div class="video-container">
+        <iframe
+          class="video-iframe"
+          :src="getPlayerUrl"
+          scrolling="no"
+          border="0"
+          frameborder="no"
+          framespacing="0"
+          allowfullscreen="true"
+        ></iframe>
+      </div>
+      <div class="info-container">
+        <div class="info-title">记录详情</div>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">玩家</span>
+            <input
+              v-model="runInfo.users.nickname"
+              :placeholder="runInfo.users.nickname"
+              class="info-value"
+              type="text"
+              disabled
+            />
+          </div>
+          <div class="info-item">
+            <span class="info-label">日期</span>
+            <input
+              v-model="runInfo.date"
+              :placeholder="runInfo.date"
+              class="info-value"
+              type="text"
+              :disabled="!isEditing"
+            />
+          </div>
+          <div class="info-item">
+            <span class="info-label">IGT</span>
+            <input
+              v-model="runInfo.igt"
+              :placeholder="runInfo.igt"
+              class="info-value"
+              type="text"
+              :disabled="!isEditing"
+            />
+          </div>
+          <div class="info-item">
+            <span class="info-label">版本</span>
+            <input
+              v-model="runInfo.version"
+              :placeholder="runInfo.version"
+              class="info-value"
+              type="text"
+              :disabled="!isEditing"
+            />
+          </div>
+          <div class="info-item">
+            <span class="info-label">类型</span>
+            <input
+              v-model="runInfo.type"
+              :placeholder="runInfo.type"
+              class="info-value"
+              type="text"
+              :disabled="!isEditing"
+            />
+          </div>
+          <div class="info-item">
+            <span class="info-label">种子</span>
+            <input
+              v-model="runInfo.seed"
+              :placeholder="runInfo.seed || '无'"
+              class="info-value"
+              type="text"
+              :disabled="!isEditing"
+            />
+          </div>
+          <div class="info-item" @click="openVideoLink">
+            <span class="info-label">视频链接</span>
+            <input
+              v-model="runInfo.videolink"
+              :placeholder="runInfo.videolink"
+              class="info-value"
+              type="text"
+              :disabled="!isEditing"
+              @click.stop
+            />
+          </div>
+          <div class="info-item">
+            <span class="info-label">备注</span>
+            <textarea
+              v-model="runInfo.remarks"
+              :placeholder="runInfo.remarks || '无'"
+              class="info-value"
+              :disabled="!isEditing"
+            />
+          </div>
         </div>
       </div>
-    </div>
-    <div class="action-container">
-      <button
-        class="action-button verify-button"
-        @click="verifyRun"
-        :disabled="isSubmitting"
-        v-show="runInfo.status !== 'verified'"
-      >
-        <span v-if="!isSubmitting">通过</span>
-        <span v-else>操作中...</span>
-      </button>
-      <button
-        class="action-button reject-button"
-        @click="rejectRun"
-        :disabled="isSubmitting"
-        v-show="runInfo.status !== 'rejected'"
-      >
-        <span v-if="!isSubmitting">拒绝</span>
-        <span v-else>操作中...</span>
-      </button>
-      <button v-if="isEditing" class="action-button edit-button" @click="saveRun">保存</button>
-      <button v-else class="action-button edit-button" @click="editRun">编辑</button>
-    </div>
-  </div>
-  <div v-else class="content">
-    <div class="loading-container">
-      <div class="loading-spinner"></div>
-      <p class="loading-text">加载中...</p>
+      <div class="action-container">
+        <button
+          class="action-button verify-button"
+          @click="verifyRun"
+          :disabled="isSubmitting"
+          v-show="runInfo.status !== 'verified'"
+        >
+          <span v-if="!isSubmitting">通过</span>
+          <span v-else>操作中...</span>
+        </button>
+        <button
+          class="action-button reject-button"
+          @click="rejectRun"
+          :disabled="isSubmitting"
+          v-show="runInfo.status !== 'rejected'"
+        >
+          <span v-if="!isSubmitting">拒绝</span>
+          <span v-else>操作中...</span>
+        </button>
+        <button v-if="isEditing" class="action-button edit-button" @click="saveRun">保存</button>
+        <button v-else class="action-button edit-button" @click="editRun">编辑</button>
+      </div>
     </div>
   </div>
 </template>
@@ -133,6 +130,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { onBeforeMount, ref, computed } from 'vue';
 import { extractBVId, buildPlayerUrl } from '@/utils/bilibili';
 import type { RunInfo } from '@/types/CommonTypes';
+import Loading from '@/components/common/Loading.vue';
 
 const route = useRoute();
 const id = route.params.id;
@@ -373,23 +371,6 @@ onBeforeMount(() => {
   white-space: nowrap;
 }
 
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  margin-top: 100px;
-}
-
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top: 3px solid #00bcd4;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
 .action-container {
   display: flex;
   gap: 10px;
@@ -416,21 +397,6 @@ onBeforeMount(() => {
 
 .action-button:hover {
   opacity: 0.8;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.loading-text {
-  color: white;
-  font-size: 1.2em;
-  text-align: center;
 }
 
 @media (max-width: 768px) {

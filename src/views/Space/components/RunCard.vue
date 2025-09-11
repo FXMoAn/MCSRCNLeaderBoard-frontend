@@ -5,6 +5,7 @@
     <div class="type-cell info-cell">{{ props.type }}</div>
     <div class="date-cell info-cell">{{ props.date }}</div>
     <div class="igt-cell" v-html="safeDisplay(props.igt)"></div>
+    <div class="status-cell info-cell" :style="{ color: statusColor }">{{ props.status }}</div>
     <div class="video-cell">
       <a
         :href="props.videolink"
@@ -23,6 +24,7 @@
 import { safeDisplay } from '@/utils/security';
 import SvgIcon from '@/components/icons/index.vue';
 import { useRouter } from 'vue-router';
+import { computed } from 'vue';
 
 interface Props {
   id: number;
@@ -32,15 +34,24 @@ interface Props {
   date: string;
   igt: string;
   videolink: string;
+  status: string;
 }
 
 const router = useRouter();
 
 const props = defineProps<Props>();
 
+const statusColor = computed(() => {
+  return props.status === 'verified'
+    ? '#4caf50'
+    : props.status === 'rejected'
+      ? '#f44336'
+      : '#ff9800';
+});
+
 // 跳转至详情页
 const navToRunDetail = (id: number) => {
-  router.push(`/pending-run/${id}`);
+  router.push(`/run/${id}`);
 };
 
 // 打开视频链接

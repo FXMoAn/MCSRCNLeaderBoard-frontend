@@ -50,9 +50,9 @@ const router = createRouter({
       component: () => import('../views/Space/Space.vue'),
       children: [
         {
-          path: 'profile',
-          name: 'profile',
-          component: () => import('../views/Space/views/Profile.vue'),
+          path: 'user-runs',
+          name: 'user-runs',
+          component: () => import('../views/Space/views/UserRuns.vue'),
         },
         {
           path: 'binding',

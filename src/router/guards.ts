@@ -5,7 +5,7 @@ import { useUserStore } from '@/stores';
 // 需要登录的路由
 const requireAuthRoutes = [
   '/space',
-  '/space/profile',
+  '/space/user-runs',
   '/space/binding',
   '/manage',
   '/manage/upload',

@@ -1,9 +1,6 @@
 <template>
   <div v-if="isLoading" class="verify-container">
-    <div class="loading-container">
-      <div class="loading-spinner"></div>
-      <p class="loading-text">加载中...</p>
-    </div>
+    <Loading />
   </div>
   <div v-else-if="verifyData.length > 0" class="verify-container">
     <RunCard
@@ -19,12 +16,13 @@
     />
   </div>
   <div v-else class="verify-container">
-    <p class="loading-text">暂无待审核成绩</p>
+    <p class="tip-text">暂无待审核成绩</p>
   </div>
 </template>
 
 <script setup lang="ts">
 import RunCard from '../components/RunCard.vue';
+import Loading from '@/components/common/Loading.vue';
 import { ref, onMounted, computed } from 'vue';
 import { useStatsStore } from '@/stores/stats';
 
@@ -49,29 +47,9 @@ onMounted(() => {
   align-items: center;
 }
 
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  margin-top: 100px;
-}
-
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top: 3px solid #00bcd4;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+.tip-text {
+  color: #fff;
+  font-size: 1.2em;
+  text-align: center;
 }
 </style>

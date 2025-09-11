@@ -1,54 +1,51 @@
 <template>
-  <div v-if="runInfo" class="content">
-    <div class="video-container">
-      <iframe
-        class="video-iframe"
-        :src="getPlayerUrl"
-        scrolling="no"
-        border="0"
-        frameborder="no"
-        framespacing="0"
-        allowfullscreen="true"
-      ></iframe>
-    </div>
-    <div class="info-container">
-      <div class="info-title">记录详情</div>
-      <div class="info-grid">
-        <div class="info-item">
-          <span class="info-label">玩家</span>
-          <span class="info-value">{{ runInfo.users.nickname }}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">日期</span>
-          <span class="info-value">{{ runInfo.date }}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">IGT</span>
-          <span class="info-value igt-value">{{ runInfo.igt }}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">版本</span>
-          <span class="info-value">{{ runInfo.version }}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">类型</span>
-          <span class="info-value">{{ runInfo.type }}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">种子</span>
-          <span class="info-value">{{ runInfo.seed || '无' }}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">备注</span>
-          <span class="info-value">{{ runInfo.remarks || '无' }}</span>
+  <div class="content">
+    <Loading v-if="!runInfo" />
+    <div v-else class="content">
+      <div class="video-container">
+        <iframe
+          class="video-iframe"
+          :src="getPlayerUrl"
+          scrolling="no"
+          border="0"
+          frameborder="no"
+          framespacing="0"
+          allowfullscreen="true"
+        ></iframe>
+      </div>
+      <div class="info-container">
+        <div class="info-title">记录详情</div>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">玩家</span>
+            <span class="info-value">{{ runInfo.users.nickname }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">日期</span>
+            <span class="info-value">{{ runInfo.date }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">IGT</span>
+            <span class="info-value igt-value">{{ runInfo.igt }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">版本</span>
+            <span class="info-value">{{ runInfo.version }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">类型</span>
+            <span class="info-value">{{ runInfo.type }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">种子</span>
+            <span class="info-value">{{ runInfo.seed || '无' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">备注</span>
+            <span class="info-value">{{ runInfo.remarks || '无' }}</span>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
-  <div v-else class="content">
-    <div class="loading-container">
-      <div class="loading-spinner"></div>
-      <p class="loading-text">加载中...</p>
     </div>
   </div>
 </template>
@@ -59,6 +56,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { onBeforeMount, ref, computed } from 'vue';
 import { extractBVId, buildPlayerUrl } from '@/utils/bilibili';
 import type { RunInfo } from '@/types/CommonTypes';
+import Loading from '@/components/common/Loading.vue';
 
 const route = useRoute();
 const id = route.params.id;
@@ -207,38 +205,6 @@ onBeforeMount(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  margin-top: 100px;
-}
-
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top: 3px solid #00bcd4;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.loading-text {
-  color: white;
-  font-size: 1.2em;
-  text-align: center;
 }
 
 @media (max-width: 768px) {
