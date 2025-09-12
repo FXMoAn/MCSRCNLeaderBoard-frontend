@@ -60,9 +60,9 @@ onMounted(async () => {
   await authStore.initializeAuth();
 
   // 等待认证完成后再初始化用户信息
-  if (authStore.isLoggedIn && authStore.user) {
-    eventBus.emit(AUTH_EVENTS.USER_LOGGED_IN, authStore.user);
-  }
+  // if (authStore.isLoggedIn && authStore.user) {
+  //   eventBus.emit(AUTH_EVENTS.USER_LOGGED_IN, authStore.user);
+  // }
 });
 </script>
 
