@@ -51,7 +51,7 @@ const statusColor = computed(() => {
 
 // 跳转至详情页
 const navToRunDetail = (id: number) => {
-  router.push(`/pending-run/${id}`);
+  router.push(`/run/${id}`);
 };
 
 // 打开视频链接

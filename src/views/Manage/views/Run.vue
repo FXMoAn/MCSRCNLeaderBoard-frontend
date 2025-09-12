@@ -23,6 +23,7 @@
         :version="item.version"
         :type="item.type"
         :date="item.date"
+        :status="item.status"
       />
     </div>
   </div>
@@ -91,6 +92,9 @@ const getRunByUser = async () => {
 
 .run-cards {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .submit-button {

@@ -2,7 +2,7 @@
   <div class="user-panel">
     <div
       class="user-info"
-      @click="routeToBinding"
+      @click="routeToSpace"
       @mouseenter="showDropdown"
       @mouseleave="hideDropdown"
     >
@@ -59,6 +59,10 @@ let hideTimeout: number | null = null;
 const displayUserName = computed(() => {
   return userStore.isBinding ? userStore.userInfo?.nickname : authStore.user?.email;
 });
+
+const routeToSpace = () => {
+  router.push('/space/user-runs');
+};
 
 const routeToBinding = () => {
   router.push('/space/binding');

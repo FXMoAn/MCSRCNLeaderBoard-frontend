@@ -45,14 +45,19 @@ const router = createRouter({
       component: () => import('../views/PendingRun.vue'),
     },
     {
+      path: '/stats',
+      name: 'stats',
+      component: () => import('../views/Stats/Stats.vue'),
+    },
+    {
       path: '/space',
       name: 'space',
       component: () => import('../views/Space/Space.vue'),
       children: [
         {
-          path: 'profile',
-          name: 'profile',
-          component: () => import('../views/Space/views/Profile.vue'),
+          path: 'user-runs',
+          name: 'user-runs',
+          component: () => import('../views/Space/views/UserRuns.vue'),
         },
         {
           path: 'binding',

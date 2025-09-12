@@ -8,6 +8,7 @@
       <div v-if="userStore.isBinding">
         <router-link to="/user-upload" class="nav-link">上传记录</router-link>
       </div>
+      <div><router-link to="/stats" class="nav-link">统计数据</router-link></div>
       <div><a href="https://wiki.mcspeedrun.cn" target="_blank" class="nav-link">速通wiki</a></div>
       <div v-if="userStore.isAdmin">
         <router-link to="/manage/upload" class="nav-link">管理员</router-link>
@@ -59,9 +60,9 @@ onMounted(async () => {
   await authStore.initializeAuth();
 
   // 等待认证完成后再初始化用户信息
-  if (authStore.isLoggedIn && authStore.user) {
-    eventBus.emit(AUTH_EVENTS.USER_LOGGED_IN, authStore.user);
-  }
+  // if (authStore.isLoggedIn && authStore.user) {
+  //   eventBus.emit(AUTH_EVENTS.USER_LOGGED_IN, authStore.user);
+  // }
 });
 </script>
 
