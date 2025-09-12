@@ -58,6 +58,19 @@ function getPlayerColor(player) {
   return playerColors[player] || '#607d8b'; // 默认蓝灰色
 }
 
+// 将时间字符串转换为秒数
+function timeToSeconds(timeStr) {
+  const [minutes, seconds] = timeStr.split(':').map(Number);
+  return minutes * 60 + seconds;
+}
+
+// 将秒数转换为时间字符串
+function secondsToTime(seconds) {
+  const minutes = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
 const chartRef = ref(null);
 let chartInst = null;
 
@@ -115,8 +128,10 @@ function renderChart() {
       },
     },
     yAxis: {
-      type: 'category',
+      type: 'value',
       name: '用时（mm:ss）',
+      nameLocation: 'middle',
+      nameGap: 50,
       nameTextStyle: {
         color: '#fff',
         fontSize: 14,
@@ -124,8 +139,12 @@ function renderChart() {
       axisLabel: {
         color: '#ccc',
         fontSize: 12,
+        formatter: function (value) {
+          return secondsToTime(value);
+        },
       },
       axisLine: {
+        show: true,
         lineStyle: {
           color: '#555',
         },
@@ -140,7 +159,9 @@ function renderChart() {
           color: '#444',
         },
       },
-      data: [...history.map((d) => d.time), '06:50'],
+      min: timeToSeconds('06:50'),
+      max: timeToSeconds('17:37'),
+      inverse: true,
     },
     legend: {
       show: true,
@@ -172,7 +193,6 @@ function renderChart() {
     series: [
       {
         type: 'line',
-        step: 'start',
         symbol: 'circle',
         symbolSize: 10,
         lineStyle: {
@@ -208,7 +228,7 @@ function renderChart() {
         },
         data: history.map((d, index) => ({
           date: d.date,
-          value: [new Date(d.date), d.time],
+          value: [new Date(d.date), timeToSeconds(d.time)],
           time: d.time,
           player: d.player,
           bv: d.bv,
@@ -223,7 +243,7 @@ function renderChart() {
           data: [
             {
               player: '世界纪录',
-              yAxis: '06:50',
+              yAxis: timeToSeconds('06:50'),
               time: '06:50',
               date: '2025-06-12',
               lineStyle: {
@@ -233,7 +253,7 @@ function renderChart() {
               },
               label: {
                 show: true,
-                position: 'end',
+                position: 'insideEndTop',
                 color: '#ff6b6b',
                 fontSize: 12,
                 backgroundColor: 'rgba(255, 107, 107, 0.1)',
@@ -241,6 +261,8 @@ function renderChart() {
                 borderWidth: 1,
                 borderRadius: 4,
                 padding: [4, 8],
+                formatter: '世界纪录 06:50',
+                offset: [0, -10],
               },
             },
           ],
