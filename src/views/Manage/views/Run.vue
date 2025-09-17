@@ -61,6 +61,7 @@ onMounted(() => {
 const handleUserSelect = (user: any) => {
   nickname.value = user.nickname;
   runData.value = [];
+  getRunByUser();
 };
 
 const getRunByUser = async () => {
