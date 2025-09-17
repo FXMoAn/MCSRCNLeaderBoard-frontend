@@ -1,5 +1,5 @@
 <template>
-  <div class="run-container">
+  <div class="run-container" @keydown.enter="getRunByUser">
     <div class="filter-bar">
       <SearchSelect
         v-model="nickname"
@@ -60,6 +60,7 @@ onMounted(() => {
 
 const handleUserSelect = (user: any) => {
   nickname.value = user.nickname;
+  runData.value = [];
 };
 
 const getRunByUser = async () => {

@@ -161,7 +161,7 @@ const verifyRun = async () => {
     } else {
       console.log('verifyRun success', data);
       alert('通过成功');
-      router.push('/manage/verify');
+      router.go(-1);
     }
   } catch (error) {
     console.error(error);
@@ -196,6 +196,7 @@ const rejectRun = async () => {
 };
 
 const saveRun = () => {
+  verifyRun();
   isEditing.value = false;
 };
 
