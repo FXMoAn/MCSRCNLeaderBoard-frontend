@@ -48,7 +48,7 @@
               min="0"
               autocomplete="off"
             />
-            <span class="igt-separator">:</span>
+            <span class="igt-separator">分</span>
             <input
               class="form-input igt-input"
               type="number"
@@ -59,7 +59,7 @@
               max="59"
               autocomplete="off"
             />
-            <span class="igt-separator">:</span>
+            <span class="igt-separator">秒</span>
             <input
               class="form-input igt-input"
               type="number"
@@ -70,6 +70,7 @@
               max="999"
               autocomplete="off"
             />
+            <span class="igt-separator">毫秒</span>
           </div>
         </div>
 
@@ -169,7 +170,7 @@ const igt = computed(() => {
     igtMinute.value.toString().padStart(2, '0') +
     ':' +
     igtSecond.value.toString().padStart(2, '0') +
-    ':' +
+    '.' +
     igtMillisecond.value.toString().padStart(3, '0')
   );
 });
