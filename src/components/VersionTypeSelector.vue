@@ -3,17 +3,19 @@
     <div class="filter-group">
       <label class="filter-label">版本筛选</label>
       <select v-model="version" class="filter-select" @change="confirmFilter">
-        <option value="1.16.1">1.16.1</option>
-        <option value="1.15.2">1.15.2</option>
-        <option value="1.12.2">1.12.2</option>
-        <option value="1.8.9">1.8.9</option>
-        <option value="1.7.10">1.7.10</option>
+        <option value="1.16.1">1.16-1.19</option>
+        <option value="1.20">1.20+</option>
+        <option value="1.15.2">1.13-1.15</option>
+        <option value="1.12.2">1.9-1.12</option>
+        <option value="1.8.9">1.8</option>
+        <option value="1.7.10">pre 1.8</option>
       </select>
     </div>
     <div class="filter-group">
       <label class="filter-label">类型筛选</label>
       <select v-model="type" class="filter-select" @change="confirmFilter">
         <option value="RSG">RSG</option>
+        <option value="SSG">SSG</option>
       </select>
     </div>
   </div>

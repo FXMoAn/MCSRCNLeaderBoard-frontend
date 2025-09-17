@@ -6,11 +6,12 @@
         <div class="form-group">
           <label class="form-label" for="version">版本</label>
           <select class="form-select" id="version" v-model="version">
-            <option value="1.16.1">1.16.1</option>
-            <option value="1.15.2">1.15.2</option>
-            <option value="1.12.2">1.12.2</option>
-            <option value="1.8.9">1.8.9</option>
-            <option value="1.7.10">1.7.10</option>
+            <option value="1.16.1">1.16-1.19</option>
+            <option value="1.20">1.20+</option>
+            <option value="1.15.2">1.13-1.15</option>
+            <option value="1.12.2">1.9-1.12</option>
+            <option value="1.8.9">1.8</option>
+            <option value="1.7.10">pre 1.8</option>
           </select>
         </div>
 
@@ -18,6 +19,7 @@
           <label class="form-label" for="type">类型</label>
           <select class="form-select" id="type" v-model="type">
             <option value="RSG">RSG</option>
+            <option value="SSG">SSG</option>
           </select>
         </div>
 
@@ -45,7 +47,7 @@
               min="0"
               autocomplete="off"
             />
-            <span class="igt-separator">:</span>
+            <span class="igt-separator">分</span>
             <input
               class="form-input igt-input"
               type="number"
@@ -56,7 +58,7 @@
               max="59"
               autocomplete="off"
             />
-            <span class="igt-separator">:</span>
+            <span class="igt-separator">秒</span>
             <input
               class="form-input igt-input"
               type="number"
@@ -67,6 +69,7 @@
               max="999"
               autocomplete="off"
             />
+            <span class="igt-separator">毫秒</span>
           </div>
         </div>
 
@@ -168,7 +171,7 @@ const igt = computed(() => {
     igtMinute.value.toString().padStart(2, '0') +
     ':' +
     igtSecond.value.toString().padStart(2, '0') +
-    ':' +
+    '.' +
     igtMillisecond.value.toString().padStart(3, '0')
   );
 });
