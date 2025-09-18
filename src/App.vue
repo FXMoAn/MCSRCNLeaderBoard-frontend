@@ -3,6 +3,7 @@
     <div class="logo" @click="backToHome">
       <span> MCSR-CN </span>
     </div>
+    <!-- 屏幕宽度小于780px时，变为左侧抽屉菜单 -->
     <div class="links">
       <div><router-link to="/rank" class="nav-link">排行榜</router-link></div>
       <div v-if="userStore.isBinding">
@@ -28,7 +29,7 @@
 
 <script setup lang="ts">
 import '@/assets/main.css';
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 // 用户登录控制
 import AuthControl from '@/components/AuthControl.vue';
@@ -43,6 +44,14 @@ const userStore = useUserStore();
 const backToHome = () => {
   router.push('/');
 };
+
+// 获取窗口宽度
+const windowWidth = ref(window.innerWidth);
+
+// 监听窗口宽度变化
+watch(windowWidth, (newWidth) => {
+  windowWidth.value = newWidth;
+});
 
 // 监听认证状态变化，自动更新用户信息
 watch(

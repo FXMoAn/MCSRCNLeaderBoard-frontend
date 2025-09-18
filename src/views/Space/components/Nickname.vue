@@ -17,7 +17,7 @@
           title="选择用户"
           @select="handleUserSelect"
         />
-        <button class="form-button" @click="handleBinding">绑定</button>
+        <PrimaryButton @click="handleBinding">绑定</PrimaryButton>
       </div>
     </div>
 
@@ -32,7 +32,7 @@
           placeholder="请输入你的昵称"
           v-model="newUserNickname"
         />
-        <button class="form-button" @click="handleNewUserBinding">绑定</button>
+        <PrimaryButton @click="handleNewUserBinding">绑定</PrimaryButton>
       </div>
     </div>
   </div>
@@ -47,10 +47,8 @@
           v-model="changedNickname"
           :disabled="!isEditing"
         />
-        <button class="form-button refresh-button" @click="handleEditNickname" v-if="!isEditing">
-          修改
-        </button>
-        <button class="form-button refresh-button" @click="handleSaveNickname" v-else>保存</button>
+        <PrimaryButton @click="handleEditNickname" v-if="!isEditing"> 修改 </PrimaryButton>
+        <PrimaryButton @click="handleSaveNickname" v-else>保存</PrimaryButton>
       </div>
     </div>
   </div>
@@ -63,6 +61,7 @@ import useUserStore from '@/stores/user';
 import { useRouter } from 'vue-router';
 import { validateNickname, sanitizeInput } from '@/utils/security';
 import SearchSelect from '@/components/common/SearchSelect.vue';
+import PrimaryButton from '@/components/common/PrimaryButton.vue';
 
 const userStore = useUserStore();
 const router = useRouter();
@@ -199,30 +198,6 @@ onMounted(() => {
   box-shadow: 0 0 0 2px rgba(0, 188, 212, 0.1);
 }
 
-.form-button {
-  background: linear-gradient(135deg, #00bcd4, #0097a7);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 12px 24px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.form-button:hover {
-  background: linear-gradient(135deg, #00acc1, #00838f);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0, 188, 212, 0.3);
-}
-
-.form-button:active {
-  transform: translateY(0);
-}
-
 /* 滚动条样式 */
 .dropdown-options::-webkit-scrollbar {
   width: 6px;
@@ -284,10 +259,6 @@ onMounted(() => {
     flex-direction: column;
     gap: 12px;
     align-items: stretch;
-  }
-
-  .form-button {
-    width: 100%;
   }
 
   .custom-dropdown {
