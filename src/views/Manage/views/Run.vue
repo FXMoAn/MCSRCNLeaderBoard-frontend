@@ -10,7 +10,7 @@
         placeholder="请选择用户"
         @select="handleUserSelect"
       />
-      <button class="submit-button" @click="getRunByUser">确定</button>
+      <PrimaryButton @click="getRunByUser">确定</PrimaryButton>
     </div>
     <div class="run-cards">
       <RunCard
@@ -32,6 +32,7 @@
 <script setup lang="ts">
 import RunCard from '../components/RunCard.vue';
 import SearchSelect from '@/components/common/SearchSelect.vue';
+import PrimaryButton from '@/components/common/PrimaryButton.vue';
 import { ref, onMounted, computed } from 'vue';
 import { useStatsStore } from '@/stores/stats';
 import { supabase } from '@/lib/supabaseClient';
@@ -97,46 +98,5 @@ const getRunByUser = async () => {
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-
-.submit-button {
-  background: linear-gradient(135deg, #00bcd4, #0097a7);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 14px 24px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-}
-
-.submit-button:hover {
-  background: linear-gradient(135deg, #00acc1, #00838f);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0, 188, 212, 0.3);
-}
-
-.submit-button:active {
-  transform: translateY(0);
-}
-
-.submit-button:disabled {
-  background: linear-gradient(135deg, #666, #555);
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-  opacity: 0.7;
-}
-
-.submit-button.submitting {
-  background: linear-gradient(135deg, #0097a7, #00695f);
-  cursor: wait;
-}
-
-.submit-button.submitting:hover {
-  transform: none;
-  box-shadow: none;
 }
 </style>

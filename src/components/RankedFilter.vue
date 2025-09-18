@@ -24,14 +24,15 @@
     </div>
 
     <div class="filter-actions">
-      <button @click="confirmFilter" class="filter-button confirm">确定</button>
-      <button @click="clearFilter" class="filter-button clear">清空</button>
+      <PrimaryButton @click="confirmFilter" variant="primary">确定</PrimaryButton>
+      <PrimaryButton @click="clearFilter" variant="clear">清空</PrimaryButton>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import PrimaryButton from '@/components/common/PrimaryButton.vue';
 
 interface Props {
   initialIgt?: string;
@@ -145,45 +146,6 @@ const confirmFilter = () => {
   margin-left: auto;
 }
 
-.filter-button {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.filter-button.confirm {
-  background: linear-gradient(135deg, #00bcd4, #0097a7);
-  color: #fff;
-}
-
-.filter-button.confirm:hover {
-  background: linear-gradient(135deg, #00acc1, #00838f);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0, 188, 212, 0.3);
-}
-
-.filter-button.clear {
-  background-color: transparent;
-  color: #ccc;
-  border: 1px solid #555;
-}
-
-.filter-button.clear:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-  color: #fff;
-  border-color: #666;
-  transform: translateY(-2px);
-}
-
-.filter-button:active {
-  transform: translateY(0);
-}
-
 @media (max-width: 768px) {
   .ranked-filter {
     flex-direction: column;
@@ -200,28 +162,12 @@ const confirmFilter = () => {
     margin-left: 0;
     justify-content: center;
   }
-
-  .filter-button {
-    flex: 1;
-    max-width: 120px;
-  }
 }
 
 @media (max-width: 480px) {
   .ranked-filter {
     padding: 12px;
     gap: 12px;
-  }
-
-  .filter-select,
-  .filter-input {
-    padding: 8px 10px;
-    font-size: 13px;
-  }
-
-  .filter-button {
-    padding: 8px 16px;
-    font-size: 13px;
   }
 }
 </style>
