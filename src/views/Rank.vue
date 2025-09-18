@@ -35,7 +35,15 @@
         </thead>
         <tbody class="leaderboard-body">
           <tr v-for="(info, index) in slicedata" class="stats" @click="navToRunDetail(info.run_id)">
-            <td class="rank-cell">{{ info.rank }}</td>
+            <td class="rank-cell">
+              <img
+                :src="rankPlaceIconSrc(info.rank)"
+                alt="rank"
+                class="rank-icon"
+                v-if="info.rank <= 3"
+              />
+              <span v-else>{{ info.rank }}</span>
+            </td>
             <td class="player-cell" v-html="safeDisplay(info.nickname)"></td>
             <td class="igt-cell" v-html="safeDisplay(info.igt)"></td>
             <td class="date-cell" v-html="safeDisplay(info.date)"></td>
@@ -72,6 +80,10 @@ import Pagination from '@/components/Pagination.vue';
 import Notification from '@/components/Notification.vue';
 import VersionTypeSelector from '@/components/VersionTypeSelector.vue';
 import Loading from '@/components/common/Loading.vue';
+// 导入排名图标
+import firstPlaceIcon from '@/assets/icons/firstplace.png';
+import secondPlaceIcon from '@/assets/icons/secondplace.png';
+import thirdPlaceIcon from '@/assets/icons/thirdplace.png';
 
 // 定义状态类型
 interface RankState {
@@ -199,6 +211,17 @@ const handleConfirmFilter = (filter: { igt: string; nickname: string }) => {
   stateManager.saveToStorage();
 };
 
+const rankPlaceIconSrc = (rank: number) => {
+  if (rank === 1) {
+    return firstPlaceIcon;
+  } else if (rank === 2) {
+    return secondPlaceIcon;
+  } else if (rank === 3) {
+    return thirdPlaceIcon;
+  }
+  return '';
+};
+
 // 初始化
 onMounted(async () => {
   state.value.page = restoredState.page;
@@ -323,6 +346,11 @@ onActivated(() => {
 .stats td {
   padding: 16px 8px;
   vertical-align: middle;
+}
+
+.rank-icon {
+  width: 30px;
+  height: 30px;
 }
 
 .rank-cell {

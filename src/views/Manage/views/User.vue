@@ -10,7 +10,7 @@
           v-model="newUserNickname"
           autocomplete="off"
         />
-        <button class="form-button" @click="handleNewUserCreate">创建</button>
+        <PrimaryButton @click="handleNewUserCreate">创建</PrimaryButton>
       </div>
     </div>
     <div class="operation-section">
@@ -32,7 +32,7 @@
           v-model="newNickname"
           autocomplete="off"
         />
-        <button class="form-button" @click="handleUserUpdate">修改</button>
+        <PrimaryButton @click="handleUserUpdate">修改</PrimaryButton>
       </div>
     </div>
   </div>
@@ -45,6 +45,7 @@ import { useRouter } from 'vue-router';
 import { supabase } from '@/lib/supabaseClient';
 import { validateNickname, sanitizeInput } from '@/utils/security';
 import SearchSelect from '@/components/common/SearchSelect.vue';
+import PrimaryButton from '@/components/common/PrimaryButton.vue';
 
 const userStore = useUserStore();
 const router = useRouter();
@@ -145,8 +146,7 @@ onMounted(() => {
   align-items: center;
 }
 
-.form-input,
-.form-select {
+.form-input {
   flex: 1;
   padding: 12px 16px;
   background-color: #333;
@@ -162,34 +162,9 @@ onMounted(() => {
   color: #666;
 }
 
-.form-input:focus,
-.form-select:focus {
+.form-input:focus {
   outline: none;
   border-color: #00bcd4;
   box-shadow: 0 0 0 2px rgba(0, 188, 212, 0.1);
-}
-
-.form-button {
-  background: linear-gradient(135deg, #00bcd4, #0097a7);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 12px 24px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.form-button:hover {
-  background: linear-gradient(135deg, #00acc1, #00838f);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0, 188, 212, 0.3);
-}
-
-.form-button:active {
-  transform: translateY(0);
 }
 </style>
