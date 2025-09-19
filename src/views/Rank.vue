@@ -238,15 +238,15 @@ watch(
   { immediate: true }
 );
 
-// 每次激活页面时，确保数据正确显示
-onActivated(() => {
-  if (statsdata.value.length === 0) {
-    statsStore.getStats('1.16.1', 'RSG');
-  } else {
-    filteredData.value = statsdata.value;
-  }
-  checkUrlError();
-});
+// // 每次激活页面时，确保数据正确显示
+// onActivated(() => {
+//   if (statsdata.value.length === 0) {
+//     statsStore.getStats('1.16.1', 'RSG');
+//   } else {
+//     filteredData.value = statsdata.value;
+//   }
+//   checkUrlError();
+// });
 </script>
 
 <style scoped>
