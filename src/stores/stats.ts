@@ -3,6 +3,11 @@ import { defineStore } from 'pinia';
 import request from '@/utils/request';
 import type UserInfo from '@/types/LeaderBoardTypes';
 import { supabase } from '@/lib/supabaseClient';
+import {
+  showErrorNotification,
+  showSuccessNotification,
+  showInfoNotification,
+} from '@/utils/notification';
 
 export interface Run {
   run_id: number;
@@ -33,11 +38,13 @@ export const useStatsStore = defineStore('stats', () => {
       });
       if (error) {
         console.error('get_runs_by_status error', error);
+        showErrorNotification('获取待审核成绩失败');
         return [];
       }
       return data;
     } catch (error) {
       console.error('get_runs_by_status error', error);
+      showErrorNotification('获取待审核成绩失败');
       return [];
     } finally {
       isLoading.value = false;
@@ -54,6 +61,7 @@ export const useStatsStore = defineStore('stats', () => {
 
       if (error) {
         console.error('get_leaderboard error', error);
+        showErrorNotification('获取排行榜失败');
         return [];
       }
       data.map((item: Run, index: number) => {
@@ -63,6 +71,7 @@ export const useStatsStore = defineStore('stats', () => {
       return data;
     } catch (err) {
       console.error('get_leaderboard error', err);
+      showErrorNotification('获取排行榜失败');
       return [];
     }
   };
@@ -92,6 +101,7 @@ export const useStatsStore = defineStore('stats', () => {
       currStats.value = data;
     } catch (err) {
       console.log(err);
+      showErrorNotification('获取排行榜失败');
     } finally {
       isLoading.value = false;
     }
@@ -110,6 +120,7 @@ export const useStatsStore = defineStore('stats', () => {
       currStats.value = data;
     } catch (err) {
       console.log(err);
+      showErrorNotification('获取排行榜失败');
     } finally {
       isLoading.value = false;
     }

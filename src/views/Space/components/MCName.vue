@@ -27,6 +27,7 @@
 import useUserStore from '@/stores/user';
 import { ref, computed } from 'vue';
 import PrimaryButton from '@/components/common/PrimaryButton.vue';
+import { showErrorNotification } from '@/utils/notification';
 
 const userStore = useUserStore();
 
@@ -34,7 +35,7 @@ const ingamename = ref('');
 
 const handleGetMCID = async () => {
   if (!ingamename.value.trim()) {
-    alert('请输入Minecraft用户名');
+    showErrorNotification('请输入Minecraft用户名');
     return;
   }
   await userStore.bindMinecraftId(ingamename.value);

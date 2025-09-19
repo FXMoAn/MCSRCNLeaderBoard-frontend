@@ -46,6 +46,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { validateNickname, sanitizeInput } from '@/utils/security';
 import SearchSelect from '@/components/common/SearchSelect.vue';
 import PrimaryButton from '@/components/common/PrimaryButton.vue';
+import { showErrorNotification, showSuccessNotification } from '@/utils/notification';
 
 const userStore = useUserStore();
 const router = useRouter();
@@ -62,7 +63,7 @@ const handleNewUserCreate = async () => {
   const validation = validateNickname(newUserNickname.value);
 
   if (!validation.isValid) {
-    alert(validation.message);
+    showErrorNotification(validation.message);
     return;
   }
 
@@ -76,14 +77,14 @@ const handleNewUserCreate = async () => {
       .select();
     if (error) {
       console.error(error);
-      alert('创建失败，请重试');
+      showErrorNotification('创建失败，请重试');
     } else {
-      alert('创建成功');
+      showSuccessNotification('创建成功');
       newUserNickname.value = ''; // 清空输入
     }
   } catch (error) {
     console.error(error);
-    alert('创建失败，请重试');
+    showErrorNotification('创建失败，请重试');
   }
   router.go(0);
 };
@@ -91,7 +92,7 @@ const handleNewUserCreate = async () => {
 const getUserList = async () => {
   const { data, error } = await supabase.from('users').select('*');
   if (error) {
-    alert('获取用户列表失败');
+    showErrorNotification('获取用户列表失败');
     return;
   }
   userList.value = data.map((user) => ({
@@ -110,10 +111,10 @@ const handleUserUpdate = async () => {
     .update({ nickname: newNickname.value })
     .eq('nickname', oldNickname.value);
   if (error) {
-    alert('修改失败');
+    showErrorNotification('修改失败');
     return;
   }
-  alert('修改成功');
+  showSuccessNotification('修改成功');
   router.go(0);
 };
 

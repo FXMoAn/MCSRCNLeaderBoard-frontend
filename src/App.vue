@@ -25,6 +25,8 @@
   <div class="container">
     <router-view />
   </div>
+  <!-- 全局通知组件 -->
+  <Notification />
 </template>
 
 <script setup lang="ts">
@@ -34,6 +36,7 @@ import { useRouter } from 'vue-router';
 // 用户登录控制
 import AuthControl from '@/components/AuthControl.vue';
 import UserPanel from '@/components/UserPanel.vue';
+import Notification from '@/components/Notification.vue';
 import { useAuthStore, useUserStore } from '@/stores';
 import { eventBus, AUTH_EVENTS } from '@/stores/eventBus';
 

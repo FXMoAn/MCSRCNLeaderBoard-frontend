@@ -131,6 +131,11 @@ import { onBeforeMount, ref, computed } from 'vue';
 import { extractBVId, buildPlayerUrl } from '@/utils/bilibili';
 import type { RunInfo } from '@/types/CommonTypes';
 import Loading from '@/components/common/Loading.vue';
+import {
+  showErrorNotification,
+  showSuccessNotification,
+  showInfoNotification,
+} from '@/utils/notification';
 
 const route = useRoute();
 const id = route.params.id;
@@ -157,10 +162,10 @@ const verifyRun = async () => {
       .eq('id', id);
     if (error) {
       console.error(error);
-      alert('通过失败' + error.message);
+      showErrorNotification('通过失败' + error.message);
     } else {
       console.log('verifyRun success', data);
-      alert('通过成功');
+      showSuccessNotification('通过成功');
       router.go(-1);
     }
   } catch (error) {
@@ -182,10 +187,10 @@ const rejectRun = async () => {
       .eq('id', id);
     if (error) {
       console.error(error);
-      alert('拒绝失败' + error.message);
+      showErrorNotification('拒绝失败' + error.message);
     } else {
       console.log('rejectRun success', data);
-      alert('拒绝成功');
+      showSuccessNotification('拒绝成功');
       router.push('/manage/verify');
     }
   } catch (error) {

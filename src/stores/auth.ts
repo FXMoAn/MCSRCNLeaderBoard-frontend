@@ -1,11 +1,16 @@
-import { ref, computed } from "vue";
-import { defineStore } from "pinia";
-import { supabase } from "@/lib/supabaseClient";
-import type { User, Session, AuthError } from "@supabase/supabase-js";
-import { useRouter } from "vue-router";
-import { eventBus, AUTH_EVENTS } from "./eventBus";
+import { ref, computed } from 'vue';
+import { defineStore } from 'pinia';
+import { supabase } from '@/lib/supabaseClient';
+import type { User, Session, AuthError } from '@supabase/supabase-js';
+import { useRouter } from 'vue-router';
+import { eventBus, AUTH_EVENTS } from './eventBus';
+import {
+  showErrorNotification,
+  showSuccessNotification,
+  showInfoNotification,
+} from '@/utils/notification';
 
-const useAuthStore = defineStore("auth", () => {
+const useAuthStore = defineStore('auth', () => {
   const router = useRouter();
 
   // 状态
@@ -43,32 +48,32 @@ const useAuthStore = defineStore("auth", () => {
           user.value = newSession?.user ?? null;
 
           // 当用户登录时，自动初始化用户信息
-          if (event === "SIGNED_IN" && newSession?.user) {
+          if (event === 'SIGNED_IN' && newSession?.user) {
             eventBus.emit(AUTH_EVENTS.USER_LOGGED_IN, newSession.user);
           }
           // 当用户登出时，清除用户信息
-          else if (event === "SIGNED_OUT") {
+          else if (event === 'SIGNED_OUT') {
             eventBus.emit(AUTH_EVENTS.USER_LOGGED_OUT);
           }
           // 当token刷新时，可能需要重新验证用户信息
-          else if (event === "TOKEN_REFRESHED" && newSession?.user) {
+          else if (event === 'TOKEN_REFRESHED' && newSession?.user) {
             // 可选：重新验证用户信息
-            console.log("Token已刷新");
+            console.log('Token已刷新');
           }
           // 当用户信息更新时
-          else if (event === "USER_UPDATED" && newSession?.user) {
-            console.log("用户信息已更新");
+          else if (event === 'USER_UPDATED' && newSession?.user) {
+            console.log('用户信息已更新');
           }
         } catch (error) {
-          console.error("处理认证状态变化时出错:", error);
+          console.error('处理认证状态变化时出错:', error);
           // 如果处理过程中出错，确保状态一致
-          if (event === "SIGNED_OUT" || !newSession) {
+          if (event === 'SIGNED_OUT' || !newSession) {
             eventBus.emit(AUTH_EVENTS.USER_LOGGED_OUT);
           }
         }
       });
     } catch (error) {
-      console.error("初始化认证失败:", error);
+      console.error('初始化认证失败:', error);
     } finally {
       loading.value = false;
     }
@@ -120,13 +125,10 @@ const useAuthStore = defineStore("auth", () => {
 
       // 即使supabase返回错误，也要清除本地状态
       if (error) {
-        console.warn("Supabase登出时出现警告:", error.message);
+        console.warn('Supabase登出时出现警告:', error.message);
         // 如果是session相关错误，继续执行本地清理
-        if (
-          error.message.includes("Session") ||
-          error.message.includes("JWT")
-        ) {
-          console.log("检测到session错误，继续执行本地清理");
+        if (error.message.includes('Session') || error.message.includes('JWT')) {
+          console.log('检测到session错误，继续执行本地清理');
         } else {
           // 如果是其他严重错误，抛出异常
           throw error;
@@ -140,11 +142,11 @@ const useAuthStore = defineStore("auth", () => {
       // 清除用户信息
       eventBus.emit(AUTH_EVENTS.USER_LOGGED_OUT);
 
-      router.push("/");
+      router.push('/');
 
       return { error: null };
     } catch (error) {
-      console.error("登出过程中出现错误:", error);
+      console.error('登出过程中出现错误:', error);
 
       // 即使出现错误，也要强制清除本地状态
       user.value = null;
@@ -152,7 +154,7 @@ const useAuthStore = defineStore("auth", () => {
       eventBus.emit(AUTH_EVENTS.USER_LOGGED_OUT);
 
       // 跳转到首页
-      router.push("/");
+      router.push('/');
 
       return { error: error as AuthError };
     } finally {
@@ -231,7 +233,7 @@ const useAuthStore = defineStore("auth", () => {
 
   // 强制清理失效的session状态
   const forceCleanup = () => {
-    console.log("强制清理失效的session状态");
+    console.log('强制清理失效的session状态');
     user.value = null;
     session.value = null;
     eventBus.emit(AUTH_EVENTS.USER_LOGGED_OUT);
@@ -245,13 +247,13 @@ const useAuthStore = defineStore("auth", () => {
         error,
       } = await supabase.auth.getSession();
       if (error || !currentSession) {
-        console.log("Session无效，执行清理");
+        console.log('Session无效，执行清理');
         forceCleanup();
         return false;
       }
       return true;
     } catch (error) {
-      console.error("检查session有效性时出错:", error);
+      console.error('检查session有效性时出错:', error);
       forceCleanup();
       return false;
     }

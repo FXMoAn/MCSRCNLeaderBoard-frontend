@@ -1,12 +1,4 @@
 <template>
-  <!-- 通知提示 -->
-  <Notification
-    v-model:visible="showNotification"
-    :message="notificationMessage"
-    :type="notificationType"
-    :duration="5000"
-    @close="hideNotification"
-  />
   <div class="control-container">
     <VersionTypeSelector
       @confirmFilter="handleSelectionChange"
@@ -72,12 +64,12 @@ import { ref, onMounted, computed, onActivated, watch } from 'vue';
 import { useStatsStore } from '@/stores/stats.ts';
 import { safeDisplay } from '@/utils/security';
 import { createURLStateManager } from '@/utils/urlStateManage';
+import { showErrorNotification } from '@/utils/notification';
 // 组件
 import SvgIcon from '@/components/icons/index.vue';
 import { useRouter, useRoute } from 'vue-router';
 import RankedFilter from '@/components/RankedFilter.vue';
 import Pagination from '@/components/Pagination.vue';
-import Notification from '@/components/Notification.vue';
 import VersionTypeSelector from '@/components/VersionTypeSelector.vue';
 import Loading from '@/components/common/Loading.vue';
 // 导入排名图标
@@ -122,10 +114,6 @@ const statsStore = useStatsStore();
 const restoredState = stateManager.initialize();
 const state = stateManager.getState();
 
-// 通知提示相关
-const showNotification = ref<boolean>(false);
-const notificationMessage = ref<string>('');
-const notificationType = ref<'error' | 'success' | 'info'>('info');
 // 排名数据
 const isLoading = computed(() => statsStore.isLoading);
 const statsdata = computed(() => statsStore.currStats);
@@ -158,22 +146,10 @@ const openVideo = (url: string) => {
   window.open(url, '_blank');
 };
 
-// 显示通知
-const showNotificationMessage = (message: string, type: 'error' | 'success' | 'info' = 'info') => {
-  notificationMessage.value = message;
-  notificationType.value = type;
-  showNotification.value = true;
-};
-
-// 隐藏通知
-const hideNotification = () => {
-  showNotification.value = false;
-};
-
 // 检查URL中的错误参数
 const checkUrlError = () => {
   if (route.query.error === 'unauthorized') {
-    showNotificationMessage('您没有权限访问该页面，需要管理员权限', 'error');
+    showErrorNotification('您没有权限访问该页面，需要管理员权限');
     // 清除URL中的错误参数
     router.replace({ query: {} });
   }
