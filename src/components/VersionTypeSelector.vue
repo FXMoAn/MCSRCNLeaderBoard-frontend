@@ -8,14 +8,15 @@
         <option value="1.15.2">1.13-1.15</option>
         <option value="1.12.2">1.9-1.12</option>
         <option value="1.8.9">1.8</option>
-        <option value="1.7.10">pre 1.8</option>
+        <option value="1.7.10">pre-1.8</option>
       </select>
     </div>
     <div class="filter-group">
       <label class="filter-label">类型筛选</label>
       <select v-model="type" class="filter-select" @change="confirmFilter">
-        <option value="RSG">RSG</option>
-        <option value="SSG">SSG</option>
+        <option v-for="option in TYPE_SELECTOR_OPTIONS" :key="option.value" :value="option.value">
+          {{ option.label }}
+        </option>
       </select>
     </div>
   </div>
@@ -23,6 +24,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { TYPE_SELECTOR_OPTIONS } from '@/constants/common';
 
 interface Props {
   initialVersion: string;

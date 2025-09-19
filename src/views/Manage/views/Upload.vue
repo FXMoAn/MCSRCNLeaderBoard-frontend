@@ -18,8 +18,13 @@
         <div class="form-group">
           <label class="form-label" for="type">类型</label>
           <select class="form-select" id="type" v-model="type">
-            <option value="RSG">RSG</option>
-            <option value="SSG">SSG</option>
+            <option
+              v-for="option in TYPE_SELECTOR_OPTIONS"
+              :key="option.value"
+              :value="option.value"
+            >
+              {{ option.label }}
+            </option>
           </select>
         </div>
 
@@ -138,6 +143,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { supabase } from '@/lib/supabaseClient';
+import { TYPE_SELECTOR_OPTIONS } from '@/constants/common';
 import {
   validateNickname,
   validateRemarks,

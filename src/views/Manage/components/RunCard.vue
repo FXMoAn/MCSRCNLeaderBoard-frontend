@@ -67,8 +67,10 @@ const openVideo = (url: string) => {
   border: 1px solid #444;
   border-radius: 12px;
   padding: 20px;
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+  /* 每个格子剧中显示 */
+  justify-items: center;
   align-items: center;
   transition: all 0.2s ease;
   box-sizing: border-box;
@@ -80,6 +82,10 @@ const openVideo = (url: string) => {
 
 .player-cell {
   font-weight: 500;
+  overflow: hidden;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .igt-cell {
