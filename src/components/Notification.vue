@@ -15,49 +15,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { useNotification } from '@/hooks/useNotification';
+import { watch } from 'vue';
 
-interface Props {
-  message: string;
-  type?: 'error' | 'success' | 'info';
-  duration?: number;
-  visible: boolean;
-}
+const { visible, message, type, hideNotification } = useNotification();
 
-interface Emits {
-  (e: 'update:visible', visible: boolean): void;
-  (e: 'close'): void;
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  type: 'info',
-  duration: 0
-});
-
-const emit = defineEmits<Emits>();
-
-const visible = ref(props.visible);
-
-watch(() => props.visible, (newVal) => {
-  visible.value = newVal;
-});
-
-watch(visible, (newVal) => {
-  emit('update:visible', newVal);
-});
+// 添加调试信息
+watch(
+  [visible, message, type],
+  ([newVisible, newMessage, newType]) => {
+    console.log('Notification component state:', {
+      visible: newVisible,
+      message: newMessage,
+      type: newType,
+    });
+  },
+  { immediate: true }
+);
 
 const close = () => {
-  visible.value = false;
-  emit('close');
+  hideNotification();
 };
-
-watch(visible, (newVal) => {
-  if (newVal && props.duration > 0) {
-    setTimeout(() => {
-      close();
-    }, props.duration);
-  }
-});
 </script>
 
 <style scoped>
@@ -152,16 +130,16 @@ watch(visible, (newVal) => {
     min-width: 280px;
     max-width: 95%;
   }
-  
+
   .notification-content {
     padding: 14px 16px;
     gap: 10px;
   }
-  
+
   .notification-text {
     font-size: 13px;
   }
-  
+
   .notification-close {
     width: 20px;
     height: 20px;

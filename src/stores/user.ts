@@ -3,6 +3,11 @@ import { ref, computed, onMounted } from 'vue';
 import { supabase } from '@/lib/supabaseClient';
 import { eventBus, AUTH_EVENTS } from './eventBus';
 import axios from 'axios';
+import {
+  showErrorNotification,
+  showSuccessNotification,
+  showInfoNotification,
+} from '@/utils/notification';
 
 interface UserInfo {
   id: number;
@@ -49,6 +54,7 @@ const useUserStore = defineStore('user', () => {
       localStorage.setItem('userInfo', JSON.stringify(userInfo.value));
     } catch (error) {
       console.error(error);
+      showErrorNotification('获取用户信息失败');
     } finally {
       loading.value = false;
     }
@@ -63,12 +69,14 @@ const useUserStore = defineStore('user', () => {
         .select();
       if (error) {
         console.error(error);
+        showErrorNotification('绑定用户失败');
       } else {
-        alert('绑定成功');
+        showSuccessNotification('绑定成功');
         await initUserInfo();
       }
     } catch (error) {
       console.error(error);
+      showErrorNotification('绑定用户失败');
     }
   };
 
@@ -80,12 +88,14 @@ const useUserStore = defineStore('user', () => {
         .select();
       if (error) {
         console.error(error);
+        showErrorNotification('创建用户失败');
       } else {
-        alert('创建成功');
+        showSuccessNotification('创建成功');
         await initUserInfo();
       }
     } catch (error) {
       console.error(error);
+      showErrorNotification('创建用户失败');
     }
   };
 
@@ -97,14 +107,14 @@ const useUserStore = defineStore('user', () => {
         .eq('user_id', localUserId.value);
       if (error) {
         console.error(error);
-        alert('更新失败');
+        showErrorNotification('更新失败');
       } else {
-        alert('更新成功');
+        showSuccessNotification('更新成功');
         await initUserInfo();
       }
     } catch (error) {
       console.error(error);
-      alert('更新失败');
+      showErrorNotification('更新失败');
     }
   };
 
@@ -120,7 +130,7 @@ const useUserStore = defineStore('user', () => {
         userInfo.value!.ingamename = ingamename;
         return true;
       } else {
-        alert('获取Minecraft ID失败，请检查MC名称是否正确');
+        showErrorNotification('获取Minecraft ID失败，请检查MC名称是否正确');
         return false;
       }
     } catch (error) {
@@ -138,7 +148,7 @@ const useUserStore = defineStore('user', () => {
         userInfo.value.ingamename = res.data.name;
         return true;
       } else {
-        alert('获取Minecraft昵称失败，请检查MC ID是否正确');
+        showErrorNotification('获取Minecraft昵称失败，请检查MC ID是否正确');
         return false;
       }
     } catch (error) {
@@ -160,7 +170,7 @@ const useUserStore = defineStore('user', () => {
       if (error) {
         console.error(error);
       } else {
-        alert('绑定成功');
+        showSuccessNotification('绑定成功');
         // 更新本地存储
         localStorage.setItem('userInfo', JSON.stringify(userInfo.value));
       }
@@ -182,7 +192,7 @@ const useUserStore = defineStore('user', () => {
       if (error) {
         console.error(error);
       } else {
-        alert('刷新成功');
+        showSuccessNotification('刷新成功');
         // 更新本地存储
         localStorage.setItem('userInfo', JSON.stringify(userInfo.value));
       }

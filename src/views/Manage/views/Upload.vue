@@ -18,8 +18,13 @@
         <div class="form-group">
           <label class="form-label" for="type">类型</label>
           <select class="form-select" id="type" v-model="type">
-            <option value="RSG">RSG</option>
-            <option value="SSG">SSG</option>
+            <option
+              v-for="option in TYPE_SELECTOR_OPTIONS"
+              :key="option.value"
+              :value="option.value"
+            >
+              {{ option.label }}
+            </option>
           </select>
         </div>
 
@@ -138,6 +143,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { supabase } from '@/lib/supabaseClient';
+import { TYPE_SELECTOR_OPTIONS } from '@/constants/common';
 import {
   validateNickname,
   validateRemarks,
@@ -148,6 +154,11 @@ import {
   sanitizeTextInput,
 } from '@/utils/security';
 import SearchSelect from '@/components/common/SearchSelect.vue';
+import {
+  showErrorNotification,
+  showSuccessNotification,
+  showInfoNotification,
+} from '@/utils/notification';
 
 const version = ref('1.16.1');
 const type = ref('RSG');
@@ -177,32 +188,32 @@ const igt = computed(() => {
 
 const checkRequiredInfo = () => {
   if (version.value === '') {
-    alert('版本不能为空');
+    showErrorNotification('版本不能为空');
     return false;
   }
   if (type.value === '') {
-    alert('类型不能为空');
+    showErrorNotification('类型不能为空');
     return false;
   }
   if (igt.value === '') {
-    alert('游戏时间不能为空');
+    showErrorNotification('游戏时间不能为空');
     return false;
   }
   if (date.value === '') {
-    alert('日期不能为空');
+    showErrorNotification('日期不能为空');
     return false;
   }
 
   // 使用安全工具函数验证输入
   const nicknameValidation = validateNickname(nickname.value);
   if (!nicknameValidation.isValid) {
-    alert(nicknameValidation.message);
+    showErrorNotification(nicknameValidation.message);
     return false;
   }
 
   const videoLinkValidation = validateVideoLink(videoLink.value);
   if (!videoLinkValidation.isValid) {
-    alert(videoLinkValidation.message);
+    showErrorNotification(videoLinkValidation.message);
     return false;
   }
 
@@ -217,12 +228,12 @@ const getNameIdByNickname = async (nickname: string) => {
       .eq('nickname', nickname)
       .single();
     if (error) {
-      alert('获取用户ID失败');
+      showErrorNotification('获取用户ID失败');
       return;
     }
     return data.id;
   } catch (error) {
-    alert('获取用户ID失败');
+    showErrorNotification('获取用户ID失败');
     return;
   }
 };
@@ -230,7 +241,7 @@ const getNameIdByNickname = async (nickname: string) => {
 const getUserList = async () => {
   const { data, error } = await supabase.from('users').select('*');
   if (error) {
-    alert('获取用户列表失败');
+    showErrorNotification('获取用户列表失败');
     return;
   }
   userList.value = data.map((user) => ({
@@ -263,10 +274,10 @@ const insertVerifiedRun = async () => {
     status: 'verified',
   });
   if (error) {
-    alert('上传失败');
+    showErrorNotification('上传失败');
     return;
   }
-  alert('上传成功');
+  showSuccessNotification('上传成功');
 
   // 上传成功后清空表单
   clearForm();
@@ -292,7 +303,7 @@ const clearForm = () => {
 const uploadRun = async () => {
   // 防重复提交检查
   if (isSubmitting.value) {
-    alert('正在上传中，请勿重复提交');
+    showInfoNotification('正在上传中，请勿重复提交');
     return;
   }
 
@@ -305,7 +316,7 @@ const uploadRun = async () => {
     await insertVerifiedRun();
   } catch (error) {
     console.error('上传过程中出现错误:', error);
-    alert('上传失败，请重试');
+    showErrorNotification('上传失败，请重试');
   } finally {
     isSubmitting.value = false; // 重置提交状态
   }

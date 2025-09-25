@@ -42,6 +42,7 @@ import { ref, onMounted } from 'vue';
 import useAuthStore from '@/stores/auth';
 import { useRouter } from 'vue-router';
 import { supabase } from '@/lib/supabaseClient';
+import { showErrorNotification, showSuccessNotification } from '@/utils/notification';
 
 const newPassword = ref('');
 const confirmPassword = ref('');
@@ -49,11 +50,11 @@ const loading = ref(false);
 
 const checkPassword = () => {
   if (newPassword.value !== confirmPassword.value) {
-    alert('密码不一致');
+    showErrorNotification('密码不一致');
     return false;
   }
   if (newPassword.value.length < 6) {
-    alert('密码长度至少6位');
+    showErrorNotification('密码长度至少6位');
     return false;
   }
   return true;
@@ -63,8 +64,8 @@ const router = useRouter();
 
 const handleReset = async () => {
   const { error } = await supabase.auth.updateUser({ password: newPassword.value });
-  if (error) return alert(error.message);
-  alert('密码已重置，请重新登录');
+  if (error) return showErrorNotification(error.message);
+  showSuccessNotification('密码已重置，请重新登录');
   await supabase.auth.signOut();
   router.replace('/login');
 };
@@ -84,7 +85,7 @@ onMounted(async () => {
   // 当用户通过邮件进来时，URL 中带有 access_token，Supabase 会自动把 session 换好
   const { data } = await supabase.auth.getSession();
   if (!data.session) {
-    alert('链接已失效，请重新申请');
+    showErrorNotification('链接已失效，请重新申请');
     router.replace('/login');
   }
 });

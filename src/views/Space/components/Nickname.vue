@@ -60,6 +60,7 @@ import { supabase } from '@/lib/supabaseClient';
 import useUserStore from '@/stores/user';
 import { useRouter } from 'vue-router';
 import { validateNickname, sanitizeInput } from '@/utils/security';
+import { showErrorNotification, showInfoNotification } from '@/utils/notification';
 import SearchSelect from '@/components/common/SearchSelect.vue';
 import PrimaryButton from '@/components/common/PrimaryButton.vue';
 
@@ -82,7 +83,8 @@ const getUnbindedUser = async () => {
   //uuser为空
   const { data, error } = await supabase.from('users').select('*').is('user_id', null);
   if (error) {
-    throw error;
+    showErrorNotification('网络错误，获取用户列表失败');
+    return;
   }
   unbindedUserList.value = data.map((user) => ({
     id: user.id,
@@ -92,7 +94,7 @@ const getUnbindedUser = async () => {
 
 const handleBinding = async () => {
   if (!selectedUser.value) {
-    alert('请选择一个用户');
+    showInfoNotification('请选择一个用户');
     return;
   }
   await userStore.bindUser(selectedUser.value.id);
@@ -104,7 +106,7 @@ const handleNewUserBinding = async () => {
   const validation = validateNickname(newUserNickname.value);
 
   if (!validation.isValid) {
-    alert(validation.message);
+    showErrorNotification(validation.message);
     return;
   }
 
@@ -125,7 +127,8 @@ const handleSaveNickname = async () => {
     await userStore.updateNickname(changedNickname.value);
     isEditing.value = false;
   } catch (error) {
-    console.error(error);
+    showErrorNotification('网络错误，修改昵称失败');
+    return;
   }
 };
 

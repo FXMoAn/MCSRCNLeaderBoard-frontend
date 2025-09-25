@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import Rank from '@/views/Rank.vue';
+import Rank from '@/views/Rank/Rank.vue';
 import { setupRouteGuards, setupRouteErrorHandling } from './guards';
 
 const router = createRouter({

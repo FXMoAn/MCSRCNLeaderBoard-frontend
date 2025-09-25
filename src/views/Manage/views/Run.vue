@@ -36,6 +36,7 @@ import PrimaryButton from '@/components/common/PrimaryButton.vue';
 import { ref, onMounted, computed } from 'vue';
 import { useStatsStore } from '@/stores/stats';
 import { supabase } from '@/lib/supabaseClient';
+import { showErrorNotification } from '@/utils/notification';
 
 const statsStore = useStatsStore();
 const runData = ref<any[]>([]);
@@ -46,7 +47,7 @@ const nickname = ref<any>('');
 const getUserList = async () => {
   const { data, error } = await supabase.from('users').select('*');
   if (error) {
-    alert('获取用户列表失败');
+    showErrorNotification('网络错误，获取用户列表失败');
     return;
   }
   userList.value = data.map((user) => ({
@@ -71,7 +72,7 @@ const getRunByUser = async () => {
     .select('*,runs(*)')
     .eq('nickname', nickname.value);
   if (error) {
-    alert('获取成绩失败');
+    showErrorNotification('网络错误，获取成绩失败');
     return;
   }
   runData.value = data[0].runs;

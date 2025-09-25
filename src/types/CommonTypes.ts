@@ -1,4 +1,4 @@
-import type { User, Session } from "@supabase/supabase-js";
+import type { User, Session } from '@supabase/supabase-js';
 
 export interface RunInfo {
   id: number;
@@ -7,6 +7,7 @@ export interface RunInfo {
   igt: string;
   date: string;
   version: string;
+  subversion: string;
   type: string;
   videolink: string;
   remarks: string;
@@ -42,8 +43,8 @@ export interface PlayerInfo {
 
 // 用户偏好设置接口
 export interface UserPreferences {
-  theme?: "light" | "dark" | "auto";
-  language?: "zh-CN" | "en-US" | "ja-JP";
+  theme?: 'light' | 'dark' | 'auto';
+  language?: 'zh-CN' | 'en-US' | 'ja-JP';
   notifications?: boolean;
   soundEnabled?: boolean;
   autoSave?: boolean;
@@ -157,7 +158,7 @@ export interface UserSettings {
     marketing: boolean;
   };
   gameplay: {
-    difficulty: "easy" | "normal" | "hard";
+    difficulty: 'easy' | 'normal' | 'hard';
     autoSave: boolean;
     confirmActions: boolean;
     showTutorials: boolean;
@@ -168,13 +169,7 @@ export interface UserSettings {
 export interface UserActivity {
   id: string;
   userId: string;
-  type:
-    | "login"
-    | "logout"
-    | "game_start"
-    | "game_end"
-    | "achievement"
-    | "setting_change";
+  type: 'login' | 'logout' | 'game_start' | 'game_end' | 'achievement' | 'setting_change';
   description: string;
   metadata?: Record<string, any>;
   timestamp: string;
@@ -187,8 +182,8 @@ export interface UserRelationship {
   id: string;
   userId: string;
   relatedUserId: string;
-  type: "friend" | "blocked" | "following";
-  status: "pending" | "accepted" | "rejected";
+  type: 'friend' | 'blocked' | 'following';
+  status: 'pending' | 'accepted' | 'rejected';
   createdAt: string;
   updatedAt: string;
 }
@@ -198,8 +193,8 @@ export interface UserInvitation {
   id: string;
   inviterId: string;
   inviteeEmail: string;
-  type: "game" | "friend" | "team";
-  status: "pending" | "accepted" | "declined" | "expired";
+  type: 'game' | 'friend' | 'team';
+  status: 'pending' | 'accepted' | 'declined' | 'expired';
   expiresAt: string;
   metadata?: Record<string, any>;
 }
@@ -209,15 +204,15 @@ export type { User, Session };
 
 // 类型守卫函数
 export const isUser = (obj: any): obj is User => {
-  return obj && typeof obj.id === "string" && typeof obj.email === "string";
+  return obj && typeof obj.id === 'string' && typeof obj.email === 'string';
 };
 
 export const isPlayerInfo = (obj: any): obj is PlayerInfo => {
-  return obj && typeof obj.id === "string" && typeof obj.name === "string";
+  return obj && typeof obj.id === 'string' && typeof obj.name === 'string';
 };
 
 export const isUserPreferences = (obj: any): obj is UserPreferences => {
-  return obj && typeof obj === "object";
+  return obj && typeof obj === 'object';
 };
 
 export const isUserData = (obj: any): obj is UserData => {
@@ -232,26 +227,26 @@ export type PartialUserSettings = Partial<UserSettings>;
 
 // 常量定义
 export const USER_ROLES = {
-  ADMIN: "admin",
-  MODERATOR: "moderator",
-  USER: "user",
-  GUEST: "guest",
+  ADMIN: 'admin',
+  MODERATOR: 'moderator',
+  USER: 'user',
+  GUEST: 'guest',
 } as const;
 
 export const USER_THEMES = {
-  LIGHT: "light",
-  DARK: "dark",
-  AUTO: "auto",
+  LIGHT: 'light',
+  DARK: 'dark',
+  AUTO: 'auto',
 } as const;
 
 export const USER_LANGUAGES = {
-  ZH_CN: "zh-CN",
-  EN_US: "en-US",
-  JA_JP: "ja-JP",
+  ZH_CN: 'zh-CN',
+  EN_US: 'en-US',
+  JA_JP: 'ja-JP',
 } as const;
 
 export const DIFFICULTY_LEVELS = {
-  EASY: "easy",
-  NORMAL: "normal",
-  HARD: "hard",
+  EASY: 'easy',
+  NORMAL: 'normal',
+  HARD: 'hard',
 } as const;

@@ -45,6 +45,11 @@ import useAuthStore from '@/stores/auth';
 import { useRouter, useRoute } from 'vue-router';
 import { getRedirectPath, clearRedirectPath } from '@/router/guards';
 import { supabase } from '@/lib/supabaseClient';
+import {
+  showErrorNotification,
+  showSuccessNotification,
+  showInfoNotification,
+} from '@/utils/notification';
 
 const router = useRouter();
 const route = useRoute();
@@ -56,7 +61,7 @@ const password = ref('');
 const handleLogin = async () => {
   const { data, error } = await authStore.login(email.value, password.value);
   if (error) {
-    alert(error.message);
+    showErrorNotification(error.message);
   } else {
     // 等待一下让认证状态更新完成
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -71,12 +76,12 @@ const handleLogin = async () => {
 };
 
 const resetPassword = async () => {
-  if (!email.value) return alert('请输入邮箱');
+  if (!email.value) return showErrorNotification('请输入邮箱');
   const { error } = await supabase.auth.resetPasswordForEmail(email.value, {
     redirectTo: 'https://www.mcspeedrun.cn/reset-password',
   });
-  if (error) return alert(error.message);
-  alert('已发送，请查收邮件');
+  if (error) return showErrorNotification(error.message);
+  showInfoNotification('已发送，请查收邮件');
 };
 </script>
 

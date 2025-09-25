@@ -47,17 +47,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-import useAuthStore from "@/stores/auth";
-import { useRouter } from "vue-router";
+import { ref } from 'vue';
+import useAuthStore from '@/stores/auth';
+import { useRouter } from 'vue-router';
+import { showErrorNotification, showSuccessNotification } from '@/utils/notification';
 
-const email = ref("");
-const password = ref("");
-const confirmPassword = ref("");
+const email = ref('');
+const password = ref('');
+const confirmPassword = ref('');
 
 const checkPassword = () => {
   if (password.value !== confirmPassword.value) {
-    alert("密码不一致");
+    showErrorNotification('密码不一致');
     return false;
   }
   return true;
@@ -69,10 +70,10 @@ const router = useRouter();
 const signUpNewUser = async () => {
   const { data, error } = await authStore.signup(email.value, password.value);
   if (error) {
-    alert(error.message);
+    showErrorNotification(error.message);
   } else {
-    alert("注册成功");
-    router.push("/login");
+    showSuccessNotification('注册成功');
+    router.push('/login');
   }
 };
 

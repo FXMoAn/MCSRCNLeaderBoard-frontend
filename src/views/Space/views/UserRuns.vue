@@ -26,6 +26,7 @@ import Loading from '@/components/common/Loading.vue';
 import { ref, onMounted, computed } from 'vue';
 import { supabase } from '@/lib/supabaseClient';
 import { useUserStore } from '@/stores';
+import { showErrorNotification } from '@/utils/notification';
 
 const userStore = useUserStore();
 const runData = ref<any[]>([]);
@@ -41,7 +42,7 @@ const getRunByUser = async () => {
     .select('*,runs(*)')
     .eq('nickname', userInfo.value.nickname);
   if (error) {
-    alert('获取成绩失败');
+    showErrorNotification('网络错误，获取成绩失败');
     return;
   }
   runData.value = data[0].runs;
