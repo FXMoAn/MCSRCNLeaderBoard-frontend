@@ -25,7 +25,7 @@
   <div class="container">
     <router-view />
     <footer>
-      <p>&copy; 2025 MCSR-CN 我的世界JAVA版中国速通排行榜. 保留所有权利</p>
+      <p>&copy; 2025 MCSR-CN 中国我的世界JAVA版速通排行榜. 保留所有权利</p>
       <a href="https://wiki.mcspeedrun.cn/advanced/cn-ldb/PrivacyPolicy" target="_blank"
         >隐私政策</a
       >
