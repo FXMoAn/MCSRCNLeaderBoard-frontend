@@ -24,6 +24,12 @@
   </nav>
   <div class="container">
     <router-view />
+    <footer>
+      <p>&copy; 2025 MCSR-CN 我的世界JAVA版中国速通排行榜. 保留所有权利</p>
+      <a href="https://wiki.mcspeedrun.cn/advanced/cn-ldb/PrivacyPolicy" target="_blank"
+        >隐私政策</a
+      >
+    </footer>
   </div>
   <!-- 全局通知组件 -->
   <Notification />
@@ -155,5 +161,23 @@ nav {
     padding: 6px 12px;
     font-size: 14px;
   }
+}
+
+footer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+footer > p,
+footer > a {
+  text-align: center;
+  padding: 10px;
+  color: #ccc;
+}
+
+footer > a:hover {
+  text-decoration: underline;
+  color: #00bcd4;
 }
 </style>
