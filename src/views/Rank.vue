@@ -15,19 +15,21 @@
   <div class="content-container">
     <Loading v-if="isLoading" />
     <div class="container" v-else>
-      <table class="leaderboard">
-        <thead class="leaderboard-head">
-          <tr class="head">
-            <th>排名</th>
-            <th>玩家</th>
-            <th>IGT</th>
-            <th>记录时间</th>
-            <th>记录视频</th>
-          </tr>
-        </thead>
-        <tbody class="leaderboard-body">
-          <tr v-for="(info, index) in slicedata" class="stats" @click="navToRunDetail(info.run_id)">
-            <td class="rank-cell">
+      <div class="leaderboard">
+        <div class="leaderboard-head">
+          <div class="rank-cell">排名</div>
+          <div class="player-cell">玩家</div>
+          <div class="igt-cell">IGT</div>
+          <div class="date-cell">记录时间</div>
+          <div class="video-cell">记录视频</div>
+        </div>
+        <div class="leaderboard-body">
+          <div
+            v-for="(info, index) in slicedata"
+            class="stats"
+            @click="navToRunDetail(info.run_id)"
+          >
+            <div class="rank-cell">
               <img
                 :src="rankPlaceIconSrc(info.rank)"
                 alt="rank"
@@ -35,11 +37,11 @@
                 v-if="info.rank <= 3"
               />
               <span v-else>{{ info.rank }}</span>
-            </td>
-            <td class="player-cell" v-html="safeDisplay(info.nickname)"></td>
-            <td class="igt-cell" v-html="safeDisplay(info.igt)"></td>
-            <td class="date-cell" v-html="safeDisplay(info.date)"></td>
-            <td class="video-cell">
+            </div>
+            <div class="player-cell" v-html="safeDisplay(info.nickname)"></div>
+            <div class="igt-cell" v-html="safeDisplay(info.igt)"></div>
+            <div class="date-cell" v-html="safeDisplay(info.date)"></div>
+            <div class="video-cell">
               <a
                 :href="info.videolink"
                 target="_blank"
@@ -49,10 +51,10 @@
               >
                 <SvgIcon name="vedio" color="white"></SvgIcon>
               </a>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     <Pagination v-model:currentPage="state.page" :totalPages="pages" />
   </div>
@@ -280,8 +282,6 @@ watch(
   width: 100%;
   color: white;
   text-align: center;
-  border-collapse: collapse;
-  table-layout: fixed;
   background-color: #333;
   border-radius: 12px;
   overflow: hidden;
@@ -290,24 +290,32 @@ watch(
 
 .leaderboard-head {
   background-color: #444;
-}
-
-.head {
+  display: flex;
   font-size: 1.1em;
   height: 60px;
   font-weight: 600;
   color: #fff;
 }
 
-.head th {
+.leaderboard-head > div {
+  flex: 1;
   padding: 16px 8px;
   border-bottom: 2px solid #555;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.leaderboard-body {
+  display: flex;
+  flex-direction: column;
 }
 
 .stats {
   cursor: pointer;
   transition: all 0.2s ease;
   border-bottom: 1px solid #444;
+  display: flex;
 }
 
 .stats:hover {
@@ -319,9 +327,12 @@ watch(
   border-bottom: none;
 }
 
-.stats td {
+.stats > div {
+  flex: 1;
   padding: 16px 8px;
-  vertical-align: middle;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .rank-icon {
@@ -385,8 +396,8 @@ watch(
     min-width: 600px;
   }
 
-  .head th,
-  .stats td {
+  .leaderboard-head > div,
+  .stats > div {
     padding: 12px 6px;
     font-size: 0.9em;
   }
