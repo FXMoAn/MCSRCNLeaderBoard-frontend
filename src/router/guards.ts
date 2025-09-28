@@ -7,6 +7,7 @@ const requireAuthRoutes = [
   '/space',
   '/space/user-runs',
   '/space/binding',
+  '/space/user-edit',
   '/manage',
   '/manage/upload',
   '/manage/user',

@@ -24,13 +24,11 @@
   </nav>
   <div class="container">
     <router-view />
-    <footer>
-      <p>&copy; 2025 MCSR-CN 中国我的世界JAVA版速通排行榜. 保留所有权利</p>
-      <a href="https://wiki.mcspeedrun.cn/advanced/cn-ldb/PrivacyPolicy" target="_blank"
-        >隐私政策</a
-      >
-    </footer>
   </div>
+  <footer>
+    <p>&copy; 2025 MCSR-CN 中国我的世界JAVA版速通排行榜. 保留所有权利</p>
+    <a href="https://wiki.mcspeedrun.cn/advanced/cn-ldb/PrivacyPolicy" target="_blank">隐私政策</a>
+  </footer>
   <!-- 全局通知组件 -->
   <Notification />
 </template>
@@ -167,13 +165,14 @@ footer {
   width: 100%;
   display: flex;
   justify-content: center;
+  background-color: var(--bgcolor);
 }
 
 footer > p,
 footer > a {
   text-align: center;
   padding: 10px;
-  color: #ccc;
+  color: rgb(204, 204, 204, 0.4);
 }
 
 footer > a:hover {

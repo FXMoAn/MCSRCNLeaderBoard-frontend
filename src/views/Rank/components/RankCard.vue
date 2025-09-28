@@ -5,7 +5,7 @@
       <img :src="rankPlaceIconSrc(rank)" alt="rank" class="rank-icon" v-if="rank <= 3" />
       <span v-else>{{ rank }}</span>
     </div>
-    <div class="player-cell" v-html="safeDisplay(nickname)"></div>
+    <div class="player-cell" v-html="safeDisplay(nickname)" @click.stop="navToUserProfile"></div>
     <div class="igt-cell" v-html="safeDisplay(igt)"></div>
     <div class="date-cell" v-html="safeDisplay(date)"></div>
     <div class="video-cell">
@@ -25,6 +25,7 @@
 <script setup lang="ts">
 import { safeDisplay } from '@/utils/security';
 import SvgIcon from '@/components/icons/index.vue';
+import { useRouter } from 'vue-router';
 // 导入排名图标
 import firstPlaceIcon from '@/assets/icons/firstplace.png';
 import secondPlaceIcon from '@/assets/icons/secondplace.png';
@@ -35,6 +36,7 @@ import { computed } from 'vue';
 interface Props {
   rank: number;
   nickname: string;
+  userId: number;
   igt: string;
   date: string;
   videolink: string;
@@ -42,6 +44,8 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+const router = useRouter();
 
 // 定义 emits
 const emit = defineEmits<{
@@ -52,6 +56,11 @@ const emit = defineEmits<{
 // 处理点击事件
 const handleClick = () => {
   emit('click', props.runId);
+};
+
+// 跳转至用户空间
+const navToUserProfile = () => {
+  router.push(`/profile/${props.userId}`);
 };
 
 // 处理视频点击事件
