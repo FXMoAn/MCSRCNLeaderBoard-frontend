@@ -1,7 +1,16 @@
 <template>
   <div class="profile-container">
-    <div class="skin-container">
-      <img :src="userSkinUrl" alt="skin" />
+    <div class="profile-line">
+      <div class="skin-container">
+        <img :src="userSkinUrl" />
+      </div>
+      <div class="profile-info">
+        <BaseInfoItem label="昵称" :value="userInfo.nickname" />
+        <BaseInfoItem label="IGN" :value="userInfo.ingamename" />
+      </div>
+    </div>
+    <div class="profile-line">
+      <PacemanCard :ingamename="userInfo.ingamename" />
     </div>
   </div>
 </template>
@@ -10,6 +19,9 @@
 import { onMounted, ref, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { supabase } from '@/lib/supabaseClient';
+
+import BaseInfoItem from './components/BaseInfoItem.vue';
+import PacemanCard from './components/PacemanCard.vue';
 
 const route = useRoute();
 const id = route.params.id;
@@ -22,7 +34,10 @@ const getUserInfo = async () => {
 };
 
 const userSkinUrl = computed(() => {
-  return `https://render.crafty.gg/3d/full/${userInfo.value.ingamename}`;
+  if (userInfo.value.ingamename) {
+    return `https://render.crafty.gg/3d/full/${userInfo.value.ingamename}`;
+  }
+  return '';
 });
 
 onMounted(() => {
@@ -32,13 +47,20 @@ onMounted(() => {
 
 <style scoped>
 .profile-container {
+  margin-top: 20px;
   width: 80%;
   height: 80%;
   display: flex;
 }
 
-.skin-container {
-  width: 20%;
-  height: 20%;
+.profile-line {
+  width: 100%;
+  display: flex;
+  gap: 5rem;
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
 }
 </style>

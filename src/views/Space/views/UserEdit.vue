@@ -6,7 +6,13 @@
   </div>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { ref } from 'vue';
+import useUserStore from '@/stores/user';
+
+const userStore = useUserStore();
+const userInfo = ref(userStore.userInfo);
+</script>
 
 <style scoped>
 .user-edit-container {
