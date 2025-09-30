@@ -1,5 +1,8 @@
 <template>
   <div class="user-edit-container">
+    <div class="to-my-profile">
+      <PrimaryButton variant="primary" @click="handleToMyProfile">我的主页</PrimaryButton>
+    </div>
     <div class="user-edit-section">
       <div class="section-subtitle">编辑个人资料</div>
       <div class="form-column">
@@ -25,12 +28,14 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import useUserStore from '@/stores/user';
+import { useRouter } from 'vue-router';
 
 import PrimaryInput from '@/components/common/PrimaryInput.vue';
 import PrimaryButton from '@/components/common/PrimaryButton.vue';
 
 const userStore = useUserStore();
 const userInfo = ref(userStore.userInfo);
+const router = useRouter();
 
 // 主页和直播间链接
 const spaceLink = ref(userInfo.value.space_link);
@@ -53,12 +58,24 @@ const handleCancel = () => {
   spaceLink.value = userInfo.value.space_link;
   liveroomLink.value = userInfo.value.liveroom_link;
 };
+
+const handleToMyProfile = () => {
+  router.push(`/profile/${userInfo.value.id}`);
+};
 </script>
 
 <style scoped>
 .user-edit-container {
   width: 100%;
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.to-my-profile {
+  width: 100%;
+  display: flex;
 }
 
 .user-edit-section {
