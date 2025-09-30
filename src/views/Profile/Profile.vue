@@ -198,6 +198,13 @@ onMounted(() => {
   color: #fff;
 }
 
+.profile-run-cards {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .placeholder-content {
   width: 100%;
   height: 100%;
