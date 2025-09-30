@@ -1,28 +1,40 @@
 <template>
-  <input
-    :type="type"
-    class="primary-input"
-    :placeholder="placeholder"
-    v-model="value"
-    :disabled="disabled"
-    @input="handleInput"
-    @focus="handleFocus"
-    @blur="handleBlur"
-    @change="handleChange"
-  />
+  <div class="primary-input-container">
+    <label class="primary-input-label" v-show="label">{{ label }}</label>
+    <input
+      :type="type"
+      class="primary-input"
+      :placeholder="placeholder"
+      v-model="value"
+      :disabled="disabled"
+      @input="handleInput"
+      @focus="handleFocus"
+      @blur="handleBlur"
+      @change="handleChange"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
+/**
+ * 通用输入框组件
+ * @param placeholder 占位符
+ * @param type 类型
+ * @param modelValue 模型值
+ * @param disabled 是否禁用
+ */
 import { computed } from 'vue';
 
 interface Props {
+  label?: string;
   placeholder?: string;
   type?: string;
-  modelValue?: string;
+  modelValue?: string | null;
   disabled?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  label: '',
   placeholder: '',
   modelValue: '',
   type: 'text',
@@ -62,6 +74,20 @@ const handleChange = (e: Event) => {
 </script>
 
 <style scoped>
+.primary-input-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.primary-input-label {
+  color: #ccc;
+  font-size: 1em;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .primary-input {
   flex: 1;
   padding: 12px 16px;

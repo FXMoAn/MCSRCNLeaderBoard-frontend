@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import { supabase } from '@/lib/supabaseClient';
 import { eventBus, AUTH_EVENTS } from './eventBus';
 import axios from 'axios';
@@ -8,17 +8,7 @@ import {
   showSuccessNotification,
   showInfoNotification,
 } from '@/utils/notification';
-
-interface UserInfo {
-  id: number;
-  ingamename: string;
-  mc_uuid: string;
-  nickname: string;
-  user_id: number;
-  role: string;
-  bili_id: string | null;
-  bili_name: string | null;
-}
+import type { UserInfo } from '@/types/CommonTypes';
 
 const useUserStore = defineStore('user', () => {
   const localUserId = ref<number | null>(null);
@@ -105,6 +95,27 @@ const useUserStore = defineStore('user', () => {
         .from('users')
         .update({ nickname: nickname })
         .eq('user_id', localUserId.value);
+      if (error) {
+        console.error(error);
+        showErrorNotification('更新失败');
+      } else {
+        showSuccessNotification('更新成功');
+        await initUserInfo();
+      }
+    } catch (error) {
+      console.error(error);
+      showErrorNotification('更新失败');
+    }
+  };
+
+  // 更新用户信息(通用)
+  const updateUserInfo = async (updates: Partial<UserInfo>) => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .update(updates)
+        .eq('user_id', localUserId.value);
+
       if (error) {
         console.error(error);
         showErrorNotification('更新失败');
@@ -271,6 +282,7 @@ const useUserStore = defineStore('user', () => {
     setUserInfo,
     clearUserInfo,
     setUserId,
+    updateUserInfo,
   };
 });
 

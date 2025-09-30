@@ -3,8 +3,8 @@
     <div class="logo" @click="backToHome">
       <span> MCSR-CN </span>
     </div>
-    <!-- 屏幕宽度小于780px时，变为左侧抽屉菜单 -->
-    <div class="links">
+    <!-- 屏幕宽度小于780px时，变为右侧抽屉菜单 -->
+    <div class="links" v-if="windowWidth > 780">
       <div><router-link to="/rank" class="nav-link">排行榜</router-link></div>
       <div v-if="userStore.isBinding">
         <router-link to="/user-upload" class="nav-link">上传记录</router-link>
@@ -14,13 +14,52 @@
       <div v-if="userStore.isAdmin">
         <router-link to="/manage/upload" class="nav-link">管理员</router-link>
       </div>
+      <UserPanel v-if="authStore.isLoggedIn" @signOut="authStore.logout" class="control-item" />
+      <AuthControl v-else class="control-item" />
     </div>
-    <!-- <div class="search-form">
-        <input id="search-user" type="text" placeholder="输入用户名..." v-model="nickName"/>
-        <el-button :icon="Search" circle @click="routeToSpace"/>
-    </div>  -->
-    <UserPanel v-if="authStore.isLoggedIn" @signOut="authStore.logout" />
-    <AuthControl v-else />
+    <div class="drawer" v-else @click="isDrawerOpen = !isDrawerOpen">展开菜单</div>
+
+    <!-- 背景遮罩 -->
+    <div
+      class="drawer-overlay"
+      v-show="isDrawerOpen"
+      v-if="windowWidth < 780"
+      @click="isDrawerOpen = false"
+    ></div>
+
+    <!-- 抽屉内容 -->
+    <div class="drawer-content" :class="{ 'drawer-open': isDrawerOpen }" v-if="windowWidth < 780">
+      <div class="drawer-close" @click="isDrawerOpen = false">×</div>
+      <UserPanel v-if="authStore.isLoggedIn" @signOut="authStore.logout" class="control-item" />
+      <AuthControl v-else class="control-item" />
+      <div>
+        <router-link to="/rank" class="nav-link" @click="isDrawerOpen = false">排行榜</router-link>
+      </div>
+      <div v-if="userStore.isBinding">
+        <router-link to="/user-upload" class="nav-link" @click="isDrawerOpen = false"
+          >上传记录</router-link
+        >
+      </div>
+      <div>
+        <router-link to="/stats" class="nav-link" @click="isDrawerOpen = false"
+          >统计数据</router-link
+        >
+      </div>
+      <div>
+        <a
+          href="https://wiki.mcspeedrun.cn"
+          target="_blank"
+          class="nav-link"
+          @click="isDrawerOpen = false"
+          >速通wiki</a
+        >
+      </div>
+      <div v-if="userStore.isAdmin">
+        <router-link to="/manage/upload" class="nav-link" @click="isDrawerOpen = false"
+          >管理员</router-link
+        >
+      </div>
+    </div>
   </nav>
   <div class="container">
     <router-view />
@@ -37,6 +76,7 @@
 import '@/assets/main.css';
 import { ref, onMounted, watch, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useWindowSize } from '@vueuse/core';
 // 用户登录控制
 import AuthControl from '@/components/AuthControl.vue';
 import UserPanel from '@/components/UserPanel.vue';
@@ -53,12 +93,9 @@ const backToHome = () => {
 };
 
 // 获取窗口宽度
-const windowWidth = ref(window.innerWidth);
+const { width: windowWidth } = useWindowSize();
 
-// 监听窗口宽度变化
-watch(windowWidth, (newWidth) => {
-  windowWidth.value = newWidth;
-});
+const isDrawerOpen = ref(false);
 
 // 监听认证状态变化，自动更新用户信息
 watch(
@@ -118,6 +155,12 @@ nav {
   color: #00bcd4;
 }
 
+.nav-link.router-link-active {
+  color: #00bcd4;
+  background-color: rgba(0, 188, 212, 0.1);
+  border: 1px solid rgba(0, 188, 212, 0.3);
+}
+
 .logo {
   font-size: larger;
   display: flex;
@@ -135,29 +178,12 @@ nav {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 2rem;
-  margin-left: 2rem;
+  gap: 10px;
+  margin-left: 1rem;
+  font-size: 14px;
 
-  .nav-link.router-link-active {
-    color: #00bcd4;
-    background-color: rgba(0, 188, 212, 0.1);
-    border: 1px solid rgba(0, 188, 212, 0.3);
-  }
-}
-
-@media (max-width: 780px) {
-  .container {
-    width: 100%;
-  }
-
-  .links {
-    gap: 1rem;
-    margin-left: 1rem;
-  }
-
-  .nav-link {
-    padding: 6px 12px;
-    font-size: 14px;
+  .control-item {
+    margin-left: auto;
   }
 }
 
@@ -178,5 +204,96 @@ footer > a {
 footer > a:hover {
   text-decoration: underline;
   color: #00bcd4;
+}
+
+.drawer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.drawer:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #00bcd4;
+}
+
+/* 背景遮罩 */
+.drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 抽屉内容 */
+.drawer-content {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 280px;
+  height: 100vh;
+  background-color: #444;
+  color: white;
+  z-index: 1000;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding-top: 20px;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.drawer-content.drawer-open {
+  transform: translateX(0);
+}
+
+.drawer-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 24px;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #333;
+  border: 1px solid #555;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.drawer-close:hover {
+  background-color: #555;
+  color: #00bcd4;
+}
+
+/* 响应式调整 */
+@media (max-width: 480px) {
+  .drawer-content {
+    width: 260px;
+  }
 }
 </style>
