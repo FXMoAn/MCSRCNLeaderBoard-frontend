@@ -9,21 +9,25 @@ const router = createRouter({
       path: '/',
       redirect: '/rank',
     },
+    // 排行榜
     {
       path: '/rank',
       name: 'rank',
       component: Rank,
     },
+    // 速通详情
     {
       path: '/run/:id',
       name: 'run',
       component: () => import('../views/Run.vue'),
     },
+    // 上传成绩
     {
       path: '/user-upload',
       name: 'user-upload',
       component: () => import('../views/Upload/Upload.vue'),
     },
+    // 账号管理
     {
       path: '/login',
       name: 'login',
@@ -39,16 +43,25 @@ const router = createRouter({
       name: 'reset-password',
       component: () => import('../views/ResetPassword.vue'),
     },
+    // 待审核成绩（管理员）
     {
       path: '/pending-run/:id',
       name: 'pending-run',
       component: () => import('../views/PendingRun.vue'),
     },
+    // 统计数据
     {
       path: '/stats',
       name: 'stats',
       component: () => import('../views/Stats/Stats.vue'),
     },
+    // 用户资料(公开)
+    {
+      path: '/profile/:id',
+      name: 'profile',
+      component: () => import('../views/Profile/Profile.vue'),
+    },
+    // 个人空间
     {
       path: '/space',
       name: 'space',
@@ -60,12 +73,18 @@ const router = createRouter({
           component: () => import('../views/Space/views/UserRuns.vue'),
         },
         {
+          path: 'user-edit',
+          name: 'user-edit',
+          component: () => import('../views/Space/views/UserEdit.vue'),
+        },
+        {
           path: 'binding',
           name: 'binding',
           component: () => import('../views/Space/views/Binding.vue'),
         },
       ],
     },
+    // 管理面板
     {
       path: '/manage',
       name: 'manage',

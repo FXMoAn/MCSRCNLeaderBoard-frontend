@@ -29,6 +29,7 @@
             :key="info.run_id"
             :rank="info.rank"
             :nickname="info.nickname"
+            :userId="info.userid"
             :igt="info.igt"
             :date="info.date"
             :videolink="info.videolink"

@@ -11,6 +11,10 @@ const navItems = [
     label: '我的成绩',
   },
   {
+    path: '/space/user-edit',
+    label: '个人资料',
+  },
+  {
     path: '/space/binding',
     label: '账号信息管理',
   },

@@ -1,7 +1,5 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
-import request from '@/utils/request';
-import type UserInfo from '@/types/LeaderBoardTypes';
 import { supabase } from '@/lib/supabaseClient';
 import {
   showErrorNotification,
