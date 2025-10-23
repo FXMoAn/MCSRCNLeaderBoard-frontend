@@ -39,10 +39,7 @@
         <PacemanCard :ingamename="userInfo.ingamename" />
       </div>
       <div class="profile-right">
-        <!-- 预留位置给其他内容 -->
-        <div class="placeholder-content">
-          <p>开发中</p>
-        </div>
+        <RankedCard :ingamename="userInfo.ingamename" />
       </div>
     </div>
   </div>
@@ -56,6 +53,7 @@ import { showErrorNotification } from '@/utils/notification';
 
 import BaseInfoItem from './components/BaseInfoItem.vue';
 import PacemanCard from './components/PacemanCard.vue';
+import RankedCard from './components/RankedCard.vue';
 import RunCard from '../Space/components/RunCard.vue';
 
 const route = useRoute();
