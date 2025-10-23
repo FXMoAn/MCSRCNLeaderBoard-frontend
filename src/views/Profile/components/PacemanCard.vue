@@ -10,56 +10,56 @@
         <div class="paceman-stat-item">
           <span class="stat-label">下界</span>
           <div class="stat-values">
-            <span class="stat-count">{{ pacemanStats.nether.count }}</span>
             <span class="stat-avg">{{ pacemanStats.nether.avg }}</span>
+            <span class="stat-count">{{ pacemanStats.nether.count }}</span>
           </div>
         </div>
 
         <div class="paceman-stat-item">
           <span class="stat-label">第一个结构</span>
           <div class="stat-values">
-            <span class="stat-count">{{ pacemanStats.first_structure.count }}</span>
             <span class="stat-avg">{{ pacemanStats.first_structure.avg }}</span>
+            <span class="stat-count">{{ pacemanStats.first_structure.count }}</span>
           </div>
         </div>
 
         <div class="paceman-stat-item">
           <span class="stat-label">第二个结构</span>
           <div class="stat-values">
-            <span class="stat-count">{{ pacemanStats.second_structure.count }}</span>
             <span class="stat-avg">{{ pacemanStats.second_structure.avg }}</span>
+            <span class="stat-count">{{ pacemanStats.second_structure.count }}</span>
           </div>
         </div>
 
         <div class="paceman-stat-item">
           <span class="stat-label">盲传</span>
           <div class="stat-values">
-            <span class="stat-count">{{ pacemanStats.first_portal.count }}</span>
             <span class="stat-avg">{{ pacemanStats.first_portal.avg }}</span>
+            <span class="stat-count">{{ pacemanStats.first_portal.count }}</span>
           </div>
         </div>
 
         <div class="paceman-stat-item">
           <span class="stat-label">要塞</span>
           <div class="stat-values">
-            <span class="stat-count">{{ pacemanStats.stronghold.count }}</span>
             <span class="stat-avg">{{ pacemanStats.stronghold.avg }}</span>
+            <span class="stat-count">{{ pacemanStats.stronghold.count }}</span>
           </div>
         </div>
 
         <div class="paceman-stat-item">
           <span class="stat-label">末地</span>
           <div class="stat-values">
-            <span class="stat-count">{{ pacemanStats.end.count }}</span>
             <span class="stat-avg">{{ pacemanStats.end.avg }}</span>
+            <span class="stat-count">{{ pacemanStats.end.count }}</span>
           </div>
         </div>
 
         <div class="paceman-stat-item">
           <span class="stat-label">完成</span>
           <div class="stat-values">
-            <span class="stat-count">{{ pacemanStats.finish.count }}</span>
             <span class="stat-avg">{{ pacemanStats.finish.avg }}</span>
+            <span class="stat-count">{{ pacemanStats.finish.count }}</span>
           </div>
         </div>
       </div>
@@ -212,14 +212,14 @@ const handleRangeChange = (value: string) => {
 }
 
 .stat-count {
-  font-size: 18px;
-  font-weight: 600;
-  color: #00bcd4;
+  font-size: 16px;
+  color: #999;
 }
 
 .stat-avg {
-  font-size: 12px;
-  color: #999;
+  font-size: 18px;
+  font-weight: 600;
+  color: #00bcd4;
 }
 
 .no-data {
