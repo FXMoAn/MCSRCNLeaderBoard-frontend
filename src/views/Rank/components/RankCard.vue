@@ -41,6 +41,7 @@ interface Props {
   date: string;
   videolink: string;
   runId: number;
+  is_new_record: boolean;
 }
 
 const props = defineProps<Props>();
@@ -82,9 +83,7 @@ const rankPlaceIconSrc = (rank: number) => {
 
 // 判断是否为30天内的新成绩
 const isNewRecord = computed(() => {
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 30);
-  return new Date(props.date) > sevenDaysAgo;
+  return props.is_new_record;
 });
 </script>
 
