@@ -11,6 +11,11 @@
       :initialIgt="state.igt"
       :initialNickname="state.nickname"
     />
+
+    <OtherFilter
+      @confirmFilter="handleOtherConfirmFilter"
+      :initialIsNewRecord="isNewRecord"
+    />
   </div>
   <div class="content-container">
     <Loading v-if="isLoading" />
@@ -33,7 +38,8 @@
             :igt="info.igt"
             :date="info.date"
             :videolink="info.videolink"
-            :run-id="info.run_id"
+            :runId="info.run_id"
+            :is_new_record="info.is_new_record"
             @click="navToRunDetail"
             @video-click="openVideo"
           />
@@ -58,6 +64,7 @@ import Pagination from '@/components/Pagination.vue';
 import VersionTypeSelector from '@/components/VersionTypeSelector.vue';
 import Loading from '@/components/common/Loading.vue';
 import RankCard from './components/RankCard.vue';
+import OtherFilter from '@/components/OtherFilter.vue';
 
 // 定义状态类型
 interface RankState {
@@ -105,6 +112,7 @@ const slicedata = computed(() =>
 );
 // 分页
 const pages = computed(() => Math.ceil(filteredData.value.length / 10));
+const isNewRecord = ref(false);
 
 // 版本选择
 const handleSelectionChange = (version: string, type: string) => {
@@ -114,6 +122,7 @@ const handleSelectionChange = (version: string, type: string) => {
     page: 1,
   });
 
+  isNewRecord.value = false;
   statsStore.getStats(version, type);
   stateManager.saveToStorage();
 };
@@ -167,6 +176,12 @@ const handleConfirmFilter = (filter: { igt: string; nickname: string }) => {
   }
 
   stateManager.saveToStorage();
+  isNewRecord.value = false;
+};
+
+// 确认筛选
+const handleOtherConfirmFilter = (value: boolean) => {
+  isNewRecord.value = value;
 };
 
 // 初始化
@@ -185,6 +200,17 @@ onMounted(async () => {
     });
   }
   checkUrlError();
+});
+
+// 监听新纪录筛选变化
+watch(isNewRecord, (newVal) => {
+  filteredData.value = statsdata.value.filter((item) => {
+    if (newVal) {
+      return item.is_new_record;
+    } else {
+      return true;
+    }
+  });
 });
 
 // 监听分页变化
@@ -208,16 +234,6 @@ watch(
   },
   { immediate: true }
 );
-
-// // 每次激活页面时，确保数据正确显示
-// onActivated(() => {
-//   if (statsdata.value.length === 0) {
-//     statsStore.getStats('1.16.1', 'RSG');
-//   } else {
-//     filteredData.value = statsdata.value;
-//   }
-//   checkUrlError();
-// });
 </script>
 
 <style scoped>

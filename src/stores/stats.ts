@@ -19,6 +19,7 @@ export interface Run {
   remarks: string;
   seed: string;
   rank: number;
+  is_new_record: boolean;
 }
 
 export const useStatsStore = defineStore('stats', () => {
@@ -64,6 +65,12 @@ export const useStatsStore = defineStore('stats', () => {
       }
       data.map((item: Run, index: number) => {
         item.rank = index + 1;
+        return item;
+      });
+      data.map((item: Run) => {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 30);
+        item.is_new_record = new Date(item.date) > sevenDaysAgo;
         return item;
       });
       return data;
