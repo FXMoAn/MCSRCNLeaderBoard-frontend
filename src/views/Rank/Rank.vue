@@ -1,4 +1,15 @@
 <template>
+  <button class="year-comparison-btn" @click="navToYearComparison">
+    <div class="btn-content">
+      <span class="btn-icon">📊</span>
+      <span class="btn-text">
+        <span class="btn-line">点击查看</span>
+        <span class="btn-line">2025年</span>
+        <span class="btn-line">榜单变更</span>
+      </span>
+    </div>
+    <div class="btn-glow"></div>
+  </button>
   <div class="control-container">
     <VersionTypeSelector
       @confirmFilter="handleSelectionChange"
@@ -132,6 +143,11 @@ const navToRunDetail = (id: number) => {
   router.push(`/run/${id}`);
 };
 
+// 跳转至年份对比页
+const navToYearComparison = () => {
+  router.push('/24to25');
+};
+
 // 打开视频链接
 const openVideo = (url: string) => {
   window.open(url, '_blank');
@@ -237,6 +253,134 @@ watch(
 </script>
 
 <style scoped>
+.year-comparison-btn {
+  position: fixed;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: visible;
+}
+
+.btn-content {
+  position: relative;
+  padding: 16px 12px;
+  background: linear-gradient(135deg, rgba(0, 188, 212, 0.95), rgba(0, 151, 167, 0.95));
+  border: 2px solid rgba(0, 188, 212, 0.6);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 188, 212, 0.4), 
+              0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 70px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+}
+
+.btn-icon {
+  font-size: 24px;
+  line-height: 1;
+  animation: float 3s ease-in-out infinite;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.btn-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  line-height: 1.3;
+  letter-spacing: 0.5px;
+}
+
+.btn-line {
+  display: block;
+  white-space: nowrap;
+}
+
+.btn-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(0, 188, 212, 0.3) 0%, transparent 70%);
+  border-radius: 12px;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.year-comparison-btn:hover .btn-content {
+  background: linear-gradient(135deg, rgba(0, 188, 212, 1), rgba(0, 151, 167, 1));
+  transform: translateX(8px) scale(1.05);
+  box-shadow: 0 8px 30px rgba(0, 188, 212, 0.6),
+              0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+  border-color: rgba(0, 188, 212, 0.9);
+}
+
+.year-comparison-btn:hover .btn-glow {
+  opacity: 1;
+}
+
+.year-comparison-btn:hover .btn-icon {
+  animation: float 1.5s ease-in-out infinite, pulse 2s ease-in-out infinite;
+}
+
+.year-comparison-btn:active .btn-content {
+  transform: translateX(4px) scale(1.02);
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 2px 8px rgba(0, 188, 212, 0.6));
+  }
+}
+
+@media (max-width: 780px) {
+  .year-comparison-btn {
+    left: 10px;
+  }
+
+  .btn-content {
+    padding: 12px 8px;
+    min-width: 60px;
+  }
+
+  .btn-icon {
+    font-size: 20px;
+  }
+
+  .btn-text {
+    font-size: 10px;
+  }
+}
+
 .content-container {
   width: 100%;
   height: 100%;
