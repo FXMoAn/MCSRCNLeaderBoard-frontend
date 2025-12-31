@@ -55,6 +55,12 @@ const router = createRouter({
       name: 'stats',
       component: () => import('../views/Stats/Stats.vue'),
     },
+    // 年份对比
+    {
+      path: '/24to25',
+      name: '24to25',
+      component: () => import('../views/YearComparison.vue'),
+    },
     // 用户资料(公开)
     {
       path: '/profile/:id',
