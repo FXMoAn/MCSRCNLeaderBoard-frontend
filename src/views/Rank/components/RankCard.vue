@@ -1,31 +1,68 @@
 <template>
   <div class="stats" @click="handleClick">
-    <div class="new-record-cell" v-if="isNewRecord">NEW</div>
-    <div class="rank-cell">
-      <img :src="rankPlaceIconSrc(rank)" alt="rank" class="rank-icon" v-if="rank <= 3" />
+    <span class="new-record-cell" v-if="isNewRecord">NEW</span>
+    <div class="cell rank-cell">
+      <img
+        :src="rankPlaceIconSrc(rank)"
+        :alt="`第 ${rank} 名`"
+        class="rank-icon"
+        v-if="rank <= 3"
+      />
       <span v-else>{{ rank }}</span>
     </div>
-    <div class="player-cell" v-html="safeDisplay(nickname)" @click.stop="navToUserProfile"></div>
-    <div class="igt-cell" v-html="safeDisplay(igt)"></div>
-    <div class="date-cell" v-html="safeDisplay(date)"></div>
-    <div class="video-cell">
+    <div class="cell player-cell">
+      <RouterLink :to="`/profile/${userId}`" class="player-link" @click.stop>{{
+        nickname
+      }}</RouterLink>
+      <span class="new-record-badge" v-if="isNewRecord">NEW</span>
+    </div>
+    <div class="cell igt-cell">
+      <RouterLink
+        :to="`/run/${runId}`"
+        :aria-label="`${nickname} 的成绩 ${igt}，查看详情`"
+        @click.stop
+        >{{ igt }}</RouterLink
+      >
+    </div>
+    <div class="cell date-cell">{{ date }}</div>
+    <div class="cell video-cell">
       <a
+        v-if="videolink"
         :href="videolink"
         target="_blank"
-        @click.stop
-        @click.prevent="handleVideoClick"
+        rel="noopener noreferrer"
+        :aria-label="`${nickname} 的记录视频`"
+        @click.stop.prevent="handleVideoClick"
         class="video-link"
       >
         <SvgIcon name="vedio" color="white"></SvgIcon>
       </a>
+      <span v-else class="no-video">暂无视频</span>
     </div>
+    <details class="mobile-details" @click.stop>
+      <summary>日期与视频 <span class="details-chevron" aria-hidden="true">⌄</span></summary>
+      <div class="details-content">
+        <span class="record-date"
+          >记录时间 <span>{{ date }}</span></span
+        >
+        <a
+          v-if="videolink"
+          :href="videolink"
+          target="_blank"
+          rel="noopener noreferrer"
+          :aria-label="`${nickname} 的记录视频`"
+          @click.prevent="handleVideoClick"
+          >观看视频 ↗</a
+        >
+        <span v-else class="no-video">暂无视频</span>
+      </div>
+    </details>
   </div>
 </template>
 
 <script setup lang="ts">
-import { safeDisplay } from '@/utils/security';
 import SvgIcon from '@/components/icons/index.vue';
-import { useRouter } from 'vue-router';
+import { RouterLink } from 'vue-router';
 // 导入排名图标
 import firstPlaceIcon from '@/assets/icons/firstplace.png';
 import secondPlaceIcon from '@/assets/icons/secondplace.png';
@@ -46,8 +83,6 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const router = useRouter();
-
 // 定义 emits
 const emit = defineEmits<{
   click: [runId: number];
@@ -57,11 +92,6 @@ const emit = defineEmits<{
 // 处理点击事件
 const handleClick = () => {
   emit('click', props.runId);
-};
-
-// 跳转至用户空间
-const navToUserProfile = () => {
-  router.push(`/profile/${props.userId}`);
 };
 
 // 处理视频点击事件
@@ -105,7 +135,7 @@ const isNewRecord = computed(() => {
   border-bottom: none;
 }
 
-.stats > div {
+.cell {
   flex: 1;
   padding: 16px 8px;
   display: flex;
@@ -138,10 +168,38 @@ const isNewRecord = computed(() => {
   font-size: 1.2em;
 }
 
+.player-link {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.stats a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.stats a:hover {
+  color: #00bcd4;
+}
+
+.stats a:focus-visible,
+.mobile-details summary:focus-visible {
+  outline: 2px solid #00bcd4;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.new-record-badge,
+.mobile-details {
+  display: none;
+}
+
 .igt-cell {
   font-family: 'Courier New', monospace;
   font-weight: 600;
   font-size: 1.2em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .date-cell {
@@ -151,6 +209,11 @@ const isNewRecord = computed(() => {
 
 .video-cell {
   width: 60px;
+}
+
+.no-video {
+  color: #ccc;
+  font-size: 12px;
 }
 
 .video-link {
@@ -172,9 +235,111 @@ const isNewRecord = computed(() => {
 }
 
 @media (max-width: 780px) {
-  .stats > div {
-    padding: 12px 6px;
-    font-size: 0.9em;
+  .stats {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 112px;
+    column-gap: 8px;
+    padding: 0 12px;
+  }
+
+  .stats:hover {
+    transform: none;
+  }
+
+  .cell {
+    min-width: 0;
+    padding: 16px 0 4px;
+    font-size: 14px;
+  }
+
+  .player-cell {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .igt-cell {
+    font-size: 15px;
+  }
+
+  .rank-icon {
+    width: 26px;
+    height: 26px;
+  }
+
+  .date-cell,
+  .video-cell,
+  .new-record-cell {
+    display: none;
+  }
+
+  .new-record-badge {
+    display: inline-flex;
+    color: #00bcd4;
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  .mobile-details {
+    display: block;
+    grid-column: 1 / -1;
+    min-width: 0;
+    font-size: 12px;
+    text-align: left;
+    cursor: auto;
+  }
+
+  .mobile-details summary {
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    color: #ccc;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .mobile-details summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .details-chevron {
+    font-size: 16px;
+  }
+
+  .mobile-details[open] .details-chevron {
+    transform: rotate(180deg);
+  }
+
+  .details-content {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px 16px;
+    padding: 4px 0 12px;
+    color: #ccc;
+  }
+
+  .record-date {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+  }
+
+  .details-content a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    color: #00bcd4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stats,
+  .video-link {
+    transition: none;
   }
 }
 </style>

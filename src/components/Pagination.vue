@@ -1,255 +1,293 @@
 <template>
-  <div class="pagination">
-    <button 
-      class="control prev" 
-      @click="handlePrevPage" 
-      :disabled="currentPage <= 1"
-    >
-      <span>&lt;</span>
-    </button>
-    
-    <div class="page-info">
-      <span class="page-number">{{ currentPage }}</span>
-      <span class="page-separator">/</span>
-      <span class="total-pages">{{ totalPages }}</span>
+  <nav class="pagination" aria-label="排行榜分页">
+    <div class="pagination-summary" v-if="totalItems !== undefined || pageSize !== undefined">
+      <span v-if="totalItems !== undefined" class="result-count" role="status">
+        共 {{ totalItems }} 条<span v-if="totalItems > 0 && pageSize !== undefined">
+          · 当前 {{ rangeStart }}–{{ rangeEnd }} 条</span
+        >
+      </span>
+      <label v-if="pageSize !== undefined" class="page-size">
+        每页
+        <PrimarySelect
+          v-model="selectedPageSize"
+          :options="sizeOptions"
+          :disabled="disabled"
+          aria-label="每页显示条数"
+        />
+      </label>
     </div>
-    
-    <div class="page-jump">
-      <input
-        type="number"
-        class="page-input"
-        v-model="jumpPage"
-        :min="1"
-        :max="totalPages"
-        placeholder="页码"
-        @keyup.enter="handleJumpPage"
-      />
-      <button class="jump-button" @click="handleJumpPage">跳转</button>
+
+    <div class="pagination-controls">
+      <button
+        type="button"
+        class="control"
+        aria-label="上一页"
+        @click="changePage(currentPage - 1)"
+        :disabled="disabled || currentPage <= 1"
+      >
+        <span aria-hidden="true">‹</span>
+      </button>
+      <div class="page-info" aria-live="polite" aria-atomic="true">
+        <span class="page-number">{{ currentPage }}</span>
+        <span class="page-separator">/</span>
+        <span class="total-pages">{{ safeTotalPages }}</span>
+        <span class="sr-only">页</span>
+      </div>
+      <form class="page-jump" novalidate @submit.prevent="handleJumpPage">
+        <input
+          type="number"
+          class="page-input"
+          v-model="jumpPage"
+          :min="1"
+          :max="safeTotalPages"
+          :step="1"
+          :disabled="disabled"
+          aria-label="跳转页码"
+          inputmode="numeric"
+          placeholder="页码"
+        />
+        <button type="submit" class="jump-button" :disabled="disabled">跳转</button>
+      </form>
+      <button
+        type="button"
+        class="control"
+        aria-label="下一页"
+        @click="changePage(currentPage + 1)"
+        :disabled="disabled || currentPage >= safeTotalPages"
+      >
+        <span aria-hidden="true">›</span>
+      </button>
     </div>
-    
-    <button 
-      class="control next" 
-      @click="handleNextPage" 
-      :disabled="currentPage >= totalPages"
-    >
-      <span>&gt;</span>
-    </button>
-  </div>
+  </nav>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
+import PrimarySelect from '@/components/common/PrimarySelect.vue';
+import { PAGE_SIZE_OPTIONS } from '@/constants/pagination';
 
 interface Props {
   currentPage: number;
   totalPages: number;
+  pageSize?: number;
+  totalItems?: number;
+  disabled?: boolean;
 }
 
-interface Emits {
+const props = withDefaults(defineProps<Props>(), { disabled: false });
+const emit = defineEmits<{
   (e: 'update:currentPage', page: number): void;
-}
+  (e: 'update:pageSize', size: number): void;
+}>();
 
-const props = defineProps<Props>();
-const emit = defineEmits<Emits>();
-
-const jumpPage = ref<number>(props.currentPage);
-
-// 监听当前页码变化，同步输入框
-watch(() => props.currentPage, (newPage) => {
-  jumpPage.value = newPage;
+const safeTotalPages = computed(() => Math.max(1, props.totalPages));
+const jumpPage = ref<number | string>(props.currentPage);
+const sizeOptions = PAGE_SIZE_OPTIONS.map((size) => ({ value: String(size), label: `${size} 条` }));
+const selectedPageSize = computed({
+  get: () => String(props.pageSize),
+  set: (value: string) => {
+    const size = Number(value);
+    if (!props.disabled && PAGE_SIZE_OPTIONS.some((option) => option === size)) {
+      emit('update:pageSize', size);
+    }
+  },
 });
+const rangeStart = computed(() => (props.currentPage - 1) * (props.pageSize ?? 10) + 1);
+const rangeEnd = computed(() =>
+  Math.min(props.currentPage * (props.pageSize ?? 10), props.totalItems ?? 0)
+);
 
-const handlePrevPage = () => {
-  if (props.currentPage > 1) {
-    emit('update:currentPage', props.currentPage - 1);
+watch(
+  () => props.currentPage,
+  (page) => {
+    jumpPage.value = page;
   }
-};
+);
 
-const handleNextPage = () => {
-  if (props.currentPage < props.totalPages) {
-    emit('update:currentPage', props.currentPage + 1);
+const changePage = (page: number) => {
+  if (!props.disabled && page >= 1 && page <= safeTotalPages.value && page !== props.currentPage) {
+    emit('update:currentPage', page);
   }
 };
 
 const handleJumpPage = () => {
-  const targetPage = Math.max(1, Math.min(props.totalPages, jumpPage.value));
-  if (targetPage !== props.currentPage) {
-    emit('update:currentPage', targetPage);
+  const value = Number(jumpPage.value);
+  if (!Number.isSafeInteger(value) || value < 1) {
+    jumpPage.value = props.currentPage;
+    return;
   }
-  jumpPage.value = targetPage;
+  const page = Math.min(value, safeTotalPages.value);
+  changePage(page);
+  jumpPage.value = page;
 };
 </script>
 
 <style scoped>
 .pagination {
+  box-sizing: border-box;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  gap: 16px;
+  justify-content: space-between;
+  gap: 16px 24px;
+  width: 100%;
+  max-width: 1200px;
   margin-top: 20px;
   padding: 16px;
   background-color: rgba(255, 255, 255, 0.02);
-  border-radius: 12px;
   border: 1px solid #444;
+  border-radius: 12px;
 }
-
-.control {
-  background: linear-gradient(135deg, #00bcd4, #0097a7);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 12px 16px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.control:hover:not(:disabled) {
-  background: linear-gradient(135deg, #00acc1, #00838f);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0, 188, 212, 0.3);
-}
-
-.control:disabled {
-  background: #555;
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.control:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.page-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 16px;
-  color: #fff;
-  min-width: 80px;
-  justify-content: center;
-}
-
-.page-number {
-  font-weight: 600;
-  color: #00bcd4;
-}
-
-.page-separator {
-  color: #666;
-}
-
-.total-pages {
-  color: #ccc;
-}
-
+.pagination-summary,
+.pagination-controls,
+.page-size,
+.page-info,
 .page-jump {
   display: flex;
   align-items: center;
+}
+.pagination-summary {
+  flex-wrap: wrap;
+  gap: 12px 24px;
+}
+.result-count {
+  color: #ccc;
+  font-size: 14px;
+}
+.result-count span {
+  color: inherit;
+}
+.page-size {
+  gap: 8px;
+  color: #ccc;
+  font-size: 14px;
+}
+.page-size :deep(select) {
+  min-width: 80px;
+  appearance: auto;
+}
+.pagination-controls {
+  gap: 12px;
+}
+.page-info {
+  justify-content: center;
+  gap: 8px;
+  min-width: 64px;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.page-number {
+  color: #00bcd4;
+  font-weight: 600;
+}
+.page-separator {
+  color: #999;
+}
+.total-pages {
+  color: #ccc;
+}
+.page-jump {
   gap: 8px;
 }
 
-.page-input {
-  width: 60px;
-  padding: 8px 12px;
-  background-color: #333;
-  border: 1px solid #444;
-  border-radius: 6px;
+.control,
+.jump-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #555;
+  border-radius: 8px;
+  background: #333;
   color: #fff;
   font-size: 14px;
-  text-align: center;
-  transition: all 0.2s ease;
-}
-
-.page-input:focus {
-  outline: none;
-  border-color: #00bcd4;
-  box-shadow: 0 0 0 2px rgba(0, 188, 212, 0.1);
-}
-
-.page-input::-webkit-inner-spin-button,
-.page-input::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-.jump-button {
-  background: linear-gradient(135deg, #666, #555);
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 12px;
-  font-size: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+.control {
+  font-size: 24px;
+}
+.control:hover:not(:disabled),
+.jump-button:hover:not(:disabled) {
+  background: #444;
+  border-color: #00bcd4;
+}
+.control:active:not(:disabled),
+.jump-button:active:not(:disabled) {
+  background: #222;
+}
+.control:disabled,
+.jump-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+.page-input {
+  box-sizing: border-box;
+  width: 64px;
+  height: 40px;
+  padding: 8px;
+  border: 1px solid #555;
+  border-radius: 8px;
+  background: #333;
+  color: #fff;
+  text-align: center;
+  font-size: 14px;
+}
+.control:focus-visible,
+.jump-button:focus-visible,
+.page-input:focus-visible {
+  outline: 2px solid #00bcd4;
+  outline-offset: 3px;
+}
+.page-input:disabled {
+  opacity: 0.6;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
   white-space: nowrap;
 }
 
-.jump-button:hover {
-  background: linear-gradient(135deg, #777, #666);
-  transform: translateY(-1px);
-}
-
-.jump-button:active {
-  transform: translateY(0);
-}
-
-@media (max-width: 768px) {
+@media (max-width: 780px) {
   .pagination {
-    flex-direction: column;
-    gap: 12px;
+    justify-content: center;
+    gap: 16px;
     padding: 12px;
   }
-  
-  .page-jump {
-    order: -1;
+  .pagination-summary {
     width: 100%;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .pagination-controls {
+    flex-wrap: wrap;
     justify-content: center;
+    gap: 8px;
   }
-  
-  .page-input {
-    width: 80px;
-  }
-  
+}
+@media (prefers-reduced-motion: reduce) {
+  .control,
   .jump-button {
-    padding: 8px 16px;
-    font-size: 14px;
+    transition: none;
   }
 }
 
-@media (max-width: 480px) {
-  .pagination {
-    gap: 8px;
-    padding: 8px;
+@media (max-width: 380px) {
+  .pagination-controls {
+    width: 100%;
   }
-  
-  .control {
-    padding: 10px 12px;
-    min-width: 40px;
-    height: 40px;
-    font-size: 14px;
-  }
-  
-  .page-info {
-    font-size: 14px;
-    min-width: 60px;
-  }
-  
-  .page-input {
-    width: 60px;
-    padding: 6px 10px;
-    font-size: 13px;
-  }
-  
-  .jump-button {
-    padding: 6px 12px;
-    font-size: 12px;
+  .page-jump {
+    order: 1;
+    flex-basis: 100%;
+    justify-content: center;
   }
 }
 </style>

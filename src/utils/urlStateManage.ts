@@ -30,7 +30,7 @@ export class URLStateManager<T extends Record<string, any>> {
     this.config = config;
     this.router = useRouter();
     this.route = useRoute();
-    this.state = ref(config.defaultState) as Ref<T>;
+    this.state = ref({ ...config.defaultState }) as Ref<T>;
   }
 
   /**
@@ -184,8 +184,13 @@ export class URLStateManager<T extends Record<string, any>> {
     if (!this.hasCompleteURLState()) {
       const storageState = this.restoreFromStorage();
       if (storageState) {
-        // 合并URL状态和存储状态
-        const mergedState = { ...storageState, ...urlState };
+        // 只用 URL 中实际存在的字段覆盖偏好，默认值不应覆盖已保存的选择。
+        const mergedState = { ...this.config.defaultState, ...storageState };
+        for (const field of this.config.urlFields) {
+          if (this.route.query[field as string] !== undefined) {
+            mergedState[field] = urlState[field];
+          }
+        }
         Object.assign(this.state.value, mergedState);
 
         // 同步到URL
