@@ -20,6 +20,15 @@
     <div class="pagination-controls">
       <button
         type="button"
+        class="control boundary-control"
+        aria-label="第一页"
+        @click="changePage(1)"
+        :disabled="disabled || currentPage <= 1"
+      >
+        首页
+      </button>
+      <button
+        type="button"
         class="control"
         aria-label="上一页"
         @click="changePage(currentPage - 1)"
@@ -33,6 +42,24 @@
         <span class="total-pages">{{ safeTotalPages }}</span>
         <span class="sr-only">页</span>
       </div>
+      <button
+        type="button"
+        class="control"
+        aria-label="下一页"
+        @click="changePage(currentPage + 1)"
+        :disabled="disabled || currentPage >= safeTotalPages"
+      >
+        <span aria-hidden="true">›</span>
+      </button>
+      <button
+        type="button"
+        class="control boundary-control"
+        aria-label="最后一页"
+        @click="changePage(safeTotalPages)"
+        :disabled="disabled || currentPage >= safeTotalPages"
+      >
+        末页
+      </button>
       <form class="page-jump" novalidate @submit.prevent="handleJumpPage">
         <input
           type="number"
@@ -48,15 +75,6 @@
         />
         <button type="submit" class="jump-button" :disabled="disabled">跳转</button>
       </form>
-      <button
-        type="button"
-        class="control"
-        aria-label="下一页"
-        @click="changePage(currentPage + 1)"
-        :disabled="disabled || currentPage >= safeTotalPages"
-      >
-        <span aria-hidden="true">›</span>
-      </button>
     </div>
   </nav>
 </template>
@@ -211,6 +229,9 @@ const handleJumpPage = () => {
 .control {
   font-size: 24px;
 }
+.boundary-control {
+  font-size: 14px;
+}
 .control:hover:not(:disabled),
 .jump-button:hover:not(:disabled) {
   background: #444;
@@ -268,26 +289,20 @@ const handleJumpPage = () => {
     gap: 12px;
   }
   .pagination-controls {
+    width: 100%;
     flex-wrap: wrap;
     justify-content: center;
     gap: 8px;
+  }
+  .page-jump {
+    flex-basis: 100%;
+    justify-content: center;
   }
 }
 @media (prefers-reduced-motion: reduce) {
   .control,
   .jump-button {
     transition: none;
-  }
-}
-
-@media (max-width: 380px) {
-  .pagination-controls {
-    width: 100%;
-  }
-  .page-jump {
-    order: 1;
-    flex-basis: 100%;
-    justify-content: center;
   }
 }
 </style>
