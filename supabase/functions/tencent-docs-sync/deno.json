@@ -1,0 +1,1 @@
+{"compilerOptions":{"allowJs":true,"lib":["deno.ns","dom","esnext"]}}
