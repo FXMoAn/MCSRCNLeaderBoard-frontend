@@ -142,7 +142,7 @@ const stateManager = createURLStateManager<RankState>({
     pageSize: { toUrl: String, fromUrl: normalizePageSize },
   },
   storageKey: 'rank_state',
-  storageExpiry: 24 * 60 * 60 * 1000,
+  storage: 'memory',
 });
 
 const router = useRouter();

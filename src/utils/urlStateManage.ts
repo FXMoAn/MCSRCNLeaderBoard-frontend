@@ -15,9 +15,13 @@ export interface StateConfig<T> {
   };
   // 本地存储键名（可选）
   storageKey?: string;
+  // memory 只在当前页面生命周期内保留状态，供本站路由跳转返回时恢复。
+  storage?: 'local' | 'memory';
   // 本地存储过期时间（毫秒，可选）
   storageExpiry?: number;
 }
+
+const memoryStates = new Map<string, { state: Record<string, unknown>; timestamp: number }>();
 
 export class URLStateManager<T extends Record<string, any>> {
   private router: ReturnType<typeof useRouter>;
@@ -126,15 +130,20 @@ export class URLStateManager<T extends Record<string, any>> {
   }
 
   /**
-   * 保存到本地存储
+   * 保存状态；按配置选择页面内存或本地存储。
    */
   saveToStorage(): void {
     if (!this.config.storageKey) return;
 
     const storageData = {
-      state: this.state.value,
+      state: { ...this.state.value },
       timestamp: Date.now(),
     };
+
+    if (this.config.storage === 'memory') {
+      memoryStates.set(this.config.storageKey, storageData);
+      return;
+    }
 
     try {
       localStorage.setItem(this.config.storageKey, JSON.stringify(storageData));
@@ -144,23 +153,24 @@ export class URLStateManager<T extends Record<string, any>> {
   }
 
   /**
-   * 从本地存储恢复
+   * 从对应存储恢复状态。
    */
   restoreFromStorage(): T | null {
     if (!this.config.storageKey) return null;
 
     try {
-      const saved = localStorage.getItem(this.config.storageKey);
-      if (saved) {
-        const data = JSON.parse(saved);
-
+      const data =
+        this.config.storage === 'memory'
+          ? memoryStates.get(this.config.storageKey)
+          : JSON.parse(localStorage.getItem(this.config.storageKey) ?? 'null');
+      if (data) {
         // 检查是否过期
         if (this.config.storageExpiry && Date.now() - data.timestamp > this.config.storageExpiry) {
-          localStorage.removeItem(this.config.storageKey);
+          this.clearStorage();
           return null;
         }
 
-        return data.state;
+        return { ...data.state };
       }
     } catch (error) {
       console.warn('Failed to restore state from localStorage:', error);
@@ -180,11 +190,11 @@ export class URLStateManager<T extends Record<string, any>> {
     // 1. 优先从URL恢复
     const urlState = this.restoreFromURL();
 
-    // 2. 如果URL没有完整状态，从本地存储恢复
+    // 2. URL 未提供的字段从配置的存储中恢复。
     if (!this.hasCompleteURLState()) {
       const storageState = this.restoreFromStorage();
       if (storageState) {
-        // 只用 URL 中实际存在的字段覆盖偏好，默认值不应覆盖已保存的选择。
+        // 只用 URL 中实际存在的字段覆盖保存的状态。
         const mergedState = { ...this.config.defaultState, ...storageState };
         for (const field of this.config.urlFields) {
           if (this.route.query[field as string] !== undefined) {
@@ -200,6 +210,15 @@ export class URLStateManager<T extends Record<string, any>> {
     }
 
     return urlState;
+  }
+
+  private clearStorage(): void {
+    if (!this.config.storageKey) return;
+    if (this.config.storage === 'memory') {
+      memoryStates.delete(this.config.storageKey);
+    } else {
+      localStorage.removeItem(this.config.storageKey);
+    }
   }
 
   /**
@@ -256,9 +275,7 @@ export class URLStateManager<T extends Record<string, any>> {
     Object.assign(this.state.value, this.config.defaultState);
     this.updateURL();
 
-    if (this.config.storageKey) {
-      localStorage.removeItem(this.config.storageKey);
-    }
+    this.clearStorage();
   }
 }
 
