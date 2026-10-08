@@ -29,3 +29,6 @@ coverage
 
 *.tsbuildinfo
 .env.*
+/supabase/functions/.env
+/supabase/functions/**/.env
+/scripts/leaderboard-sync/backups/

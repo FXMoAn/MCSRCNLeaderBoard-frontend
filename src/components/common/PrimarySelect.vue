@@ -35,6 +35,16 @@ const handleChange = (e: Event) => {
   color: #fff;
   font-size: 14px;
   transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.primary-select:hover:not(:disabled) {
+  border-color: #00bcd4;
+}
+
+.primary-select:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .primary-select:focus {

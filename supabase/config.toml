@@ -1,0 +1,16 @@
+[functions.tencent-docs-oauth]
+# Tencent redirects a browser without a Supabase JWT. The handler instead
+# verifies a one-use setup capability, then a one-use state plus browser cookie.
+verify_jwt = false
+entrypoint = "./functions/tencent-docs-oauth/index.ts"
+
+[functions.tencent-docs-preview]
+# Only POST /inspect with a one-use capability may read the fixed target document.
+verify_jwt = false
+entrypoint = "./functions/tencent-docs-preview/index.ts"
+
+[functions.tencent-docs-sync]
+# Each POST verifies a short-lived, one-use nonce with an operation scope.
+# The handler validates it through a service-only RPC; the nonce is not a JWT.
+verify_jwt = false
+entrypoint = "./functions/tencent-docs-sync/index.ts"

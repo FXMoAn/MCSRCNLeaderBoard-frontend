@@ -1,15 +1,25 @@
 <template>
-  <nav>
+  <nav @keydown.esc="isDrawerOpen = false">
     <div class="logo" @click="backToHome">
       <span> MCSR-CN </span>
     </div>
-    <!-- 屏幕宽度小于780px时，变为右侧抽屉菜单 -->
-    <div class="links" v-if="windowWidth > 780">
+    <!-- 窄屏使用抽屉，为已登录用户的更多入口保留空间。 -->
+    <div class="links" v-if="windowWidth > NAV_BREAKPOINT">
       <div><router-link to="/rank" class="nav-link">排行榜</router-link></div>
       <div v-if="userStore.isBinding">
         <router-link to="/user-upload" class="nav-link">上传记录</router-link>
       </div>
       <div><router-link to="/stats" class="nav-link">统计数据</router-link></div>
+      <div>
+        <a
+          href="https://apac.blankboi.cn/schedule"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="nav-link"
+        >
+          APAC 月赛 <span aria-hidden="true">↗</span>
+        </a>
+      </div>
       <div><a href="https://wiki.mcspeedrun.cn" target="_blank" class="nav-link">速通wiki</a></div>
       <div v-if="userStore.isAdmin">
         <router-link to="/manage/upload" class="nav-link">管理员</router-link>
@@ -17,19 +27,39 @@
       <UserPanel v-if="authStore.isLoggedIn" @signOut="authStore.logout" class="control-item" />
       <AuthControl v-else class="control-item" />
     </div>
-    <div class="drawer" v-else @click="isDrawerOpen = !isDrawerOpen">展开菜单</div>
+    <button
+      type="button"
+      class="drawer"
+      v-else
+      :aria-expanded="isDrawerOpen"
+      aria-controls="mobile-navigation"
+      @click="isDrawerOpen = !isDrawerOpen"
+    >
+      展开菜单
+    </button>
 
     <!-- 背景遮罩 -->
     <div
       class="drawer-overlay"
       v-show="isDrawerOpen"
-      v-if="windowWidth < 780"
+      v-if="windowWidth <= NAV_BREAKPOINT"
       @click="isDrawerOpen = false"
     ></div>
 
     <!-- 抽屉内容 -->
-    <div class="drawer-content" :class="{ 'drawer-open': isDrawerOpen }" v-if="windowWidth < 780">
-      <div class="drawer-close" @click="isDrawerOpen = false">×</div>
+    <div
+      id="mobile-navigation"
+      class="drawer-content drawer-open"
+      v-if="windowWidth <= NAV_BREAKPOINT && isDrawerOpen"
+    >
+      <button
+        type="button"
+        class="drawer-close"
+        aria-label="关闭菜单"
+        @click="isDrawerOpen = false"
+      >
+        ×
+      </button>
       <UserPanel v-if="authStore.isLoggedIn" @signOut="authStore.logout" class="control-item" />
       <AuthControl v-else class="control-item" />
       <div>
@@ -43,6 +73,16 @@
       <div>
         <router-link to="/stats" class="nav-link" @click="isDrawerOpen = false"
           >统计数据</router-link
+        >
+      </div>
+      <div>
+        <a
+          href="https://apac.blankboi.cn/schedule"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="nav-link"
+          @click="isDrawerOpen = false"
+          >APAC 月赛 <span aria-hidden="true">↗</span></a
         >
       </div>
       <div>
@@ -74,7 +114,7 @@
 
 <script setup lang="ts">
 import '@/assets/main.css';
-import { ref, onMounted, watch, onUnmounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useWindowSize } from '@vueuse/core';
 // 用户登录控制
@@ -94,8 +134,12 @@ const backToHome = () => {
 
 // 获取窗口宽度
 const { width: windowWidth } = useWindowSize();
+const NAV_BREAKPOINT = 1024;
 
 const isDrawerOpen = ref(false);
+watch(windowWidth, (width) => {
+  if (width > NAV_BREAKPOINT) isDrawerOpen.value = false;
+});
 
 // 监听认证状态变化，自动更新用户信息
 watch(
@@ -161,6 +205,17 @@ nav {
   border: 1px solid rgba(0, 188, 212, 0.3);
 }
 
+.nav-link:focus-visible,
+.drawer:focus-visible,
+.drawer-close:focus-visible {
+  outline: 2px solid #00bcd4;
+  outline-offset: 3px;
+}
+
+.nav-link {
+  white-space: nowrap;
+}
+
 .logo {
   font-size: larger;
   display: flex;
@@ -216,6 +271,8 @@ footer > a:hover {
   transition: all 0.3s ease;
   background-color: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  color: inherit;
+  font: inherit;
 }
 
 .drawer:hover {
@@ -294,6 +351,19 @@ footer > a:hover {
 @media (max-width: 480px) {
   .drawer-content {
     width: 260px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-link,
+  .drawer,
+  .drawer-close,
+  .drawer-content,
+  .logo {
+    transition: none;
+  }
+  .drawer-overlay {
+    animation: none;
   }
 }
 </style>

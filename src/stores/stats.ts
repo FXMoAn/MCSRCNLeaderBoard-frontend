@@ -1,11 +1,7 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { supabase } from '@/lib/supabaseClient';
-import {
-  showErrorNotification,
-  showSuccessNotification,
-  showInfoNotification,
-} from '@/utils/notification';
+import { showErrorNotification } from '@/utils/notification';
 
 export interface Run {
   run_id: number;
@@ -22,15 +18,29 @@ export interface Run {
   is_new_record: boolean;
 }
 
+export const LEADERBOARD_CACHE_TTL = 60_000;
+
+interface LoadOptions {
+  force?: boolean;
+  silent?: boolean;
+}
+
 export const useStatsStore = defineStore('stats', () => {
-  const cache = ref(new Map());
+  const cache = ref(new Map<string, Run[]>());
+  const cacheUpdatedAt = new Map<string, number>();
+  const inFlight = new Map<string, Promise<{ data: Run[]; updatedAt: number }>>();
   const currStats = ref<Run[]>([]);
-  const isLoading = ref(false);
+  const leaderboardLoading = ref(false);
+  const pendingLoading = ref(false);
+  const isLoading = computed(() => leaderboardLoading.value || pendingLoading.value);
+  const lastUpdatedAt = ref<number | null>(null);
+  const loadError = ref<string | null>(null);
   const pages = ref(0);
+  let requestSequence = 0;
 
   const getPendingRuns = async () => {
-    if (isLoading.value) return;
-    isLoading.value = true;
+    if (pendingLoading.value) return;
+    pendingLoading.value = true;
     try {
       const { data, error } = await supabase.rpc('get_runs_by_status', {
         p_status: 'pending',
@@ -46,99 +56,110 @@ export const useStatsStore = defineStore('stats', () => {
       showErrorNotification('获取待审核成绩失败');
       return [];
     } finally {
-      isLoading.value = false;
+      pendingLoading.value = false;
     }
   };
 
   const getLeaderboard = async ({ version = '1.16.1', type = 'RSG', status = 'verified' } = {}) => {
-    try {
-      const { data, error } = await supabase.rpc('get_leaderboard', {
-        p_version: version,
-        p_type: type,
-        p_status: status,
-      });
+    const { data, error } = await supabase.rpc('get_leaderboard', {
+      p_version: version,
+      p_type: type,
+      p_status: status,
+    });
+    if (error) throw error;
 
-      if (error) {
-        console.error('get_leaderboard error', error);
-        showErrorNotification('获取排行榜失败');
-        return [];
-      }
-      data.map((item: Run, index: number) => {
-        item.rank = index + 1;
-        return item;
-      });
-      data.map((item: Run) => {
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 30);
-        item.is_new_record = new Date(item.date) > sevenDaysAgo;
-        return item;
-      });
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    return (data ?? []).map((item: Run, index: number) => ({
+      ...item,
+      rank: index + 1,
+      is_new_record: new Date(item.date) > thirtyDaysAgo,
+    })) as Run[];
+  };
+
+  // Statistics charts also use this method and expect an array on failure.
+  const fetchStats = async (version: string, type: string, status: string) => {
+    try {
+      const data = await getLeaderboard({ version, type, status });
+      pages.value = Math.ceil(data.length / 10);
       return data;
-    } catch (err) {
-      console.error('get_leaderboard error', err);
+    } catch (error) {
+      console.error('get_leaderboard error', error);
       showErrorNotification('获取排行榜失败');
+      pages.value = 0;
       return [];
     }
   };
 
-  const fetchStats = async (version: string, type: string, status: string) => {
-    const data = await getLeaderboard({ version, type, status });
-    pages.value = Math.ceil(data.length / 10);
-    return data;
-  };
+  const getStats = async (
+    version: string,
+    type: string,
+    status = 'verified',
+    { force = false, silent = false }: LoadOptions = {}
+  ) => {
+    const key = `${version}|${type}|${status}`;
+    const sequence = ++requestSequence;
+    const cached = cache.value.get(key);
+    const cachedAt = cacheUpdatedAt.get(key) ?? null;
 
-  const getStats = async (version: string, type: string, status: string = 'verified') => {
-    let key = `${version}${type}${status}`;
-    if (isLoading.value) return;
+    currStats.value = cached ?? [];
+    lastUpdatedAt.value = cachedAt;
+    loadError.value = null;
+    pages.value = Math.ceil(currStats.value.length / 10);
 
-    // 如果缓存存在，直接使用缓存数据
-    if (cache.value.has(key)) {
-      currStats.value = cache.value.get(key);
-      pages.value = Math.ceil(currStats.value.length / 10);
-      return; // 直接返回，不重新请求
+    if (!force && cached && cachedAt !== null && Date.now() - cachedAt < LEADERBOARD_CACHE_TTL) {
+      leaderboardLoading.value = false;
+      return;
     }
 
-    isLoading.value = true;
-
+    leaderboardLoading.value = true;
     try {
-      const data = await fetchStats(version, type, status);
-      cache.value.set(key, data);
+      let request = inFlight.get(key);
+      if (!request) {
+        request = getLeaderboard({ version, type, status })
+          .then((data) => {
+            const updatedAt = Date.now();
+            cache.value.set(key, data);
+            cacheUpdatedAt.set(key, updatedAt);
+            return { data, updatedAt };
+          })
+          .finally(() => inFlight.delete(key));
+        inFlight.set(key, request);
+      }
+
+      const { data, updatedAt } = await request;
+      // A response for a previously selected category must not replace the current one.
+      if (sequence !== requestSequence) return;
       currStats.value = data;
-    } catch (err) {
-      console.log(err);
-      showErrorNotification('获取排行榜失败');
+      lastUpdatedAt.value = updatedAt;
+      pages.value = Math.ceil(data.length / 10);
+    } catch (error) {
+      if (sequence !== requestSequence) return;
+      console.error('get_leaderboard error', error);
+      loadError.value = cached
+        ? '刷新失败，正在显示上次成功加载的榜单。'
+        : '暂时无法加载榜单，请刷新重试。';
+      if (!silent) showErrorNotification('获取排行榜失败，请稍后重试');
     } finally {
-      isLoading.value = false;
+      if (sequence === requestSequence) leaderboardLoading.value = false;
     }
   };
 
-  // 强制刷新数据，忽略缓存
-  const refreshStats = async (version: string, type: string) => {
-    let key = `${version}${type}`;
-    if (isLoading.value) return;
-
-    isLoading.value = true;
-
-    try {
-      const data = await fetchStats(version, type, status);
-      cache.value.set(key, data);
-      currStats.value = data;
-    } catch (err) {
-      console.log(err);
-      showErrorNotification('获取排行榜失败');
-    } finally {
-      isLoading.value = false;
-    }
-  };
+  const refreshStats = (version: string, type: string, status = 'verified') =>
+    getStats(version, type, status, { force: true });
 
   // 清除特定缓存
   const clearCache = (version?: string, type?: string) => {
     if (version && type) {
-      const key = `${version}${type}`;
-      cache.value.delete(key);
+      for (const key of cache.value.keys()) {
+        if (key.startsWith(`${version}|${type}|`)) {
+          cache.value.delete(key);
+          cacheUpdatedAt.delete(key);
+        }
+      }
     } else {
-      // 清除所有缓存
       cache.value.clear();
+      cacheUpdatedAt.clear();
     }
   };
 
@@ -146,6 +167,8 @@ export const useStatsStore = defineStore('stats', () => {
     cache,
     currStats,
     isLoading,
+    lastUpdatedAt,
+    loadError,
     pages,
     fetchStats,
     getStats,

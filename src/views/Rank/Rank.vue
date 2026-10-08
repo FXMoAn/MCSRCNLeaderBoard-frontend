@@ -23,15 +23,28 @@
       :initialNickname="state.nickname"
     />
 
-    <OtherFilter
-      @confirmFilter="handleOtherConfirmFilter"
-      :initialIsNewRecord="isNewRecord"
-    />
+    <OtherFilter @confirmFilter="handleOtherConfirmFilter" :initialIsNewRecord="state.newRecord" />
   </div>
   <div class="content-container">
-    <Loading v-if="isLoading" />
-    <div class="container" v-else>
-      <div class="leaderboard">
+    <div class="results-toolbar">
+      <div class="refresh-status" role="status" aria-live="polite">
+        <span v-if="isLoading">{{ statsdata.length ? '正在更新榜单…' : '正在加载榜单…' }}</span>
+        <span v-else-if="loadError" class="refresh-error">{{ loadError }}</span>
+        <span v-else-if="updatedTime">更新于 {{ updatedTime }}</span>
+      </div>
+      <PrimaryButton
+        variant="clear"
+        size="small"
+        class="refresh-button"
+        :loading="isLoading"
+        @click="handleRefresh"
+      >
+        {{ isLoading ? '刷新中…' : '刷新榜单' }}
+      </PrimaryButton>
+    </div>
+    <Loading v-if="isLoading && statsdata.length === 0" />
+    <div class="container" v-else :aria-busy="isLoading">
+      <div class="leaderboard" :class="{ 'is-empty': filteredData.length === 0 }">
         <div class="leaderboard-head">
           <div class="rank-cell">排名</div>
           <div class="player-cell">玩家</div>
@@ -40,12 +53,30 @@
           <div class="video-cell">记录视频</div>
         </div>
         <div class="leaderboard-body">
+          <div v-if="filteredData.length === 0" class="empty-state" role="status">
+            <strong>{{
+              loadError
+                ? '榜单加载失败'
+                : hasActiveFilters
+                  ? '没有符合条件的成绩'
+                  : '该分类暂无成绩'
+            }}</strong>
+            <p>
+              {{
+                loadError
+                  ? '请点击上方“刷新榜单”重试。'
+                  : hasActiveFilters
+                    ? '试试调整用户名、IGT 或新纪录筛选。'
+                    : '可以切换版本或类型查看其他榜单。'
+              }}
+            </p>
+          </div>
           <RankCard
-            v-for="(info, index) in slicedata"
+            v-for="info in slicedata"
             :key="info.run_id"
             :rank="info.rank"
             :nickname="info.nickname"
-            :userId="info.userid"
+            :userId="Number(info.userid)"
             :igt="info.igt"
             :date="info.date"
             :videolink="info.videolink"
@@ -57,50 +88,58 @@
         </div>
       </div>
     </div>
-    <Pagination v-model:currentPage="state.page" :totalPages="pages" />
+    <Pagination
+      :currentPage="state.page"
+      :pageSize="state.pageSize"
+      :totalPages="pages"
+      :totalItems="filteredData.length"
+      :disabled="isLoading || !hasLoaded"
+      @update:currentPage="handlePageChange"
+      @update:pageSize="handlePageSizeChange"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import '@/assets/main.css';
-import { ref, onMounted, computed, onActivated, watch } from 'vue';
-import { useStatsStore } from '@/stores/stats.ts';
-import { safeDisplay } from '@/utils/security';
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
+import { LEADERBOARD_CACHE_TTL, useStatsStore } from '@/stores/stats.ts';
 import { createURLStateManager } from '@/utils/urlStateManage';
 import { showErrorNotification } from '@/utils/notification';
-// 组件
+import { DEFAULT_PAGE_SIZE, normalizePage, normalizePageSize } from '@/constants/pagination';
 import { useRouter, useRoute } from 'vue-router';
 import RankedFilter from '@/components/RankedFilter.vue';
 import Pagination from '@/components/Pagination.vue';
 import VersionTypeSelector from '@/components/VersionTypeSelector.vue';
 import Loading from '@/components/common/Loading.vue';
+import PrimaryButton from '@/components/common/PrimaryButton.vue';
 import RankCard from './components/RankCard.vue';
 import OtherFilter from '@/components/OtherFilter.vue';
 
-// 定义状态类型
 interface RankState {
   version: string;
   type: string;
   igt: string;
   nickname: string;
+  newRecord: boolean;
   page: number;
+  pageSize: number;
 }
 
-// 创建状态管理器
 const stateManager = createURLStateManager<RankState>({
   defaultState: {
     version: '1.16.1',
     type: 'RSG',
     igt: '0,99',
     nickname: '',
+    newRecord: false,
     page: 1,
+    pageSize: DEFAULT_PAGE_SIZE,
   },
-  urlFields: ['version', 'type', 'igt', 'nickname', 'page'],
+  urlFields: ['version', 'type', 'igt', 'nickname', 'newRecord', 'page', 'pageSize'],
   transformers: {
-    page: {
-      toUrl: (value) => value.toString(),
-      fromUrl: (value) => Number(value) || 1,
-    },
+    page: { toUrl: String, fromUrl: normalizePage },
+    pageSize: { toUrl: String, fromUrl: normalizePageSize },
   },
   storageKey: 'rank_state',
   storageExpiry: 24 * 60 * 60 * 1000,
@@ -109,147 +148,132 @@ const stateManager = createURLStateManager<RankState>({
 const router = useRouter();
 const route = useRoute();
 const statsStore = useStatsStore();
-
-// 立即初始化状态管理器，获取恢复的状态
 const restoredState = stateManager.initialize();
 const state = stateManager.getState();
+stateManager.setMultiple(
+  {
+    page: normalizePage(restoredState.page),
+    pageSize: normalizePageSize(restoredState.pageSize),
+    newRecord: restoredState.newRecord === true,
+    nickname: typeof restoredState.nickname === 'string' ? restoredState.nickname : '',
+    igt: typeof restoredState.igt === 'string' ? restoredState.igt : '0,99',
+  },
+  false
+);
 
-// 排名数据
+const hasLoaded = ref(false);
 const isLoading = computed(() => statsStore.isLoading);
 const statsdata = computed(() => statsStore.currStats);
-const filteredData = ref<any[]>([]);
-const slicedata = computed(() =>
-  filteredData.value.slice((state.value.page - 1) * 10, state.value.page * 10)
-);
-// 分页
-const pages = computed(() => Math.ceil(filteredData.value.length / 10));
-const isNewRecord = ref(false);
-
-// 版本选择
-const handleSelectionChange = (version: string, type: string) => {
-  stateManager.setMultiple({
-    version,
-    type,
-    page: 1,
+const loadError = computed(() => statsStore.loadError);
+const updatedTime = computed(() => {
+  if (typeof statsStore.lastUpdatedAt !== 'number') return '';
+  return new Date(statsStore.lastUpdatedAt).toLocaleString('zh-CN', {
+    month: 'numeric',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
   });
+});
+const hasActiveFilters = computed(
+  () => state.value.igt !== '0,99' || state.value.nickname !== '' || state.value.newRecord
+);
+const filteredData = computed(() => {
+  const { igt, nickname, newRecord } = state.value;
+  const [min, max] = igt.split(',').map(Number);
+  const query = nickname.toLowerCase();
+  return statsdata.value.filter((run) => {
+    const minutes = Number(run.igt.split(':')[0]);
+    return (
+      (igt === '0,99' || (minutes >= min && minutes < max)) &&
+      run.nickname.toLowerCase().includes(query) &&
+      (!newRecord || run.is_new_record)
+    );
+  });
+});
+const pages = computed(() =>
+  Math.max(1, Math.ceil(filteredData.value.length / state.value.pageSize))
+);
+const slicedata = computed(() => {
+  const start = (state.value.page - 1) * state.value.pageSize;
+  return filteredData.value.slice(start, start + state.value.pageSize);
+});
 
-  isNewRecord.value = false;
-  statsStore.getStats(version, type);
+const saveState = (updates: Partial<RankState>) => {
+  stateManager.setMultiple(updates);
   stateManager.saveToStorage();
 };
 
-// 跳转至详情页
-const navToRunDetail = (id: number) => {
-  router.push(`/run/${id}`);
+const handleSelectionChange = async (version: string, type: string) => {
+  saveState({ version, type, page: 1, newRecord: false });
+  await statsStore.getStats(version, type);
 };
 
-// 跳转至年份对比页
-const navToYearComparison = () => {
-  router.push('/24to25');
+const handleRefresh = () => statsStore.refreshStats(state.value.version, state.value.type);
+const refreshIfStale = (allowRetry = false) => {
+  if (!hasLoaded.value || document.hidden || !navigator.onLine || isLoading.value) return;
+  // A failed background request waits for a manual refresh or a return to the page.
+  if (loadError.value && !allowRetry) return;
+  if (
+    statsStore.lastUpdatedAt === null ||
+    Date.now() - statsStore.lastUpdatedAt >= LEADERBOARD_CACHE_TTL
+  ) {
+    void statsStore.getStats(state.value.version, state.value.type, 'verified', { silent: true });
+  }
+};
+const handlePageReturn = () => refreshIfStale(true);
+let refreshTimer: ReturnType<typeof setInterval> | undefined;
+let disposed = false;
+
+const handlePageChange = (page: number) => {
+  saveState({ page: Math.min(pages.value, normalizePage(page)) });
+};
+const handlePageSizeChange = (pageSize: number) => {
+  saveState({ pageSize: normalizePageSize(pageSize), page: 1 });
+};
+const handleConfirmFilter = (filter: { igt: string; nickname: string }) => {
+  const changed = filter.igt !== state.value.igt || filter.nickname !== state.value.nickname;
+  saveState({ ...filter, ...(changed ? { page: 1 } : {}) });
+};
+const handleOtherConfirmFilter = (value: boolean) => {
+  saveState({ newRecord: value, page: 1 });
 };
 
-// 打开视频链接
-const openVideo = (url: string) => {
-  window.open(url, '_blank');
-};
+const navToRunDetail = (id: number) => router.push(`/run/${id}`);
+const navToYearComparison = () => router.push('/24to25');
+const openVideo = (url: string) => window.open(url, '_blank', 'noopener,noreferrer');
 
-// 检查URL中的错误参数
-const checkUrlError = () => {
+onMounted(async () => {
+  window.addEventListener('focus', handlePageReturn);
+  window.addEventListener('online', handlePageReturn);
+  document.addEventListener('visibilitychange', handlePageReturn);
+  refreshTimer = setInterval(refreshIfStale, LEADERBOARD_CACHE_TTL);
+  await statsStore.getStats(state.value.version, state.value.type);
+  if (disposed) return;
+  hasLoaded.value = true;
+  const page = Math.min(pages.value, normalizePage(state.value.page));
+  saveState({ page });
   if (route.query.error === 'unauthorized') {
     showErrorNotification('您没有权限访问该页面，需要管理员权限');
-    // 清除URL中的错误参数
-    router.replace({ query: {} });
+    const { error, ...query } = route.query;
+    router.replace({ query });
   }
-};
-
-// 确认筛选
-const handleConfirmFilter = (filter: { igt: string; nickname: string }) => {
-  // 检查筛选条件是否真的改变了
-  const filterChanged = filter.igt !== state.value.igt || filter.nickname !== state.value.nickname;
-
-  // 只有在筛选条件改变时才重置页码
-  const updates: Partial<RankState> = {
-    igt: filter.igt,
-    nickname: filter.nickname,
-  };
-
-  if (filterChanged) {
-    updates.page = 1;
-  }
-
-  stateManager.setMultiple(updates);
-
-  if (filter.igt === '0,99' && filter.nickname === '') {
-    filteredData.value = statsdata.value;
-  } else {
-    filteredData.value = statsdata.value.filter((item) => {
-      return (
-        Number(item.igt.split(':')[0]) >= Number(filter.igt.split(',')[0]) &&
-        Number(item.igt.split(':')[0]) < Number(filter.igt.split(',')[1]) &&
-        item.nickname.toLowerCase().includes(filter.nickname.toLowerCase())
-      );
-    });
-  }
-
-  stateManager.saveToStorage();
-  isNewRecord.value = false;
-};
-
-// 确认筛选
-const handleOtherConfirmFilter = (value: boolean) => {
-  isNewRecord.value = value;
-};
-
-// 初始化
-onMounted(async () => {
-  state.value.page = restoredState.page;
-  state.value.version = restoredState.version;
-  state.value.type = restoredState.type;
-
-  await statsStore.getStats(restoredState.version, restoredState.type);
-  filteredData.value = statsdata.value;
-
-  if (restoredState.igt !== '0,99' || restoredState.nickname !== '') {
-    handleConfirmFilter({
-      igt: restoredState.igt,
-      nickname: restoredState.nickname,
-    });
-  }
-  checkUrlError();
 });
 
-// 监听新纪录筛选变化
-watch(isNewRecord, (newVal) => {
-  filteredData.value = statsdata.value.filter((item) => {
-    if (newVal) {
-      return item.is_new_record;
-    } else {
-      return true;
-    }
-  });
+onUnmounted(() => {
+  disposed = true;
+  clearInterval(refreshTimer);
+  window.removeEventListener('focus', handlePageReturn);
+  window.removeEventListener('online', handlePageReturn);
+  document.removeEventListener('visibilitychange', handlePageReturn);
 });
 
-// 监听分页变化
-watch(
-  () => state.value.page,
-  (newPage) => {
-    stateManager.set('page', newPage);
-    stateManager.saveToStorage();
+watch([pages, isLoading], () => {
+  if (hasLoaded.value && !isLoading.value && state.value.page > pages.value) {
+    saveState({ page: pages.value });
   }
-);
-
-// 监听数据变化
-watch(
-  statsdata,
-  (newVal) => {
-    filteredData.value = newVal;
-    // 只有在没有筛选条件时才重置页码，避免覆盖用户设置的分页
-    if (state.value.igt === '0,99' && state.value.nickname === '') {
-      state.value.page = 1;
-    }
-  },
-  { immediate: true }
-);
+});
 </script>
 
 <style scoped>
@@ -273,8 +297,9 @@ watch(
   background: linear-gradient(135deg, rgba(0, 188, 212, 0.95), rgba(0, 151, 167, 0.95));
   border: 2px solid rgba(0, 188, 212, 0.6);
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 188, 212, 0.4), 
-              0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  box-shadow:
+    0 4px 20px rgba(0, 188, 212, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -327,8 +352,9 @@ watch(
 .year-comparison-btn:hover .btn-content {
   background: linear-gradient(135deg, rgba(0, 188, 212, 1), rgba(0, 151, 167, 1));
   transform: translateX(8px) scale(1.05);
-  box-shadow: 0 8px 30px rgba(0, 188, 212, 0.6),
-              0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+  box-shadow:
+    0 8px 30px rgba(0, 188, 212, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.2) inset;
   border-color: rgba(0, 188, 212, 0.9);
 }
 
@@ -337,7 +363,9 @@ watch(
 }
 
 .year-comparison-btn:hover .btn-icon {
-  animation: float 1.5s ease-in-out infinite, pulse 2s ease-in-out infinite;
+  animation:
+    float 1.5s ease-in-out infinite,
+    pulse 2s ease-in-out infinite;
 }
 
 .year-comparison-btn:active .btn-content {
@@ -345,7 +373,8 @@ watch(
 }
 
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
@@ -354,7 +383,8 @@ watch(
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
   }
   50% {
@@ -362,39 +392,143 @@ watch(
   }
 }
 
-@media (max-width: 780px) {
+@media (max-width: 1400px) {
   .year-comparison-btn {
-    left: 10px;
+    position: static;
+    width: calc(100% - 32px);
+    max-width: 1200px;
+    margin-bottom: 16px;
+    transform: none;
   }
 
   .btn-content {
-    padding: 12px 8px;
-    min-width: 60px;
+    flex-direction: row;
+    justify-content: center;
+    padding: 8px 12px;
+    min-width: 0;
+    background: #333;
+    border: 1px solid #555;
+    border-radius: 8px;
+    box-shadow: none;
   }
 
   .btn-icon {
-    font-size: 20px;
+    font-size: 16px;
+    animation: none;
   }
 
   .btn-text {
-    font-size: 10px;
+    flex-direction: row;
+    gap: 4px;
+    font-size: 12px;
+  }
+
+  .year-comparison-btn:hover .btn-content,
+  .year-comparison-btn:active .btn-content {
+    transform: none;
+    background: #3a3a3a;
+    border-color: #00bcd4;
+    box-shadow: none;
+  }
+}
+
+.year-comparison-btn:focus-visible {
+  outline: 2px solid #00bcd4;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .year-comparison-btn,
+  .btn-content,
+  .btn-glow {
+    transition: none;
+  }
+  .btn-icon,
+  .year-comparison-btn:hover .btn-icon {
+    animation: none;
   }
 }
 
 .content-container {
+  box-sizing: border-box;
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 20px 0 100px 0;
+  padding: 20px 16px 100px;
 }
 
 .control-container {
   display: flex;
-  gap: 20px;
+  box-sizing: border-box;
+  width: calc(100% - 32px);
+  max-width: 1200px;
+  flex-wrap: wrap;
+  gap: 16px;
   justify-content: space-between;
+}
+
+.control-container > * {
+  margin-bottom: 0;
+  min-width: 0;
+}
+
+.control-container :deep(.version-type-selector),
+.control-container :deep(.ranked-filter) {
+  flex: 1 1 340px;
+}
+
+.control-container :deep(.filter-group) {
+  min-width: 0;
+  flex: 1;
+}
+
+.empty-state {
+  padding: 64px 24px;
+  text-align: center;
+}
+
+.empty-state strong {
+  font-size: 16px;
+}
+.empty-state p {
+  margin-top: 12px;
+  color: #ccc;
+  font-size: 14px;
+}
+
+.results-toolbar {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.refresh-status {
+  color: #ccc;
+  font-size: 13px;
+  line-height: 1.5;
+  min-width: 0;
+}
+
+.refresh-error {
+  color: #ffb4a9;
+}
+
+.refresh-button {
+  min-width: 88px;
+  min-height: 40px;
+}
+
+.refresh-button:focus-visible {
+  outline: 2px solid #00bcd4;
+  outline-offset: 3px;
 }
 
 .container {
@@ -440,22 +574,52 @@ watch(
   flex-direction: column;
 }
 
+.leaderboard.is-empty {
+  min-width: 0;
+}
+
+.leaderboard.is-empty .leaderboard-head {
+  display: none;
+}
+
 @media (max-width: 780px) {
   .content-container {
-    padding: 10px 0 80px 0;
+    padding: 16px 16px 80px;
   }
 
-  .container {
-    overflow-x: auto;
-  }
-
-  .leaderboard {
-    min-width: 600px;
+  .leaderboard-head {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 112px;
+    gap: 8px;
+    padding: 0 12px;
+    height: 48px;
+    border-bottom: 2px solid #555;
   }
 
   .leaderboard-head > div {
-    padding: 12px 6px;
+    min-width: 0;
+    padding: 12px 0;
     font-size: 0.9em;
+    border: 0;
+  }
+
+  .leaderboard-head .player-cell {
+    justify-content: flex-start;
+  }
+
+  .leaderboard-head .date-cell,
+  .leaderboard-head .video-cell {
+    display: none;
+  }
+
+  .refresh-status {
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .refresh-button {
+    transition: none;
   }
 }
 </style>

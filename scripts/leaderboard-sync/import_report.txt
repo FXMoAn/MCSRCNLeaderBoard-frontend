@@ -1,0 +1,110 @@
+导入前复核报告  2026-09-10
+==============================================================================
+BV 解析: 共 362 个，成功 291，稿件不可见(62002) 60，权限受限(62012) 11
+
+【1】SQL 会自动执行的部分
+------------------------------------------------------------------------------
+  1a. runs 新增 bvid 列并回填；users 回填 bili_id（仅单一 mid 无歧义时）
+  1b. 新增成绩 0 条 (status=verified)
+  1c. 昵称同步 3 条自动执行（文档与B站一致），50 条留人工
+  1d. 新建玩家档案 0 个: 
+
+------------------------------------------------------------------------------
+【2】留给你人工决定的（SQL 没有动）
+------------------------------------------------------------------------------
+  2a. 同一 B站 mid 对多条 users 档案 -> 需合并 2 组
+      mid=286109167
+        users.id=228   'LiHaoqwq'           runs=1  登录账号=无
+        users.id=254   'ltyydmydcp'         runs=1  登录账号=无
+      不合并的后果: get_leaderboard 按 userid 去重，这人会在榜上占两个位置
+      mid=371717947
+        users.id=107   '九黎科技'               runs=1  登录账号=无
+        users.id=272   'MCjiuli'            runs=1  登录账号=有
+      不合并的后果: get_leaderboard 按 userid 去重，这人会在榜上占两个位置
+
+  2b. 跳过的新增记录 16 条
+      [1.16.1] #71  糖纸ng               12:10.847  https://b23.tv/rsAZSTu 2025/2/17   <- 站点已有同(姓名,成绩)，链接无法解析
+      [1.16.1] #98  Murasame_259       12:53.790  BV1qY3d67E7s           2026/8/2    <- UP主在封神榜封禁名单中
+      [1.16.1] #106 杜吉勒                13:08.848  https://b23.tv/Rdm1U2L 2025/3/15   <- 站点已有同(姓名,成绩)，链接无法解析
+      [1.16.1] #126 Iam123             14:11.123  https://www.speedrun.c 2025/8/14   <- 站点已有同(姓名,成绩)，链接无法解析
+      [1.16.1] #140 安立AN_LI            14:36.747  BV17bkgBaEtH           2026/1/20   <- 站点已有同一 BV (run id=348, 状态=rejected)
+      [1.16.1] #148 Skye_Claire        15:07.526  BV19h8Z6wEnQ           2026/8/26   <- 站点已有同(姓名,成绩)，链接无法解析
+      [1.16.1] #150 rozey32            15:09.852  https://b23.tv/NZ0WLnb 2024/9/2    <- 站点已有同(姓名,成绩)，链接无法解析
+      [1.16.1] #155 诺升                 15:19.678  https://www.kuaishou.c 2024/5/3    <- 站点已有同(姓名,成绩)，链接无法解析
+      [1.16.1] #157 菜菜cc_zy            15:28.024  https://b23.tv/LHqPLIh 2024/8/30   <- 站点已有同(姓名,成绩)，链接无法解析
+      [1.16.1] #183 无迹可寻水滴             17:22.406  https://www.bilibili.c 2022/2/21   <- 站点已有同(姓名,成绩)，链接无法解析
+      [1.16.1] #192 Raven_Fall         18:07.000  novideo                2022/1/1    <- 站点已有同(姓名,成绩)，链接无法解析
+      [1.16.1] #211 RayXu6             19:21.000  novideo                2022/4/13   <- 站点已有同(姓名,成绩)，链接无法解析
+      [1.16.1] #297 斯堪人Skytra          ?          novideo                            <- 成绩/姓名非法
+      [1.16.1] #298 邰锋ChrisNativloc    39:35.000  novideo                            <- 站点已有同(姓名,成绩)，链接无法解析
+      [1.15.2] #19  RezonX             45:39.000  novideo                2021/10/31  <- 站点已有同(姓名,成绩)，链接无法解析
+      [1.15.2] #20  Tenes9999          53:45.000  novideo                2021/7/21   <- 站点已有同(姓名,成绩)，链接无法解析
+
+  2c. 一个玩家名下解析出多个 mid（bili_id 留空，未回填）: 2
+      users.id=18 'Baron_2333' mids=[237340956, 1587720430]
+      users.id=157 '初晨-曦光' mids=[9676229, 381751351]
+
+------------------------------------------------------------------------------
+【3】明细：新增成绩 0 条
+------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------
+【4】昵称同步：自动执行 3 条（文档与B站一致、仅站点落后）
+------------------------------------------------------------------------------
+  users.id=42    'liucc4308'          -> '1by1_legopiece'     (BV12vEV6hEk8)
+  users.id=89    '_aqva'              -> 'Welight6'           (BV1Sd8F6fEqL)
+  users.id=276   'sdmy233'            -> 'shadow啥都没有'         (BV16Bu76CEtx)
+
+------------------------------------------------------------------------------
+【4b】昵称同步：留人工 50 条（B站单方面与文档不符，可能是别人代投视频）
+------------------------------------------------------------------------------
+  users.id=12    '哇趣嗯'                ?-> '_二博士'               (BV1ex4y1J7Fn)  文档名='哇趣嗯'                仅 B站单方面不同（可能代投）
+  users.id=17    '凉城旧巷'               ?-> '凉城旧巷111'            (BV16BjMz7EcM)  文档名='凉城旧巷'               仅 B站单方面不同（可能代投）
+  users.id=19    'TaNGcx_123'         ?-> 'pilipaalaaa'        (BV1f6FQeqEy5)  文档名='TaNGcx_123'         仅 B站单方面不同（可能代投）
+  users.id=22    '辣洋葱圆圈圈'             ?-> '9899的忠實粉絲'          (BV18r66YBEbu)  文档名='辣洋葱圆圈圈'             仅 B站单方面不同（可能代投）
+  users.id=27    'Jokerdesu3'         ?-> '香草阿鱼'               (BV1iEkUYVEEe)  文档名='Jokerdesu3'         仅 B站单方面不同（可能代投）
+  users.id=31    'gooSe_Lyu'          ?-> 'SheonaZ'            (BV1J4sFeQE5z)  文档名='gooSe_Lyu'          仅 B站单方面不同（可能代投）
+  users.id=33    '2nFx'               ?-> 'いいんか_'              (BV1rmpFenExF)  文档名='2nFx'               仅 B站单方面不同（可能代投）
+  users.id=34    'Piggy_Pog'          ?-> 'Piggy_pog'          (BV1ym421s7t9)  文档名='Piggy_Pog'          仅 B站单方面不同（可能代投）
+  users.id=35    'upionk3'            ?-> '我都冇知道'              (BV1cKgRzPE8c)  文档名='upionk3'            仅 B站单方面不同（可能代投）
+  users.id=36    'sniper_小白'          ?-> 'Xiao_Bai2'          (BV1KdEqzLEeE)  文档名='sniper_小白'          仅 B站单方面不同（可能代投）
+  users.id=50    '5x_uwu'             ?-> 'waga5x'             (BV1NMTKzoEMe)  文档名='5x_uwu'             仅 B站单方面不同（可能代投）
+  users.id=59    '某不是双发的XXX'          ?-> '-多宝睡不醒-'            (BV1y44y1H7t2)  文档名='某不是双发的XXX'          仅 B站单方面不同（可能代投）
+  users.id=64    'ICR_MX_'            ?-> 'mengx1nn_'          (BV1veVfz3EKa)  文档名='ICR_MX_'            仅 B站单方面不同（可能代投）
+  users.id=70    'EG祈OI玉ST'           ?-> '祈玉egoist'           (BV1WN411Y7ZT)  文档名='EG祈OI玉ST'           仅 B站单方面不同（可能代投）
+  users.id=274   'IamAper1s_'         ?-> 'aperIs-_-'          (BV1DayqBwE5a)  文档名='Aperis_uwu'         仅 B站单方面不同（可能代投）
+  users.id=76    '某不是双发的XXX的XXX'      ?-> '一多宝睡不醒一'            (BV1E34y157L1)  文档名='某不是双发的XXX的XXX'      仅 B站单方面不同（可能代投）
+  users.id=89    '_aqva'              ?-> 'Welight6'           (BV1pq7Nz5EKe)  文档名='_aqva'              仅 B站单方面不同（可能代投）
+  users.id=90    '尘埃哥哥的五花肉'           ?-> '大卫星星钥匙'             (BV1i86JYxEN8)  文档名='尘埃哥哥的五花肉'           仅 B站单方面不同（可能代投）
+  users.id=269   'DizzyK'             ?-> 'Dizzykanon'         (BV149RCBqE5i)  文档名='小草素世'               仅 B站单方面不同（可能代投）
+  users.id=97    'regreted_____'      ?-> 'regretted_____'     (BV1x14y137Zw)  文档名='regreted_____'      仅 B站单方面不同（可能代投）
+  users.id=102   '转头又颓废'              ?-> '非常高水瓶'              (BV1Kv4y1J7bj)  文档名='转头又颓废'              仅 B站单方面不同（可能代投）
+  users.id=None  'MCjiuli'            ?-> '九黎科技'               (BV1HVzhBpEMQ)  文档名='九黎科技'               mid 对应 0 或多条档案
+  users.id=109   'Dou_Pin'            ?-> '海上香克斯'              (BV1zPczeqEYj)  文档名='Dou_Pin'            仅 B站单方面不同（可能代投）
+  users.id=111   'lavaforpiglins'     ?-> '__Kane__'           (BV1sM8qzqEy6)  文档名='lavaforpiglins'     仅 B站单方面不同（可能代投）
+  users.id=118   'HeGaryy_'           ?-> 'Hegarry_'           (BV11K41147VT)  文档名='HeGaryy_'           仅 B站单方面不同（可能代投）
+  users.id=124   'tiantian_XT'        ?-> '_ElysiaLove'        (BV1Tmvre1E9p)  文档名='tiantian_XT'        仅 B站单方面不同（可能代投）
+  users.id=131   'Harold_HC'          ?-> 'HaroldHC'           (BV1zVWMezE3Z)  文档名='Harold_HC'          仅 B站单方面不同（可能代投）
+  users.id=140   '時柒_'                ?-> '時柒__'               (BV1WJ4m1n7Ly)  文档名='時柒_'                仅 B站单方面不同（可能代投）
+  users.id=145   'Demonyee'           ?-> 'Dymonix'            (BV1xG4y1y7Kr)  文档名='Demonyee'           仅 B站单方面不同（可能代投）
+  users.id=276   'sdmy233'            ?-> 'shadow啥都没有'         (BV1U7C1BSEKF)  文档名='魔龙咆哮雷'              仅 B站单方面不同（可能代投）
+  users.id=155   'Prackiee'           ?-> 'Prackiee-3-'        (BV1uGuizWEJL)  文档名='Prackiee'           仅 B站单方面不同（可能代投）
+  users.id=156   'dylian_'            ?-> 'andyli_'            (BV1MG4y1v7Wi)  文档名='dylian_'            仅 B站单方面不同（可能代投）
+  users.id=165   '神秘7x'               ?-> 'Emsr7x'             (BV1Kc411z7dW)  文档名='神秘7x'               仅 B站单方面不同（可能代投）
+  users.id=167   '蕭维斯'                ?-> '萧为思'                (BV1Y44y147YY)  文档名='蕭维斯'                仅 B站单方面不同（可能代投）
+  users.id=179   '卡卡卡莎莎莎莎'            ?-> '卡卡卡鲨鲨莎莎'            (BV1Kg4y1477u)  文档名='卡卡卡莎莎莎莎'            仅 B站单方面不同（可能代投）
+  users.id=183   'Sizzler时乐'          ?-> 'Anerchyshark时乐'     (BV1Yo4y1w7VB)  文档名='Sizzler时乐'          仅 B站单方面不同（可能代投）
+  users.id=187   '绯月染秋云'              ?-> '绊樱子'                (BV1bw411Q73L)  文档名='绯月染秋云'              仅 B站单方面不同（可能代投）
+  users.id=190   'zony_7'             ?-> 'R__Joss'            (BV17P411F7jF)  文档名='zony_7'             仅 B站单方面不同（可能代投）
+  users.id=199   '狗世界卖鸡鸭蛇皮鱼肉'         ?-> '外星人少刷点视频'           (BV1mH4y1R7mF)  文档名='狗世界卖鸡鸭蛇皮鱼肉'         仅 B站单方面不同（可能代投）
+  users.id=206   '我就是苓柒'              ?-> 'Stupiggy_'          (BV1L84y187fC)  文档名='我就是苓柒'              仅 B站单方面不同（可能代投）
+  users.id=212   '烟雨_吟风'              ?-> '幽隙浮萤'               (BV1i24y1a7zj)  文档名='烟雨_吟风'              仅 B站单方面不同（可能代投）
+  users.id=216   '不就6_个硬币吗'           ?-> 'Estelario'          (BV1SG4y1D7PL)  文档名='不就6_个硬币吗'           仅 B站单方面不同（可能代投）
+  users.id=217   'illerror'           ?-> 'ilIerror'           (BV1xe411w7sw)  文档名='illerror'           仅 B站单方面不同（可能代投）
+  users.id=225   '月夕同学233'            ?-> 'YuzhuoTx321'        (BV1Mx4y1Q7g2)  文档名='月夕同学233'            仅 B站单方面不同（可能代投）
+  users.id=445   '奋发向上的白鹿'            ?-> '奋发向上的鹿白'            (BV1mCE967EfN)  文档名='奋发向上的白鹿'            仅 B站单方面不同（可能代投）
+  users.id=None  'ltyydmydcp'         ?-> 'LiHaoqwq'           (BV17R4y1x7eX)  文档名='ltyydmydcp'         mid 对应 0 或多条档案
+  users.id=255   '枫铃ML'               ?-> '奶龙娇妻ML'             (BV1D64y197ij)  文档名='枫铃ML'               仅 B站单方面不同（可能代投）
+  users.id=18    'Baron_2333'         ?-> '熊喵日记'               (BV1RT421r7hD)  文档名='Baron_2333'         该玩家名下解析出多个 mid
+  users.id=59    '某不是双发的XXX'          ?-> '-多宝睡不醒-'            (BV1Ge4y1a7xW)  文档名='某不是双发的XXX'          仅 B站单方面不同（可能代投）
+  users.id=50    '5x_uwu'             ?-> 'waga5x'             (BV1aHedzLEqM)  文档名='5x_uwu'             仅 B站单方面不同（可能代投）
