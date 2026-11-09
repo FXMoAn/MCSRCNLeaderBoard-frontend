@@ -24,7 +24,7 @@
         >{{ igt }}</RouterLink
       >
     </div>
-    <div class="cell date-cell">{{ date }}</div>
+    <div class="cell date-cell">{{ formatRunDate(date) }}</div>
     <div class="cell video-cell">
       <a
         v-if="videolink"
@@ -43,7 +43,7 @@
       <summary>日期与视频 <span class="details-chevron" aria-hidden="true">⌄</span></summary>
       <div class="details-content">
         <span class="record-date"
-          >记录时间 <span>{{ date }}</span></span
+          >记录时间 <span>{{ formatRunDate(date) }}</span></span
         >
         <a
           v-if="videolink"
@@ -61,6 +61,7 @@
 </template>
 
 <script setup lang="ts">
+import { formatRunDate } from '@/utils/date';
 import SvgIcon from '@/components/icons/index.vue';
 import { RouterLink } from 'vue-router';
 // 导入排名图标
