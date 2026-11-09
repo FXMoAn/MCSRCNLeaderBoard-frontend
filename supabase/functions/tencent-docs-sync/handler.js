@@ -1,5 +1,5 @@
 import { createProvider, ProviderError } from "./provider.js";
-import { extractLegacyAnnotations } from "./legacy.js";
+import { extractLegacyAnnotations, parseDate } from "./legacy.js";
 
 const GROUPS = [
   { key: "BB08J2", title: "网站同步·1.16+RSG" },
@@ -103,7 +103,7 @@ export function render(source, mapping, minimumRows = 0) {
     }
     const annotation = mapping.annotations?.[String(run.run_id)];
     const notes = annotation?.sourceSignature === sourceSignature(run) ? annotation : null;
-    const values = [run.rank, run.nickname, run.igt, "", run.seed, run.date, run.remarks, notes?.originalRemarks || "", notes?.route || ""].map((value) => textCell(value));
+    const values = [run.rank, run.nickname, run.igt, "", run.seed, parseDate(run.date)?.display ?? run.date, run.remarks, notes?.originalRemarks || "", notes?.route || ""].map((value) => textCell(value));
     values[0] = { ...values[0], cellValue: { number: run.rank } };
     if (typeof run.videolink === "string" && /^https:\/\//.test(run.videolink)) {
       let video;
