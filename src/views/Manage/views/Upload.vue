@@ -143,6 +143,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { supabase } from '@/lib/supabaseClient';
+import { formatRunDate } from '@/utils/date';
 import { TYPE_SELECTOR_OPTIONS } from '@/constants/common';
 import {
   validateNickname,
@@ -267,7 +268,7 @@ const insertVerifiedRun = async () => {
     version: version.value,
     type: type.value,
     igt: igt.value,
-    date: date.value.replace(/-/g, '/'),
+    date: formatRunDate(date.value),
     videolink: sanitizedVideoLink,
     remarks: sanitizedRemarks,
     seed: sanitizedSeed,
