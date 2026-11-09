@@ -22,7 +22,7 @@
           </div>
           <div class="info-item">
             <span class="info-label">日期</span>
-            <span class="info-value">{{ runInfo.date }}</span>
+            <span class="info-value">{{ formatRunDate(runInfo.date) }}</span>
           </div>
           <div class="info-item">
             <span class="info-label">IGT</span>
@@ -51,6 +51,7 @@
 </template>
 
 <script setup lang="ts">
+import { formatRunDate } from '@/utils/date';
 import { useRoute } from 'vue-router';
 import { supabase } from '@/lib/supabaseClient';
 import { onBeforeMount, ref, computed } from 'vue';
