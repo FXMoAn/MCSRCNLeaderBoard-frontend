@@ -82,3 +82,11 @@ SELECT public.docs_sync_backups('BB08J3', 5);
 `docs_sync_state()` 可查看 `last_error`、`next_attempt_at`、`last_success_at`、`dirty`、`lease_until` 及 `has_write_intent`。调整配置前先暂停，并等待活动租约结束；不要删除队列、快照或未完成写入记录来消除报错。
 
 遇到 `managed_page_changed`、`concurrent_document_edit`、`pending_write_conflict` 时，保留人工修改并核对前后快照，不直接把当前页当作新基线覆盖。遇到 `ambiguous_best_time_*` 或容量错误时，先处理绑定/容量问题再恢复。仅重新排队不能解决这些冲突。停用定时任务可用 `SELECT cron.unschedule('mcsrcn-tencent-docs-sync');`；这不会删除原页、自动页或私有快照。
+
+## 2026-11-09 日期格式修复
+
+历史导入日期多为 `YYYY/M/D`，两个网页上传入口原先只替换分隔符，保留了原生日期输入中的补零；网页与腾讯同步均直接显示原文。提交和显示统一为 `YYYY/M/D`，月日不补零，空值与无法解析的历史值不补造。
+
+历史数据库日期不批量改写，腾讯同步仅格式化输出日期，来源签名仍使用原值，保留已有原文档备注和路线匹配。同步函数 v10 已部署，两个自动页在北京时间 10:15 / 10:16 刷新成功，310 / 20 位玩家已读回核对，原始页保持一致。
+
+前端日期修复从 `main` 单独提取，未包含 `feature/speedrun-layout` 的页面改版；通过本次合并沿用现有 GitHub → Vercel 发布流程。
