@@ -29,8 +29,8 @@
           <div class="info-item">
             <span class="info-label">日期</span>
             <input
-              v-model="runInfo.date"
-              :placeholder="runInfo.date"
+              v-model="displayDate"
+              :placeholder="formatRunDate(runInfo.date)"
               class="info-value"
               type="text"
               :disabled="!isEditing"
@@ -127,6 +127,7 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router';
 import { supabase } from '@/lib/supabaseClient';
+import { formatRunDate } from '@/utils/date';
 import { onBeforeMount, ref, computed } from 'vue';
 import { extractBVId, buildPlayerUrl } from '@/utils/bilibili';
 import type { RunInfo } from '@/types/CommonTypes';
@@ -143,6 +144,14 @@ const router = useRouter();
 const runInfo = ref<RunInfo>();
 const isEditing = ref(false);
 const isSubmitting = ref(false);
+
+// Format the read-only value without changing the stored date on approval.
+const displayDate = computed({
+  get: () => isEditing.value ? runInfo.value?.date ?? '' : formatRunDate(runInfo.value?.date),
+  set: (value: string) => {
+    if (runInfo.value) runInfo.value.date = value;
+  },
+});
 
 const verifyRun = async () => {
   try {
