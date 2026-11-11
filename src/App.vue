@@ -11,7 +11,7 @@
         <div><router-link to="/announcements" class="nav-link">公告</router-link></div>
         <div><router-link to="/resources" class="nav-link">资源</router-link></div>
         <div v-if="userStore.isBinding">
-          <router-link to="/user-upload" class="nav-link nav-link-cta">上传成绩</router-link>
+          <router-link to="/user-upload" class="nav-link">上传成绩</router-link>
         </div>
         <div>
           <a
@@ -231,15 +231,6 @@ nav {
   color: #fff;
   background-color: rgba(0, 0, 0, 0.25);
   font-weight: 600;
-}
-
-.nav-link-cta {
-  background-color: rgba(0, 0, 0, 0.25);
-  font-weight: 600;
-}
-
-.nav-link-cta:hover {
-  background-color: rgba(0, 0, 0, 0.35);
 }
 
 .nav-link:focus-visible,
