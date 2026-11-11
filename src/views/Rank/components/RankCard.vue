@@ -35,8 +35,9 @@
         :aria-label="`${nickname} 的记录视频`"
         class="video-link"
         @click.stop
-        >观看 ↗</a
       >
+        <SvgIcon name="vedio" color="white" aria-hidden="true" />
+      </a>
       <span v-else class="no-video">—</span>
     </div>
     <details class="mobile-details" @click.stop>
@@ -50,8 +51,10 @@
           target="_blank"
           rel="noopener noreferrer"
           :aria-label="`${nickname} 的记录视频`"
-          >观看视频 ↗</a
+          class="video-link"
         >
+          <SvgIcon name="vedio" color="white" aria-hidden="true" />
+        </a>
         <span v-else class="no-video">暂无视频</span>
       </div>
     </details>
@@ -59,6 +62,7 @@
 </template>
 
 <script setup lang="ts">
+import SvgIcon from '@/components/icons/index.vue';
 import { formatRunDate } from '@/utils/date';
 import { validateVideoLink } from '@/utils/security';
 import { RouterLink } from 'vue-router';
@@ -224,9 +228,8 @@ const isNewRecord = computed(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-width: 32px;
   min-height: 32px;
-  font-size: 13px;
-  white-space: nowrap;
 }
 
 .mobile-details {
