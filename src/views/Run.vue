@@ -2,7 +2,7 @@
   <div class="content">
     <Loading v-if="!runInfo" />
     <div v-else class="content">
-      <div class="video-container">
+      <div v-if="getPlayerUrl" class="video-container">
         <iframe
           class="video-iframe"
           :src="getPlayerUrl"
@@ -13,6 +13,15 @@
           allowfullscreen="true"
         ></iframe>
       </div>
+
+      <a
+        v-if="videoUrl"
+        :href="videoUrl"
+        class="original-video-link"
+        target="_blank"
+        rel="noopener noreferrer"
+        >观看原视频 ↗</a
+      >
 
       <!-- 简介 -->
       <section class="desc-panel">
@@ -54,7 +63,7 @@
           </div>
           <div class="info-card">
             <span class="card-label">日期</span>
-            <span class="card-value">{{ runInfo.date }}</span>
+            <span class="card-value">{{ formatRunDate(runInfo.date) }}</span>
           </div>
         </section>
 
@@ -73,6 +82,9 @@
 </template>
 
 <script setup lang="ts">
+import { formatRunDate } from '@/utils/date';
+import { validateVideoLink } from '@/utils/security';
+import { VERSION_RANGE_OPTIONS } from '@/constants/common';
 import { useRoute } from 'vue-router';
 import { RouterLink } from 'vue-router';
 import { supabase } from '@/lib/supabaseClient';
@@ -87,16 +99,6 @@ const id = route.params.id;
 const runInfo = ref<RunInfo>();
 // 该成绩在其分类（已验证）榜单中的名次；非验证状态或查询失败时为 null。
 const rank = ref<number | null>(null);
-
-// runs.version 存的是后端代表版本，这里映射回展示用的版本区间。
-const VERSION_RANGE_LABELS: Record<string, string> = {
-  '1.7.10': 'Pre 1.8',
-  '1.8.9': '1.8',
-  '1.12.2': '1.9-1.12',
-  '1.15.2': '1.13-1.15',
-  '1.16.1': '1.16-1.19',
-  '1.20': '1.20+',
-};
 
 const getRunInfo = async () => {
   try {
@@ -129,9 +131,19 @@ const fetchRank = async () => {
   }
 };
 
-const versionRange = computed(
-  () => VERSION_RANGE_LABELS[runInfo.value?.version ?? ''] ?? runInfo.value?.version ?? '—'
-);
+const versionRange = computed(() => {
+  const run = runInfo.value;
+  return (
+    VERSION_RANGE_OPTIONS[run?.type ?? '']?.find((option) => option.value === run?.version)
+      ?.label ??
+    run?.version ??
+    '—'
+  );
+});
+const videoUrl = computed(() => {
+  const link = runInfo.value?.videolink ?? '';
+  return validateVideoLink(link).isValid ? link.trim() : '';
+});
 const rankText = computed(() => (rank.value !== null ? `第 ${rank.value} 名` : '—'));
 
 const getBVId = computed(() => {
@@ -151,6 +163,17 @@ onBeforeMount(() => {
 </script>
 
 <style scoped>
+.original-video-link {
+  align-self: flex-start;
+  color: var(--accent-bright);
+  padding: 8px 0;
+}
+
+.original-video-link:focus-visible {
+  outline: 2px solid var(--accent-bright);
+  outline-offset: 3px;
+}
+
 .content {
   width: 100%;
   height: 100%;
