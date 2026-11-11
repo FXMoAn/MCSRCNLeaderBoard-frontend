@@ -85,13 +85,6 @@
           />
         </div>
 
-        <div class="form-group">
-          <label class="form-label" for="subversion">版本</label>
-          <select class="form-select" id="subversion" v-model="subversion">
-            <option v-for="v in subversionOptions" :key="v" :value="v">{{ v }}</option>
-          </select>
-        </div>
-
         <div class="form-group full-width">
           <label class="form-label" for="remarks">简介</label>
           <textarea
@@ -127,8 +120,9 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { supabase } from '@/lib/supabaseClient';
+import { formatRunDate } from '@/utils/date';
 import { validateVideoLink, sanitizeTextInput, sanitizeVideoLink } from '@/utils/security';
-import { TYPE_SELECTOR_OPTIONS } from '@/constants/common';
+import { TYPE_SELECTOR_OPTIONS, VERSION_RANGE_OPTIONS } from '@/constants/common';
 import { useUserStore } from '@/stores';
 import {
   showErrorNotification,
@@ -138,125 +132,22 @@ import {
 
 const userStore = useUserStore();
 
-const version = ref('1.16+');
+const version = ref('1.16.1');
 const type = ref('RSG');
 const igtMinute = ref(0);
 const igtSecond = ref(0);
 const igtMillisecond = ref(0);
 const date = ref(new Date().toISOString().split('T')[0]);
 const videoLink = ref('');
-const subversion = ref('1.16');
 const remarks = ref('');
 
-// 版本范围选项按种子类型区分：
-// FSG 只有 1.16；RSG 为 Pre 1.8 / 1.8 / 1.9-1.12 / 1.13-1.15 / 1.16+；SSG 另分 1.16-1.19 与 1.20+。
-interface RangeOption {
-  value: string;
-  label: string;
-}
+const rangeOptions = computed(() => VERSION_RANGE_OPTIONS[type.value] ?? VERSION_RANGE_OPTIONS.RSG);
 
-const RANGE_OPTIONS: Record<string, RangeOption[]> = {
-  FSG: [{ value: '1.16', label: '1.16' }],
-  RSG: [
-    { value: '1.7.10', label: 'Pre 1.8' },
-    { value: '1.8.9', label: '1.8' },
-    { value: '1.12.2', label: '1.9-1.12' },
-    { value: '1.15.2', label: '1.13-1.15' },
-    { value: '1.16+', label: '1.16+' },
-  ],
-  SSG: [
-    { value: '1.7.10', label: 'Pre 1.8' },
-    { value: '1.8.9', label: '1.8' },
-    { value: '1.12.2', label: '1.9-1.12' },
-    { value: '1.15.2', label: '1.13-1.15' },
-    { value: '1.16-1.19', label: '1.16-1.19' },
-    { value: '1.20+', label: '1.20+' },
-  ],
-};
-
-const rangeOptions = computed(() => RANGE_OPTIONS[type.value] ?? RANGE_OPTIONS.RSG);
-
-// 实际版本号选项：按所选版本范围（区间 key）给出对应清单。
-const VERSIONS_1_16_TO_1_19 = [
-  '1.16', '1.16.1', '1.16.2', '1.16.3', '1.16.4', '1.16.5',
-  '1.17', '1.17.1', '1.18', '1.18.1', '1.18.2',
-  '1.19', '1.19.1', '1.19.2', '1.19.3', '1.19.4',
-];
-const VERSIONS_1_20_PLUS = [
-  '1.20', '1.20.1', '1.20.2', '1.20.3', '1.20.4', '1.20.5', '1.20.6',
-  '1.21', '1.21.1', '1.21.2', '1.21.3', '1.21.4', '1.21.5', '1.21.6',
-  '1.21.7', '1.21.8', '1.21.9', '1.21.10', '1.21.11',
-  '26.1', '26.1.1', '26.1.2', '26.2', '26.3',
-];
-const VERSIONS_1_16_ONLY = ['1.16', '1.16.1', '1.16.2', '1.16.3', '1.16.4', '1.16.5'];
-
-const VERSION_BY_RANGE: Record<string, string[]> = {
-  '1.7.10': [
-    '1.0', '1.1', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.3.1', '1.3.2',
-    '1.4.2', '1.4.4', '1.4.5', '1.4.6', '1.4.7', '1.5', '1.5.1', '1.5.2', '1.6.1',
-    '1.6.2', '1.6.4', '1.7.2', '1.7.4', '1.7.5', '1.7.6', '1.7.7', '1.7.8', '1.7.9',
-    '1.7.10',
-  ],
-  '1.8.9': [
-    '1.8', '1.8.1', '1.8.2', '1.8.3', '1.8.4', '1.8.5', '1.8.6', '1.8.7', '1.8.8',
-    '1.8.9',
-  ],
-  '1.12.2': [
-    '1.9', '1.9.1', '1.9.2', '1.9.3', '1.9.4', '1.10', '1.10.1', '1.10.2', '1.11',
-    '1.11.1', '1.11.2', '1.12', '1.12.1', '1.12.2',
-  ],
-  '1.15.2': [
-    '1.13', '1.13.1', '1.13.2', '1.14', '1.14.1', '1.14.2', '1.14.3', '1.14.4',
-    '1.15', '1.15.1', '1.15.2',
-  ],
-  '1.16-1.19': VERSIONS_1_16_TO_1_19,
-  '1.20+': VERSIONS_1_20_PLUS,
-  // FSG：只有 1.16 区间
-  '1.16': VERSIONS_1_16_ONLY,
-  // RSG：1.16+ 覆盖 1.16-1.19 与 1.20+
-  '1.16+': [...VERSIONS_1_16_TO_1_19, ...VERSIONS_1_20_PLUS],
-};
-
-const subversionOptions = computed(() => VERSION_BY_RANGE[version.value] ?? []);
-
-// 数据库 runs.version 存代表版本，提交时由版本范围（必要时结合实际版本）换算。
-const representativeVersion = computed(() => {
-  if (version.value === '1.16+') {
-    return VERSIONS_1_16_TO_1_19.includes(subversion.value) ? '1.16.1' : '1.20';
+watch(type, () => {
+  if (!rangeOptions.value.some((option) => option.value === version.value)) {
+    version.value = '1.16.1';
   }
-  if (version.value === '1.16-1.19') return '1.16.1';
-  if (version.value === '1.20+') return '1.20';
-  if (version.value === '1.16') return '1.16.1';
-  return version.value; // 1.7.10 / 1.8.9 / 1.12.2 / 1.15.2
 });
-
-// 切换种子类型时，把当前区间映射到该类型下的对应区间；无法对应则回退第一项。
-const normalizeRange = () => {
-  const keys = rangeOptions.value.map((r) => r.value);
-  if (keys.includes(version.value)) return;
-
-  const current = version.value;
-  if (type.value === 'FSG') {
-    version.value = '1.16';
-  } else if (type.value === 'RSG') {
-    version.value = current === '1.16-1.19' || current === '1.20+' || current === '1.16' ? '1.16+' : keys[0];
-  } else {
-    // SSG
-    version.value = current === '1.16+' || current === '1.16' ? '1.20+' : keys[0];
-  }
-};
-
-// 版本范围或种子类型变化时，实际版本重置为新区间第一项。
-watch(
-  () => type.value,
-  () => normalizeRange()
-);
-watch(
-  () => version.value,
-  () => {
-    subversion.value = subversionOptions.value[0] ?? '';
-  }
-);
 
 // 防重复提交状态
 const isSubmitting = ref(false);
@@ -307,13 +198,12 @@ const insertRun = async () => {
   const userId = userStore.userInfo.id;
   const { data, error } = await supabase.from('runs').insert({
     userid: userId,
-    version: representativeVersion.value,
+    version: version.value,
     type: type.value,
     igt: igt.value,
-    date: date.value.replace(/-/g, '/'),
+    date: formatRunDate(date.value),
     videolink: sanitizedVideoLink,
     remarks: sanitizedRemarks,
-    subversion: sanitizeTextInput(subversion.value.trim()),
     status: 'pending',
   });
   if (error) {
@@ -331,14 +221,13 @@ const insertRun = async () => {
  * 清空所有表单输入
  */
 const clearForm = () => {
-  version.value = '1.16+';
+  version.value = '1.16.1';
   type.value = 'RSG';
   igtMinute.value = 0;
   igtSecond.value = 0;
   igtMillisecond.value = 0;
   date.value = new Date().toISOString().split('T')[0];
   videoLink.value = '';
-  subversion.value = subversionOptions.value[0] ?? '';
   remarks.value = '';
 };
 
