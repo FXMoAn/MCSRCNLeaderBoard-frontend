@@ -6,12 +6,9 @@
         <div class="form-group">
           <label class="form-label" for="version">版本</label>
           <select class="form-select" id="version" v-model="version">
-            <option value="1.16.1">1.16-1.19</option>
-            <option value="1.20">1.20+</option>
-            <option value="1.15.2">1.13-1.15</option>
-            <option value="1.12.2">1.9-1.12</option>
-            <option value="1.8.9">1.8</option>
-            <option value="1.7.10">pre 1.8</option>
+            <option v-for="option in rangeOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
           </select>
         </div>
 
@@ -141,9 +138,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { supabase } from '@/lib/supabaseClient';
-import { TYPE_SELECTOR_OPTIONS } from '@/constants/common';
+import { formatRunDate } from '@/utils/date';
+import { TYPE_SELECTOR_OPTIONS, VERSION_RANGE_OPTIONS } from '@/constants/common';
 import {
   validateNickname,
   validateRemarks,
@@ -162,6 +160,12 @@ import {
 
 const version = ref('1.16.1');
 const type = ref('RSG');
+const rangeOptions = computed(() => VERSION_RANGE_OPTIONS[type.value] ?? VERSION_RANGE_OPTIONS.RSG);
+watch(type, () => {
+  if (!rangeOptions.value.some((option) => option.value === version.value)) {
+    version.value = '1.16.1';
+  }
+});
 const igtMinute = ref(0);
 const igtSecond = ref(0);
 const igtMillisecond = ref(0);
@@ -267,7 +271,7 @@ const insertVerifiedRun = async () => {
     version: version.value,
     type: type.value,
     igt: igt.value,
-    date: date.value.replace(/-/g, '/'),
+    date: formatRunDate(date.value),
     videolink: sanitizedVideoLink,
     remarks: sanitizedRemarks,
     seed: sanitizedSeed,
