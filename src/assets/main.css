@@ -63,7 +63,7 @@ a:hover {
 }
 
 .clearfix {
-  content: "";
+  content: '';
   display: block;
   clear: both;
 }
@@ -75,4 +75,22 @@ a:hover {
   background-color: var(--text-primary);
   color: #000;
   cursor: pointer;
+}
+
+/* The arrow's right inset follows the text's left inset on every native select. */
+select:not([multiple]) {
+  --select-inline-padding: 12px;
+  appearance: none;
+  background-image: url('./select-chevron.svg');
+  background-repeat: no-repeat;
+  background-position: right var(--select-inline-padding) center;
+  background-size: 16px 16px;
+  padding-inline: var(--select-inline-padding) calc(var(--select-inline-padding) + 24px);
+}
+
+@media (forced-colors: active) {
+  select:not([multiple]) {
+    appearance: auto;
+    background-image: none;
+  }
 }

@@ -123,7 +123,7 @@
         >隐私政策</a
       >
     </div>
-    <p>&copy; 2025 MCSR-CN 中国我的世界JAVA版速通排行榜. 保留所有权利</p>
+    <p>&copy; 2026 MCSR-CN 中国我的世界JAVA版速通排行榜. 保留所有权利</p>
   </footer>
   <!-- 全局通知组件 -->
   <Notification />

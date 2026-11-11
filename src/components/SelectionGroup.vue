@@ -1,20 +1,12 @@
 <template>
   <div class="selection-container">
     <div class="select-wrapper">
-      <select 
-        v-model="selectedVersion" 
-        @change="updateSelection"
-        class="custom-select"
-      >
+      <select v-model="selectedVersion" @change="updateSelection" class="custom-select">
         <option value="1.16.1">1.16.1</option>
         <option value="1.15.2">1.15.2</option>
         <option value="1.7.10">1.7.10</option>
       </select>
-      <select 
-        v-model="selectedType" 
-        @change="updateSelection"
-        class="custom-select"
-      >
+      <select v-model="selectedType" @change="updateSelection" class="custom-select">
         <option value="RSG">RSG</option>
         <option value="SSG">SSG</option>
       </select>
@@ -23,19 +15,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref } from 'vue';
 
-const emit = defineEmits(['selection-changed'])
+const emit = defineEmits(['selection-changed']);
 
-const selectedVersion = ref('1.16.1')
-const selectedType = ref('RSG')
+const selectedVersion = ref('1.16.1');
+const selectedType = ref('RSG');
 
 const updateSelection = () => {
   emit('selection-changed', {
     version: selectedVersion.value,
-    type: selectedType.value
-  })
-}
+    type: selectedType.value,
+  });
+};
 </script>
 
 <style scoped>
@@ -47,8 +39,8 @@ const updateSelection = () => {
 }
 
 .custom-select {
-  appearance: none;
-  padding: 10px 15px;
+  --select-inline-padding: 15px;
+  padding-block: 10px;
   border-radius: 8px;
   background-color: #123;
   color: white;
@@ -65,4 +57,4 @@ const updateSelection = () => {
   outline: none;
   box-shadow: 0 0 10px rgba(52, 152, 219, 0.5);
 }
-</style> 
+</style>

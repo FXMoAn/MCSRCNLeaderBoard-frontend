@@ -1,8 +1,13 @@
 <template>
-  <div class="primary-input-container">
-    <label class="primary-input-label" v-show="label">{{ label }}</label>
+  <div class="primary-input-container" :class="{ 'primary-input-stacked': layout === 'stacked' }">
+    <label class="primary-input-label" v-show="label" :for="inputId">{{ label }}</label>
     <input
       :type="type"
+      :id="inputId"
+      :autocomplete="autocomplete"
+      :maxlength="maxLength"
+      :aria-invalid="error ? true : undefined"
+      :aria-describedby="error ? `${inputId}-error` : undefined"
       class="primary-input"
       :placeholder="placeholder"
       v-model="value"
@@ -12,6 +17,9 @@
       @blur="handleBlur"
       @change="handleChange"
     />
+    <span v-if="error" :id="`${inputId}-error`" class="primary-input-error" role="alert">{{
+      error
+    }}</span>
   </div>
 </template>
 
@@ -23,7 +31,7 @@
  * @param modelValue 模型值
  * @param disabled 是否禁用
  */
-import { computed } from 'vue';
+import { computed, useId } from 'vue';
 
 interface Props {
   label?: string;
@@ -31,6 +39,11 @@ interface Props {
   type?: string;
   modelValue?: string | null;
   disabled?: boolean;
+  id?: string;
+  layout?: 'inline' | 'stacked';
+  autocomplete?: string;
+  maxLength?: number;
+  error?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -39,7 +52,11 @@ const props = withDefaults(defineProps<Props>(), {
   modelValue: '',
   type: 'text',
   disabled: false,
+  layout: 'inline',
 });
+
+const generatedId = useId();
+const inputId = computed(() => props.id ?? generatedId);
 
 const value = computed({
   get: () => props.modelValue ?? '',
@@ -90,6 +107,7 @@ const handleChange = (e: Event) => {
 
 .primary-input {
   flex: 1;
+  min-width: 0;
   padding: 12px 16px;
   background-color: #333;
   border: 1px solid #444;
@@ -98,6 +116,38 @@ const handleChange = (e: Event) => {
   font-size: 14px;
   transition: all 0.2s ease;
   box-sizing: border-box;
+}
+
+.primary-input-stacked {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+.primary-input-stacked .primary-input-label {
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--text-secondary);
+}
+.primary-input-stacked .primary-input {
+  width: 100%;
+  min-height: 44px;
+  line-height: 18px;
+  background: var(--bgcolor);
+  border-color: var(--border-light);
+}
+.primary-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+.primary-input[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+.primary-input-error {
+  font-size: 13px;
+  color: #ffb4ab;
+  line-height: 1.5;
 }
 
 .primary-input::placeholder {

@@ -109,23 +109,29 @@ const useUserStore = defineStore('user', () => {
   };
 
   // 更新用户信息(通用)
-  const updateUserInfo = async (updates: Partial<UserInfo>) => {
+  const updateUserInfo = async (updates: Partial<UserInfo>): Promise<boolean> => {
+    const ownerId = localUserId.value;
+    const profileId = userInfo.value.id;
+    if (!ownerId || !profileId) return false;
     try {
       const { data, error } = await supabase
         .from('users')
         .update(updates)
-        .eq('user_id', localUserId.value);
-
+        .eq('user_id', ownerId)
+        .eq('id', profileId)
+        .select()
+        .single();
       if (error) {
-        console.error(error);
-        showErrorNotification('更新失败');
-      } else {
-        showSuccessNotification('更新成功');
-        await initUserInfo();
+        showErrorNotification('保存资料失败，请重试');
+        return false;
       }
-    } catch (error) {
-      console.error(error);
-      showErrorNotification('更新失败');
+      if (localUserId.value !== ownerId || userInfo.value.id !== profileId) return false;
+      setUserInfo(data);
+      showSuccessNotification('资料已保存');
+      return true;
+    } catch {
+      showErrorNotification('保存资料失败，请重试');
+      return false;
     }
   };
 

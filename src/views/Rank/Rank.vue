@@ -59,30 +59,52 @@
         </div>
 
         <div class="actions-row">
-          <div class="refresh-status" role="status" aria-live="polite">
-            <span v-if="isLoading">{{ statsdata.length ? '正在更新榜单…' : '正在加载榜单…' }}</span>
-            <span v-else-if="loadError" class="refresh-error">{{ loadError }}</span>
+          <div class="board-filters">
+            <PrimaryCheckBox
+              :modelValue="state.newRecord"
+              label="只看新成绩"
+              title="近30天内的成绩"
+              class="new-record-filter"
+              @update:modelValue="handleNewRecordChange"
+            />
+            <div class="refresh-status" role="status" aria-live="polite">
+              <span v-if="isLoading">{{
+                statsdata.length ? '正在更新榜单…' : '正在加载榜单…'
+              }}</span>
+              <span v-else-if="loadError" class="refresh-error">{{ loadError }}</span>
+            </div>
           </div>
-          <PrimaryButton
-            variant="clear"
-            size="small"
-            class="refresh-button"
-            :loading="isLoading"
-            @click="handleRefresh"
-            >{{ isLoading ? '刷新中…' : '刷新榜单' }}</PrimaryButton
-          >
-          <a
-            class="pill-btn"
-            href="https://wiki.mcspeedrun.cn"
-            target="_blank"
-            rel="noopener noreferrer"
-            >规则</a
-          >
-          <router-link to="/user-upload" class="pill-btn">提交成绩</router-link>
+          <div class="board-actions">
+            <button
+              type="button"
+              class="pill-btn refresh-button"
+              :disabled="isLoading"
+              :aria-busy="isLoading"
+              :aria-label="isLoading ? '正在刷新榜单' : '刷新榜单'"
+              :title="isLoading ? '刷新中…' : '刷新榜单'"
+              @click="handleRefresh"
+            >
+              <RefreshRight
+                class="refresh-icon"
+                :class="{ 'is-refreshing': isLoading }"
+                width="18"
+                height="18"
+                aria-hidden="true"
+              />
+            </button>
+            <a
+              class="pill-btn"
+              href="https://wiki.mcspeedrun.cn"
+              target="_blank"
+              rel="noopener noreferrer"
+              >规则</a
+            >
+            <router-link to="/user-upload" class="pill-btn">提交成绩</router-link>
+          </div>
         </div>
         <Loading v-if="isLoading && statsdata.length === 0" />
         <div class="container" v-else :aria-busy="isLoading">
-          <div class="leaderboard" :class="{ 'is-empty': statsdata.length === 0 }">
+          <div class="leaderboard" :class="{ 'is-empty': filteredData.length === 0 }">
             <div class="leaderboard-head">
               <div class="rank-cell">#</div>
               <div class="player-cell">玩家</div>
@@ -92,11 +114,17 @@
               <div class="video-cell">视频</div>
             </div>
             <div class="leaderboard-body">
-              <div v-if="statsdata.length === 0" class="empty-state" role="status">
-                <strong>{{ loadError ? '榜单加载失败' : '该分类暂无成绩' }}</strong>
+              <div v-if="filteredData.length === 0" class="empty-state" role="status">
+                <strong>{{
+                  loadError ? '榜单加载失败' : state.newRecord ? '暂无新成绩' : '该分类暂无成绩'
+                }}</strong>
                 <p>
                   {{
-                    loadError ? '请点击上方“刷新榜单”重试。' : '可以切换版本或类型查看其他榜单。'
+                    loadError
+                      ? '请点击上方刷新图标重试。'
+                      : state.newRecord
+                        ? '取消“只看新成绩”可查看全部成绩。'
+                        : '可以切换版本或类型查看其他榜单。'
                   }}
                 </p>
               </div>
@@ -122,7 +150,7 @@
           :currentPage="state.page"
           :pageSize="state.pageSize"
           :totalPages="pages"
-          :totalItems="statsdata.length"
+          :totalItems="filteredData.length"
           :disabled="isLoading || !hasLoaded"
           @update:currentPage="handlePageChange"
           @update:pageSize="handlePageSizeChange"
@@ -135,6 +163,7 @@
 <script setup lang="ts">
 import '@/assets/main.css';
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
+import { RefreshRight } from '@element-plus/icons-vue';
 import { LEADERBOARD_CACHE_TTL, useStatsStore } from '@/stores/stats.ts';
 import { createURLStateManager } from '@/utils/urlStateManage';
 import { showErrorNotification } from '@/utils/notification';
@@ -144,7 +173,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { useUserStore } from '@/stores';
 import Pagination from '@/components/Pagination.vue';
 import Loading from '@/components/common/Loading.vue';
-import PrimaryButton from '@/components/common/PrimaryButton.vue';
+import PrimaryCheckBox from '@/components/common/PrimaryCheckBox.vue';
 import RankCard from './components/RankCard.vue';
 import coverImage from '@/assets/minecraft-cover.webp';
 
@@ -153,6 +182,7 @@ interface RankState {
   type: string;
   page: number;
   pageSize: number;
+  newRecord: boolean;
 }
 
 const stateManager = createURLStateManager<RankState>({
@@ -161,11 +191,13 @@ const stateManager = createURLStateManager<RankState>({
     type: 'RSG',
     page: 1,
     pageSize: DEFAULT_PAGE_SIZE,
+    newRecord: false,
   },
-  urlFields: ['version', 'type', 'page', 'pageSize'],
+  urlFields: ['version', 'type', 'page', 'pageSize', 'newRecord'],
   transformers: {
     page: { toUrl: String, fromUrl: normalizePage },
     pageSize: { toUrl: String, fromUrl: normalizePageSize },
+    newRecord: { toUrl: String, fromUrl: (value) => value === 'true' || value === '1' },
   },
   storageKey: 'rank_state',
   storage: 'memory',
@@ -195,6 +227,7 @@ stateManager.setMultiple(
     version: normalizeVersion(restoredType, restoredState.version),
     page: normalizePage(restoredState.page),
     pageSize: normalizePageSize(restoredState.pageSize),
+    newRecord: restoredState.newRecord === true,
   },
   false
 );
@@ -203,15 +236,24 @@ const hasLoaded = ref(false);
 const isLoading = computed(() => statsStore.isLoading);
 const statsdata = computed(() => statsStore.currStats);
 const loadError = computed(() => statsStore.loadError);
-const pages = computed(() => Math.max(1, Math.ceil(statsdata.value.length / state.value.pageSize)));
+const filteredData = computed(() =>
+  state.value.newRecord ? statsdata.value.filter((run) => run.is_new_record) : statsdata.value
+);
+const pages = computed(() =>
+  Math.max(1, Math.ceil(filteredData.value.length / state.value.pageSize))
+);
 const slicedata = computed(() => {
   const start = (state.value.page - 1) * state.value.pageSize;
-  return statsdata.value.slice(start, start + state.value.pageSize);
+  return filteredData.value.slice(start, start + state.value.pageSize);
 });
 
 const saveState = (updates: Partial<RankState>) => {
   stateManager.setMultiple(updates);
   stateManager.saveToStorage();
+};
+
+const handleNewRecordChange = (newRecord: boolean) => {
+  saveState({ newRecord, page: 1 });
 };
 
 const handleSelectionChange = async (version: string, type: string) => {
@@ -490,8 +532,8 @@ watch([pages, isLoading], () => {
 }
 
 .version-select {
-  padding: 8px 12px;
-  background: var(--panel-raised);
+  padding-block: 8px;
+  background-color: var(--panel-raised);
   border: 1px solid var(--border-light);
   border-radius: 8px;
   color: #fff;
@@ -512,13 +554,13 @@ watch([pages, isLoading], () => {
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
   padding: 12px 0;
 }
 
 .refresh-status {
-  margin-right: auto;
   color: var(--text-secondary);
   font-size: 13px;
 }
@@ -527,18 +569,39 @@ watch([pages, isLoading], () => {
   color: #ffb4ab;
 }
 
-.refresh-button {
-  min-width: 88px;
-  min-height: 36px;
+.board-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  min-width: 0;
 }
 
-.refresh-button:focus-visible {
-  outline: 2px solid var(--accent-bright);
-  outline-offset: 2px;
+.new-record-filter {
+  min-height: 36px;
+  flex-shrink: 0;
+}
+
+.board-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.refresh-status:empty {
+  display: none;
 }
 
 .pill-btn {
-  padding: 8px 20px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 20px;
   border-radius: 8px;
   border: 1px solid var(--border-light);
   background: var(--panel-raised);
@@ -551,10 +614,45 @@ watch([pages, isLoading], () => {
     border-color 0.2s ease;
 }
 
-.pill-btn:hover {
+.pill-btn:hover:not(:disabled) {
   color: #fff;
   border-color: var(--accent);
   background: rgba(76, 175, 80, 0.08);
+}
+
+.pill-btn:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.pill-btn:active:not(:disabled) {
+  background-color: var(--border);
+}
+
+.refresh-button {
+  width: 36px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.refresh-icon {
+  width: 18px;
+  height: 18px;
+  color: inherit;
+}
+
+.refresh-icon :deep(path) {
+  color: inherit;
+}
+
+.is-refreshing {
+  animation: refresh-spin 0.9s linear infinite;
+}
+
+@keyframes refresh-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .pill-btn:focus-visible {
@@ -697,14 +795,6 @@ watch([pages, isLoading], () => {
     width: 100%;
   }
 
-  .actions-row {
-    flex-wrap: wrap;
-  }
-
-  .refresh-status:not(:empty) {
-    flex-basis: 100%;
-  }
-
   .leaderboard-head {
     display: grid;
     padding: 0 12px;
@@ -729,6 +819,9 @@ watch([pages, isLoading], () => {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .is-refreshing {
+    animation: none;
+  }
   .cat-pill,
   .pill-btn,
   .profile-btn {

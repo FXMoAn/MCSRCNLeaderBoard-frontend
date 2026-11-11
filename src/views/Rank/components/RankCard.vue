@@ -1,6 +1,5 @@
 <template>
   <div class="stats" @click="handleClick">
-    <span class="new-record-cell" v-if="isNewRecord">NEW</span>
     <div class="cell rank-cell">
       <img
         :src="rankPlaceIconSrc(rank)"
@@ -14,7 +13,7 @@
       <RouterLink :to="`/profile/${userId}`" class="player-link" @click.stop>{{
         nickname
       }}</RouterLink>
-      <span class="new-record-badge" v-if="isNewRecord">NEW</span>
+      <span class="new-record-badge" v-if="isNewRecord" title="近30天内的成绩">NEW</span>
     </div>
     <div class="cell igt-cell">
       <RouterLink
@@ -152,16 +151,6 @@ const isNewRecord = computed(() => {
   justify-content: center;
 }
 
-.new-record-cell {
-  position: absolute;
-  left: 0;
-  top: 0;
-  color: #4caf50;
-  font-weight: 600;
-  font-size: 0.8em;
-  transform: rotate(-45deg);
-}
-
 .rank-icon {
   width: 30px;
   height: 30px;
@@ -178,6 +167,8 @@ const isNewRecord = computed(() => {
   font-size: 1.1em;
   color: #fff;
   justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 6px 8px;
 }
 
 .player-link {
@@ -201,7 +192,18 @@ const isNewRecord = computed(() => {
 }
 
 .new-record-badge {
-  display: none;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  padding: 2px 5px;
+  border: 1px solid var(--border-light);
+  border-radius: 3px;
+  background: var(--panel);
+  color: var(--accent-bright);
+  font-size: 10px;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: 0.04em;
 }
 
 .igt-cell {
@@ -253,9 +255,8 @@ const isNewRecord = computed(() => {
   }
 
   .player-cell {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
+    align-items: center;
+    gap: 4px 6px;
   }
 
   .igt-cell {
@@ -269,8 +270,7 @@ const isNewRecord = computed(() => {
 
   .date-cell,
   .version-cell,
-  .video-cell,
-  .new-record-cell {
+  .video-cell {
     display: none;
   }
 
@@ -303,13 +303,6 @@ const isNewRecord = computed(() => {
 
   .details-content a {
     color: var(--accent-bright);
-  }
-
-  .new-record-badge {
-    display: inline-flex;
-    color: #4caf50;
-    font-size: 10px;
-    font-weight: 600;
   }
 }
 

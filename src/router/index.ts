@@ -72,6 +72,7 @@ const router = createRouter({
       path: '/space',
       name: 'space',
       component: () => import('../views/Space/Space.vue'),
+      redirect: '/space/user-edit',
       children: [
         {
           path: 'user-runs',
@@ -86,7 +87,7 @@ const router = createRouter({
         {
           path: 'binding',
           name: 'binding',
-          component: () => import('../views/Space/views/Binding.vue'),
+          redirect: '/space/user-edit',
         },
       ],
     },

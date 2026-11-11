@@ -181,8 +181,7 @@ const handleJumpPage = () => {
   font-size: 14px;
 }
 .page-size :deep(select) {
-  min-width: 80px;
-  appearance: auto;
+  min-width: 88px;
 }
 .pagination-controls {
   gap: 12px;

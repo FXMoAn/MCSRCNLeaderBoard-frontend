@@ -65,7 +65,8 @@ const toggle = (event: Event) => {
 .primary-checkbox {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  position: relative;
+  gap: 8px;
   cursor: pointer;
   user-select: none;
   font-size: 14px;
@@ -74,20 +75,36 @@ const toggle = (event: Event) => {
 }
 
 .primary-checkbox__input {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.primary-checkbox__input:focus-visible + .primary-checkbox__box {
+  outline: 2px solid var(--accent-bright);
+  outline-offset: 3px;
 }
 
 .primary-checkbox__box {
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(0, 0, 0, 0.2);
+  box-sizing: border-box;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1px solid var(--border-light);
+  background: var(--panel-raised);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .primary-checkbox__icon {
@@ -97,13 +114,12 @@ const toggle = (event: Event) => {
 }
 
 .primary-checkbox.is-checked .primary-checkbox__box {
-  background: linear-gradient(135deg, #4caf50, #388e3c);
-  border-color: transparent;
-  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.35);
+  background: var(--accent-dark);
+  border-color: var(--accent);
 }
 
 .primary-checkbox:hover:not(.is-disabled) .primary-checkbox__box {
-  transform: translateY(-1px) scale(1.02);
+  border-color: var(--accent);
 }
 
 .primary-checkbox__label {
@@ -117,5 +133,11 @@ const toggle = (event: Event) => {
 
 .primary-checkbox.is-disabled .primary-checkbox__box {
   box-shadow: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .primary-checkbox,
+  .primary-checkbox__box {
+    transition: none;
+  }
 }
 </style>

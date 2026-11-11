@@ -14,3 +14,9 @@ entrypoint = "./functions/tencent-docs-preview/index.ts"
 # The handler validates it through a service-only RPC; the nonce is not a JWT.
 verify_jwt = false
 entrypoint = "./functions/tencent-docs-sync/index.ts"
+
+[functions.player-stats]
+# Public, read-only game statistics for existing site profiles. The handler
+# restricts providers/ranges, sanitizes output, and applies shared refresh budgets.
+verify_jwt = false
+entrypoint = "./functions/player-stats/index.ts"
