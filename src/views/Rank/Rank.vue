@@ -4,11 +4,7 @@
       <!-- 游戏信息面板 -->
       <section class="game-header">
         <div class="game-cover">
-          <img
-            :src="coverImage"
-            alt="Minecraft: Java Edition 主视觉"
-            class="cover-image"
-          />
+          <img :src="coverImage" alt="Minecraft: Java Edition 主视觉" class="cover-image" />
         </div>
         <div class="game-meta">
           <h1 class="game-title">Minecraft: Java Edition</h1>
@@ -63,6 +59,18 @@
         </div>
 
         <div class="actions-row">
+          <div class="refresh-status" role="status" aria-live="polite">
+            <span v-if="isLoading">{{ statsdata.length ? '正在更新榜单…' : '正在加载榜单…' }}</span>
+            <span v-else-if="loadError" class="refresh-error">{{ loadError }}</span>
+          </div>
+          <PrimaryButton
+            variant="clear"
+            size="small"
+            class="refresh-button"
+            :loading="isLoading"
+            @click="handleRefresh"
+            >{{ isLoading ? '刷新中…' : '刷新榜单' }}</PrimaryButton
+          >
           <a
             class="pill-btn"
             href="https://wiki.mcspeedrun.cn"
@@ -81,15 +89,14 @@
               <div class="igt-cell">IGT</div>
               <div class="date-cell">日期</div>
               <div class="version-cell">版本</div>
+              <div class="video-cell">视频</div>
             </div>
             <div class="leaderboard-body">
               <div v-if="statsdata.length === 0" class="empty-state" role="status">
                 <strong>{{ loadError ? '榜单加载失败' : '该分类暂无成绩' }}</strong>
                 <p>
                   {{
-                    loadError
-                      ? '请稍后重试；返回本页或切换分类时会自动重试。'
-                      : '可以切换版本或类型查看其他榜单。'
+                    loadError ? '请点击上方“刷新榜单”重试。' : '可以切换版本或类型查看其他榜单。'
                   }}
                 </p>
               </div>
@@ -102,6 +109,7 @@
                 :igt="info.igt"
                 :date="info.date"
                 :version="info.version"
+                :videolink="info.videolink"
                 :runId="info.run_id"
                 :is_new_record="info.is_new_record"
                 @click="navToRunDetail"
@@ -131,11 +139,12 @@ import { LEADERBOARD_CACHE_TTL, useStatsStore } from '@/stores/stats.ts';
 import { createURLStateManager } from '@/utils/urlStateManage';
 import { showErrorNotification } from '@/utils/notification';
 import { DEFAULT_PAGE_SIZE, normalizePage, normalizePageSize } from '@/constants/pagination';
-import { TYPE_SELECTOR_OPTIONS } from '@/constants/common';
+import { TYPE_SELECTOR_OPTIONS, VERSION_RANGE_OPTIONS } from '@/constants/common';
 import { useRouter, useRoute } from 'vue-router';
 import { useUserStore } from '@/stores';
 import Pagination from '@/components/Pagination.vue';
 import Loading from '@/components/common/Loading.vue';
+import PrimaryButton from '@/components/common/PrimaryButton.vue';
 import RankCard from './components/RankCard.vue';
 import coverImage from '@/assets/minecraft-cover.webp';
 
@@ -148,7 +157,7 @@ interface RankState {
 
 const stateManager = createURLStateManager<RankState>({
   defaultState: {
-    version: '1.16.1,1.20',
+    version: '1.16.1',
     type: 'RSG',
     page: 1,
     pageSize: DEFAULT_PAGE_SIZE,
@@ -162,39 +171,14 @@ const stateManager = createURLStateManager<RankState>({
   storage: 'memory',
 });
 
-// 版本区间按速通类型分级；value 是后端 get_leaderboard 接受的代表版本，
-// 逗号分隔表示一个区间由多个代表版本合并而成（按 IGT 文本排序合并重排）。
-const RSG_MERGED_116 = '1.16.1,1.20';
-
-const VERSION_RANGES: Record<string, { value: string; label: string }[]> = {
-  RSG: [
-    { value: '1.7.10', label: 'Pre 1.8' },
-    { value: '1.8.9', label: '1.8' },
-    { value: '1.12.2', label: '1.9-1.12' },
-    { value: '1.15.2', label: '1.13-1.15' },
-    { value: RSG_MERGED_116, label: '1.16+' },
-  ],
-  SSG: [
-    { value: '1.7.10', label: 'Pre 1.8' },
-    { value: '1.8.9', label: '1.8' },
-    { value: '1.12.2', label: '1.9-1.12' },
-    { value: '1.15.2', label: '1.13-1.15' },
-    { value: '1.16.1', label: '1.16-1.19' },
-    { value: '1.20', label: '1.20+' },
-  ],
-  FSG: [{ value: '1.16.1', label: '1.16' }],
-};
-
-const rangesFor = (type: string) => VERSION_RANGES[type] ?? [];
-const isValidType = (type: string) =>
-  TYPE_SELECTOR_OPTIONS.some((option) => option.value === type);
+const rangesFor = (type: string) => VERSION_RANGE_OPTIONS[type] ?? [];
+const isValidType = (type: string) => TYPE_SELECTOR_OPTIONS.some((option) => option.value === type);
 
 // 旧链接与旧内存状态里存的是代表版本，需要映射到新区间；无法识别时回退第一项。
 const normalizeVersion = (type: string, version: string): string => {
   const options = rangesFor(type);
   if (options.some((option) => option.value === version)) return version;
-  if (type === 'RSG' && (version === '1.16.1' || version === '1.20')) return RSG_MERGED_116;
-  if (type === 'SSG' && version === RSG_MERGED_116) return '1.16.1';
+  if (version === '1.16.1,1.20' || (type === 'RSG' && version === '1.20')) return '1.16.1';
   return options[0]?.value ?? '1.16.1';
 };
 
@@ -219,9 +203,7 @@ const hasLoaded = ref(false);
 const isLoading = computed(() => statsStore.isLoading);
 const statsdata = computed(() => statsStore.currStats);
 const loadError = computed(() => statsStore.loadError);
-const pages = computed(() =>
-  Math.max(1, Math.ceil(statsdata.value.length / state.value.pageSize))
-);
+const pages = computed(() => Math.max(1, Math.ceil(statsdata.value.length / state.value.pageSize)));
 const slicedata = computed(() => {
   const start = (state.value.page - 1) * state.value.pageSize;
   return statsdata.value.slice(start, start + state.value.pageSize);
@@ -249,9 +231,14 @@ const setVersion = (version: string) => {
 
 const versionOptions = computed(() => rangesFor(state.value.type));
 
+const handleRefresh = () => {
+  if (isLoading.value) return;
+  void statsStore.refreshStats(state.value.version, state.value.type);
+};
+
 const refreshIfStale = (allowRetry = false) => {
   if (!hasLoaded.value || document.hidden || !navigator.onLine || isLoading.value) return;
-  // A failed background request waits for a retry when returning to the page.
+  // 后台更新失败后，等待手动刷新或返回页面再重试。
   if (loadError.value && !allowRetry) return;
   if (
     statsStore.lastUpdatedAt === null ||
@@ -385,7 +372,9 @@ watch([pages, isLoading], () => {
   color: #0d1f0e;
   font-weight: 700;
   font-size: 14px;
-  transition: background-color 0.2s ease, transform 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
   box-shadow: 0 2px 10px rgba(76, 175, 80, 0.35);
 }
 
@@ -402,6 +391,8 @@ watch([pages, isLoading], () => {
 
 /* ---- 榜单面板 ---- */
 .board-panel {
+  --leaderboard-columns: 52px minmax(0, 1fr) minmax(120px, 0.55fr) 112px 88px 72px;
+  --leaderboard-column-gap: 12px;
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 0 0 12px 12px;
@@ -469,7 +460,10 @@ watch([pages, isLoading], () => {
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .cat-pill:hover {
@@ -523,6 +517,26 @@ watch([pages, isLoading], () => {
   padding: 12px 0;
 }
 
+.refresh-status {
+  margin-right: auto;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.refresh-error {
+  color: #ffb4ab;
+}
+
+.refresh-button {
+  min-width: 88px;
+  min-height: 36px;
+}
+
+.refresh-button:focus-visible {
+  outline: 2px solid var(--accent-bright);
+  outline-offset: 2px;
+}
+
 .pill-btn {
   padding: 8px 20px;
   border-radius: 8px;
@@ -531,7 +545,10 @@ watch([pages, isLoading], () => {
   color: var(--text-secondary);
   font-size: 14px;
   font-weight: 600;
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .pill-btn:hover {
@@ -578,7 +595,9 @@ watch([pages, isLoading], () => {
 .leaderboard-head {
   background: rgba(0, 0, 0, 0.25);
   display: grid;
-  grid-template-columns: 64px minmax(0, 2fr) minmax(130px, 1.1fr) 108px 88px;
+  grid-template-columns: var(--leaderboard-columns);
+  column-gap: var(--leaderboard-column-gap);
+  padding: 0 12px;
   font-size: 13px;
   height: 44px;
   font-weight: 600;
@@ -589,7 +608,7 @@ watch([pages, isLoading], () => {
 
 .leaderboard-head > div {
   min-width: 0;
-  padding: 12px 8px;
+  padding: 12px 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -597,7 +616,6 @@ watch([pages, isLoading], () => {
 
 .leaderboard-head .player-cell {
   justify-content: flex-start;
-  padding-left: 12px;
 }
 
 .leaderboard-body {
@@ -661,6 +679,8 @@ watch([pages, isLoading], () => {
   }
 
   .board-panel {
+    --leaderboard-columns: 36px minmax(0, 1fr) 104px;
+    --leaderboard-column-gap: 8px;
     padding: 12px;
   }
 
@@ -677,10 +697,16 @@ watch([pages, isLoading], () => {
     width: 100%;
   }
 
+  .actions-row {
+    flex-wrap: wrap;
+  }
+
+  .refresh-status:not(:empty) {
+    flex-basis: 100%;
+  }
+
   .leaderboard-head {
     display: grid;
-    grid-template-columns: 44px minmax(0, 1fr) 112px;
-    gap: 8px;
     padding: 0 12px;
     height: 48px;
   }
@@ -696,7 +722,8 @@ watch([pages, isLoading], () => {
   }
 
   .leaderboard-head .date-cell,
-  .leaderboard-head .version-cell {
+  .leaderboard-head .version-cell,
+  .leaderboard-head .video-cell {
     display: none;
   }
 }
