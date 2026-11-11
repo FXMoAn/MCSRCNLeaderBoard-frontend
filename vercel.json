@@ -1,3 +1,13 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/api/player-stats/:profileId/:provider",
+      "destination": "/api/player-stats?profileId=:profileId&provider=:provider"
+    },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "regions": ["hnd1"],
+  "functions": {
+    "api/player-stats.js": { "maxDuration": 30 }
+  }
 }

@@ -8,7 +8,8 @@
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "build-only": "vite build --mode production",
-    "type-check": "vue-tsc --build"
+    "type-check": "vue-tsc --build",
+    "test:player-stats": "node --test tests/player-stats.test.mjs"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",

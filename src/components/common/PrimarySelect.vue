@@ -27,8 +27,7 @@ const handleChange = (e: Event) => {
 
 <style scoped>
 .primary-select {
-  appearance: none;
-  padding: 10px 12px;
+  padding-block: 10px;
   background-color: #333;
   border: 1px solid #444;
   border-radius: 8px;

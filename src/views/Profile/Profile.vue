@@ -1,55 +1,63 @@
 <template>
   <div class="profile-container">
-    <!-- 皮肤和基本信息 -->
-    <div class="profile-header">
-      <div class="skin-container">
-        <img :src="userSkinUrl" class="skin-image" />
+    <div v-if="profileLoading && !userInfo.id" class="profile-feedback"><Loading /></div>
+    <div v-else-if="profileError" class="profile-feedback" role="status">
+      <span>{{ profileError }}</span>
+      <PrimaryButton variant="clear" @click="loadProfile">重试</PrimaryButton>
+    </div>
+    <template v-if="userInfo.id">
+      <!-- 皮肤和基本信息 -->
+      <div class="profile-header">
+        <div class="skin-container">
+          <img :src="userSkinUrl" class="skin-image" />
+        </div>
+
+        <div class="profile-info">
+          <BaseInfoItem label="昵称" :value="userInfo.nickname" />
+          <BaseInfoItem label="IGN" :value="userInfo.ingamename" />
+          <BaseInfoItem label="个人链接" :value="userInfo.space_link" />
+          <BaseInfoItem label="直播间链接" :value="userInfo.liveroom_link" />
+        </div>
       </div>
 
-      <div class="profile-info">
-        <BaseInfoItem label="昵称" :value="userInfo.nickname" />
-        <BaseInfoItem label="IGN" :value="userInfo.ingamename" />
-        <BaseInfoItem label="个人链接" :value="userInfo.space_link" />
-        <BaseInfoItem label="直播间链接" :value="userInfo.liveroom_link" />
+      <!-- 速通成绩 -->
+      <div class="profile-run">
+        <div class="profile-run-title">速通成绩</div>
+        <div class="profile-run-cards">
+          <RunCard
+            v-for="item in runData"
+            :key="item.id"
+            :id="item.id"
+            :nickname="item.nickname"
+            :version="item.version"
+            :type="item.type"
+            :date="item.date"
+            :igt="item.igt"
+            :videolink="item.videolink"
+            :status="item.status"
+          />
+        </div>
       </div>
-    </div>
 
-    <!-- 速通成绩 -->
-    <div class="profile-run">
-      <div class="profile-run-title">速通成绩</div>
-      <div class="profile-run-cards">
-        <RunCard
-          v-for="item in runData"
-          :key="item.id"
-          :id="item.id"
-          :nickname="item.nickname"
-          :version="item.version"
-          :type="item.type"
-          :date="item.date"
-          :igt="item.igt"
-          :videolink="item.videolink"
-          :status="item.status"
-        />
+      <!-- PacemanCard和其他内容 -->
+      <div class="profile-content">
+        <div class="profile-left">
+          <PacemanCard :profile-id="userInfo.id" :ingamename="userInfo.ingamename" />
+        </div>
+        <div class="profile-right">
+          <RankedCard :profile-id="userInfo.id" :ingamename="userInfo.ingamename" />
+        </div>
       </div>
-    </div>
-
-    <!-- PacemanCard和其他内容 -->
-    <div class="profile-content">
-      <div class="profile-left">
-        <PacemanCard :ingamename="userInfo.ingamename" />
-      </div>
-      <div class="profile-right">
-        <RankedCard :ingamename="userInfo.ingamename" />
-      </div>
-    </div>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, computed, watch } from 'vue';
+import { onScopeDispose, ref, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { supabase } from '@/lib/supabaseClient';
-import { showErrorNotification } from '@/utils/notification';
+import Loading from '@/components/common/Loading.vue';
+import PrimaryButton from '@/components/common/PrimaryButton.vue';
 
 import BaseInfoItem from './components/BaseInfoItem.vue';
 import PacemanCard from './components/PacemanCard.vue';
@@ -57,55 +65,68 @@ import RankedCard from './components/RankedCard.vue';
 import RunCard from '../Space/components/RunCard.vue';
 
 const route = useRoute();
-const id = route.params.id;
-
 const userInfo = ref<any>({});
-const isSkinLoading = ref(false);
-
-const getUserInfo = async () => {
-  const { data, error } = await supabase.from('users').select('*').eq('id', id).single();
-  userInfo.value = data;
-};
+const runData = ref<any[]>([]);
+const profileLoading = ref(false);
+const profileError = ref('');
+let generation = 0;
+let controller: AbortController | undefined;
 
 const userSkinUrl = computed(() => {
   if (userInfo.value.ingamename) {
-    return `https://render.crafty.gg/2d/head/${userInfo.value.ingamename}`;
+    return `https://render.crafty.gg/2d/head/${encodeURIComponent(userInfo.value.ingamename)}`;
   }
   return '';
 });
 
-// 监听用户名变化，重新加载皮肤
-watch(
-  () => userInfo.value.ingamename,
-  (newIngamename) => {
-    if (newIngamename) {
-      isSkinLoading.value = true;
-    } else {
-      isSkinLoading.value = false;
+const loadProfile = async () => {
+  const version = ++generation;
+  controller?.abort();
+  const activeController = new AbortController();
+  controller = activeController;
+  const timeout = setTimeout(() => activeController.abort(), 15_000);
+  profileLoading.value = true;
+  profileError.value = '';
+  userInfo.value = {};
+  runData.value = [];
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('id,nickname,ingamename,space_link,liveroom_link,runs(*)')
+      .eq('id', route.params.id)
+      .abortSignal(activeController.signal)
+      .maybeSingle();
+    if (version !== generation) return;
+    if (error) throw error;
+    if (!data) {
+      profileError.value = '未找到该玩家';
+      return;
     }
-  },
-  { immediate: true }
-);
-
-const runData = ref<any[]>([]);
-
-const getRunByUser = async (nickname: string) => {
-  const { data, error } = await supabase.from('users').select('*,runs(*)').eq('nickname', nickname);
-  if (error) {
-    showErrorNotification('网络错误，获取成绩失败');
-    return;
+    userInfo.value = data;
+    runData.value = (data.runs ?? []).filter((item: any) => item.status === 'verified');
+  } catch {
+    if (version === generation) profileError.value = '个人主页加载失败，请重试';
+  } finally {
+    clearTimeout(timeout);
+    if (version === generation) profileLoading.value = false;
   }
-  runData.value = data[0].runs.filter((item: any) => item.status === 'verified');
 };
-
-onMounted(() => {
-  getUserInfo().then((res) => {
-    getRunByUser(userInfo.value.nickname);
-  });
+watch(() => route.params.id, loadProfile, { immediate: true });
+onScopeDispose(() => {
+  generation++;
+  controller?.abort();
 });
 </script>
 
 <style scoped>
+.profile-feedback {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: #b5c2b9;
+}
 .profile-container {
   width: 90%;
   max-width: 1200px;

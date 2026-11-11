@@ -1,137 +1,167 @@
 <template>
-  <div class="mcname-container" v-if="!userStore.isBindMinecraftId">
-    <div class="section-subtitle">绑定Minecraft用户名（paceman绑定的账号/ranked使用账号）</div>
-    <div class="form-row">
-      <input
-        type="text"
-        class="form-input"
-        v-model="ingamename"
-        placeholder="输入Minecraft用户名"
-      />
-      <PrimaryButton @click="handleGetMCID">获取MCID并绑定</PrimaryButton>
+  <div class="minecraft-account">
+    <div class="account-label">
+      <span v-if="userStore.isBindMinecraftId">Minecraft 用户名</span>
+      <label v-else for="minecraft-username">Minecraft 用户名</label>
+      <InfoHint text="用于获取 Paceman 和 Ranked 数据。游戏内改名后，可刷新这里的用户名。" />
     </div>
-  </div>
-
-  <div class="mcname-container" v-else>
-    <div class="mcname-info">
-      <div class="section-subtitle">已绑定Minecraft用户名</div>
-      <div class="mcname-display-container">
-        <p class="mcname-display">{{ userStore.userInfo.ingamename }}</p>
-        <PrimaryButton @click="handleRefreshMCID">刷新</PrimaryButton>
-      </div>
+    <div v-if="userStore.isBindMinecraftId" class="bound-account">
+      <span class="account-name">{{ userStore.userInfo.ingamename }}</span>
+      <PrimaryButton
+        class="mc-refresh"
+        variant="clear"
+        :disabled="disabled"
+        :loading="busy"
+        :aria-busy="busy"
+        aria-label="刷新 Minecraft 用户名"
+        title="刷新 Minecraft 用户名"
+        @click="handleRefreshMCID"
+      >
+        <RefreshRight aria-hidden="true" :class="{ spinning: busy }" />
+      </PrimaryButton>
+    </div>
+    <div v-else class="binding-row" @keydown="handleKeydown">
+      <PrimaryInput
+        id="minecraft-username"
+        v-model="ingamename"
+        placeholder="游戏内用户名"
+        :max-length="16"
+        :disabled="busy || disabled"
+      />
+      <PrimaryButton
+        :disabled="!ingamename.trim() || disabled"
+        :loading="busy"
+        @click="handleGetMCID"
+        >绑定</PrimaryButton
+      >
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
+import { RefreshRight } from '@element-plus/icons-vue';
 import useUserStore from '@/stores/user';
-import { ref, computed } from 'vue';
 import PrimaryButton from '@/components/common/PrimaryButton.vue';
+import PrimaryInput from '@/components/common/PrimaryInput.vue';
+import InfoHint from '@/components/common/InfoHint.vue';
 import { showErrorNotification } from '@/utils/notification';
-
+const props = defineProps<{ disabled?: boolean }>();
+const emit = defineEmits<{ 'busy-change': [value: boolean] }>();
 const userStore = useUserStore();
-
 const ingamename = ref('');
-
-const handleGetMCID = async () => {
-  if (!ingamename.value.trim()) {
-    showErrorNotification('请输入Minecraft用户名');
+const busy = ref(false);
+async function run(action: () => Promise<void>) {
+  if (busy.value || props.disabled) return;
+  busy.value = true;
+  emit('busy-change', true);
+  try {
+    await action();
+  } finally {
+    busy.value = false;
+    emit('busy-change', false);
+  }
+}
+const handleGetMCID = () => {
+  const name = ingamename.value.trim();
+  if (!name) {
+    showErrorNotification('请输入 Minecraft 用户名');
     return;
   }
-  await userStore.bindMinecraftId(ingamename.value);
+  return run(() => userStore.bindMinecraftId(name));
 };
-
-const handleRefreshMCID = async () => {
-  await userStore.refreshMinecraftId();
+const handleRefreshMCID = () => run(() => userStore.refreshMinecraftId());
+const handleKeydown = (event: KeyboardEvent) => {
+  if (event.key === 'Enter' && !event.isComposing) {
+    event.preventDefault();
+    void handleGetMCID();
+  }
 };
 </script>
 
 <style scoped>
-.mcname-container {
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
+.minecraft-account {
+  min-width: 0;
 }
-
-.section-subtitle {
-  color: #ccc;
-  font-size: 1.1em;
-  font-weight: 500;
-  margin-bottom: 16px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.form-row {
+.account-label {
   display: flex;
-  gap: 16px;
   align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+  min-height: 20px;
 }
-
-.form-input {
-  flex: 1;
-  padding: 12px 16px;
-  background-color: #333;
-  border: 1px solid #444;
-  border-radius: 8px;
-  color: #fff;
+.account-label label,
+.account-label span {
+  color: var(--text-secondary);
   font-size: 14px;
-  transition: all 0.2s ease;
-  box-sizing: border-box;
 }
-
-.form-input::placeholder {
-  color: #666;
+.account-label :deep(.info-hint) {
+  height: 20px;
 }
-
-.form-input:focus {
-  outline: none;
-  border-color: #4caf50;
-  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
-}
-
-.mcname-info {
-  text-align: center;
-  padding: 20px;
-}
-
-.mcname-display-container {
+.bound-account {
+  min-height: 44px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 16px;
+  gap: 12px;
 }
-
-.mcname-display {
-  color: #4caf50;
-  font-size: 1.2em;
-  font-weight: 600;
-  margin: 0;
-  padding: 16px;
-  background-color: rgba(76, 175, 80, 0.1);
-  border-radius: 8px;
-  border: 1px solid rgba(76, 175, 80, 0.3);
+.account-name {
   flex: 1;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  background: var(--bgcolor);
+  color: var(--accent-bright);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 18px;
+  overflow-wrap: anywhere;
 }
-
-.refresh-button {
-  max-width: 100px;
+.mc-refresh {
+  width: 44px;
+  height: 44px;
+  padding: 12px;
+  border-color: var(--border-light);
 }
-
-@media (max-width: 768px) {
-  .mcname-container {
-    padding: 0 16px;
+.mc-refresh svg {
+  width: 18px;
+  height: 18px;
+}
+.mc-refresh:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.mc-refresh.btn-loading {
+  background: transparent;
+}
+.binding-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.binding-row :deep(.primary-input-container) {
+  flex: 1;
+  min-width: 0;
+}
+.binding-row :deep(.primary-input) {
+  width: 100%;
+  background: var(--bgcolor);
+  border-color: var(--border-light);
+}
+.binding-row :deep(button) {
+  min-height: 44px;
+}
+.spinning {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
-
-  .form-row {
-    flex-direction: column;
-    gap: 12px;
-    align-items: stretch;
-  }
-
-  .mcname-display {
-    font-size: 1.1em;
-    padding: 14px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .spinning {
+    animation: none;
   }
 }
 </style>

@@ -1,280 +1,227 @@
 <template>
-  <div class="nickname-container" v-if="!userStore.isBinding">
-    <div class="section-title">账号绑定</div>
-
-    <div class="binding-section">
-      <div class="section-subtitle">
-        老用户绑定账号（如果之前投过成绩，可以在这里绑定，如果找不到或错绑，请联系管理员）
-      </div>
-      <div class="form-row">
+  <section class="account-setup" aria-labelledby="account-setup-title">
+    <h2 id="account-setup-title">关联榜单账号</h2>
+    <div class="setup-options">
+      <form
+        novalidate
+        class="setup-option"
+        :aria-busy="busy"
+        @submit.prevent="handleBinding"
+        @keydown.enter="guardComposition"
+      >
+        <div class="option-heading">
+          <h3>已有榜单成绩</h3>
+          <InfoHint
+            text="选择之前提交成绩时使用的昵称，将已有记录关联到当前账号。找不到或关联有误时，请联系管理员。"
+          />
+        </div>
+        <label for="existing-leaderboard-user">榜单昵称</label>
         <SearchSelect
+          input-id="existing-leaderboard-user"
           v-model="selectedUser"
           :options="unbindedUserList"
           option-key="id"
           option-label="nickname"
           :search-fields="['nickname']"
-          placeholder="搜索用户名"
-          title="选择用户"
-          @select="handleUserSelect"
+          placeholder="搜索原来的昵称"
+          title="榜单昵称"
+          :disabled="busy || listLoading"
+          @search="bindingQuery = $event"
+          @select="bindingQuery = $event.nickname"
         />
-        <PrimaryButton @click="handleBinding">绑定</PrimaryButton>
-      </div>
-    </div>
-
-    <div class="binding-section">
-      <div class="section-subtitle">
-        新用户输入昵称（如果没有投过榜，可以在这里绑定，榜单上会使用这个名字）
-      </div>
-      <div class="form-row">
-        <input
-          type="text"
-          class="form-input"
-          placeholder="请输入你的昵称"
+        <div v-if="listError" class="list-error" role="alert">
+          <span>{{ listError }}</span
+          ><PrimaryButton variant="clear" size="small" @click="getUnbindedUser">重试</PrimaryButton>
+        </div>
+        <PrimaryButton
+          type="submit"
+          :disabled="!hasCommittedSelection || busy || listLoading"
+          :loading="activeAction === 'existing'"
+          >关联账号</PrimaryButton
+        >
+      </form>
+      <form
+        novalidate
+        class="setup-option"
+        :aria-busy="busy"
+        @submit.prevent="handleNewUserBinding"
+        @keydown.enter="guardComposition"
+      >
+        <div class="option-heading">
+          <h3>首次使用</h3>
+          <InfoHint text="没有提交过榜单成绩时，可创建个人资料。昵称将显示在排行榜上。" />
+        </div>
+        <PrimaryInput
+          id="new-leaderboard-user"
           v-model="newUserNickname"
+          label="昵称"
+          layout="stacked"
+          placeholder="填写榜单使用的昵称"
+          :max-length="50"
+          :disabled="busy"
+          :error="nicknameError"
         />
-        <PrimaryButton @click="handleNewUserBinding">绑定</PrimaryButton>
-      </div>
+        <PrimaryButton
+          type="submit"
+          :disabled="!newUserNickname.trim() || busy"
+          :loading="activeAction === 'new'"
+          >创建资料</PrimaryButton
+        >
+      </form>
     </div>
-  </div>
-
-  <div class="nickname-container" v-else>
-    <div class="user-info">
-      <div class="section-subtitle">当前昵称</div>
-      <div class="nickname-display-container">
-        <input
-          type="text"
-          class="nickname-display"
-          v-model="changedNickname"
-          :disabled="!isEditing"
-        />
-        <PrimaryButton @click="handleEditNickname" v-if="!isEditing"> 修改 </PrimaryButton>
-        <PrimaryButton @click="handleSaveNickname" v-else>保存</PrimaryButton>
-      </div>
-    </div>
-  </div>
+  </section>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { supabase } from '@/lib/supabaseClient';
 import useUserStore from '@/stores/user';
-import { useRouter } from 'vue-router';
-import { validateNickname, sanitizeInput } from '@/utils/security';
-import { showErrorNotification, showInfoNotification } from '@/utils/notification';
+import { sanitizeInput, validateNickname } from '@/utils/security';
 import SearchSelect from '@/components/common/SearchSelect.vue';
 import PrimaryButton from '@/components/common/PrimaryButton.vue';
+import PrimaryInput from '@/components/common/PrimaryInput.vue';
+import InfoHint from '@/components/common/InfoHint.vue';
 
 const userStore = useUserStore();
-const router = useRouter();
+const unbindedUserList = ref<{ id: number; nickname: string }[]>([]);
+const selectedUser = ref<{ id: number; nickname: string } | null>(null);
+const bindingQuery = ref('');
+const hasCommittedSelection = computed(
+  () => selectedUser.value?.nickname === bindingQuery.value && !!selectedUser.value
+);
+const newUserNickname = ref('');
+const nicknameError = ref('');
+const listError = ref('');
+const listLoading = ref(false);
+const activeAction = ref<'existing' | 'new' | null>(null);
+const busy = computed(() => activeAction.value !== null);
 
-const unbindedUserList = ref<any[]>([]);
-const selectedUser = ref<any>(null);
-const newUserNickname = ref<string>('');
-
-const isEditing = ref(false);
-const changedNickname = ref(userStore.userInfo.nickname);
-
-// 处理用户选择
-const handleUserSelect = (user: any) => {
-  selectedUser.value = user;
-};
-
-const getUnbindedUser = async () => {
-  //uuser为空
-  const { data, error } = await supabase.from('users').select('*').is('user_id', null);
-  if (error) {
-    showErrorNotification('网络错误，获取用户列表失败');
-    return;
-  }
-  unbindedUserList.value = data.map((user) => ({
-    id: user.id,
-    nickname: user.nickname,
-  }));
-};
-
-const handleBinding = async () => {
-  if (!selectedUser.value) {
-    showInfoNotification('请选择一个用户');
-    return;
-  }
-  await userStore.bindUser(selectedUser.value.id);
-  router.go(0);
-};
-
-const handleNewUserBinding = async () => {
-  // 使用安全工具函数进行输入验证
-  const validation = validateNickname(newUserNickname.value);
-
-  if (!validation.isValid) {
-    showErrorNotification(validation.message);
-    return;
-  }
-
-  // 清理输入
-  const sanitizedNickname = sanitizeInput(newUserNickname.value.trim());
-
-  await userStore.createNewUser(sanitizedNickname);
-  newUserNickname.value = ''; // 清空输入
-  router.go(0);
-};
-
-const handleEditNickname = () => {
-  isEditing.value = true;
-};
-
-const handleSaveNickname = async () => {
+async function getUnbindedUser() {
+  if (listLoading.value) return;
+  listLoading.value = true;
+  listError.value = '';
   try {
-    await userStore.updateNickname(changedNickname.value);
-    isEditing.value = false;
-  } catch (error) {
-    showErrorNotification('网络错误，修改昵称失败');
+    const { data, error } = await supabase.from('users').select('id,nickname').is('user_id', null);
+    if (error) throw error;
+    unbindedUserList.value = data ?? [];
+  } catch {
+    listError.value = '昵称列表加载失败';
+  } finally {
+    listLoading.value = false;
+  }
+}
+async function handleBinding() {
+  if (!selectedUser.value || !hasCommittedSelection.value || busy.value || listLoading.value)
+    return;
+  activeAction.value = 'existing';
+  try {
+    await userStore.bindUser(selectedUser.value.id);
+  } finally {
+    activeAction.value = null;
+  }
+}
+async function handleNewUserBinding() {
+  if (busy.value) return;
+  const validation = validateNickname(newUserNickname.value);
+  nicknameError.value = validation.isValid ? '' : validation.message;
+  if (!validation.isValid) {
+    document.getElementById('new-leaderboard-user')?.focus();
     return;
   }
+  activeAction.value = 'new';
+  try {
+    await userStore.createNewUser(sanitizeInput(newUserNickname.value.trim()));
+    if (userStore.isBinding) newUserNickname.value = '';
+  } finally {
+    activeAction.value = null;
+  }
+}
+onMounted(getUnbindedUser);
+const guardComposition = (event: KeyboardEvent) => {
+  if (event.isComposing) event.preventDefault();
 };
-
-onMounted(() => {
-  getUnbindedUser();
-});
 </script>
 
 <style scoped>
-.nickname-container {
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
+.account-setup {
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
 }
-
-.section-title {
-  color: #fff;
-  font-size: 1.6em;
+h2 {
+  margin: 0 0 28px;
+  font-size: 18px;
   font-weight: 600;
-  text-align: center;
-  margin-bottom: 30px;
-  padding-bottom: 15px;
-  border-bottom: 2px solid #444;
 }
-
-.binding-section {
-  margin-bottom: 30px;
-  padding: 20px;
-  background-color: rgba(255, 255, 255, 0.02);
-  border-radius: 8px;
-  border: 1px solid #444;
+.setup-options {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 32px;
 }
-
-.section-subtitle {
-  color: #ccc;
-  font-size: 1.1em;
-  font-weight: 500;
-  margin-bottom: 16px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.form-row {
+.setup-option {
   display: flex;
-  gap: 16px;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  gap: 12px;
 }
-
-.form-input,
-.form-select {
-  flex: 1;
-  padding: 12px 16px;
-  background-color: #333;
-  border: 1px solid #444;
-  border-radius: 8px;
-  color: #fff;
+.setup-option + .setup-option {
+  padding-left: 32px;
+  border-left: 1px solid var(--border);
+}
+.option-heading {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+h3 {
+  font-size: 15px;
+  font-weight: 600;
+}
+label {
+  color: var(--text-secondary);
   font-size: 14px;
-  transition: all 0.2s ease;
+}
+.setup-option :deep(.primary-input-container),
+.setup-option :deep(.search-select-container) {
+  width: 100%;
+  min-width: 0;
+}
+.setup-option :deep(.search-select-input) {
+  width: 100%;
   box-sizing: border-box;
+  background: var(--bgcolor);
+  border-color: var(--border-light);
 }
-
-.form-input::placeholder {
-  color: #666;
+.setup-option > :deep(button) {
+  margin-top: 4px;
+  min-height: 40px;
 }
-
-.form-input:focus,
-.form-select:focus {
-  outline: none;
-  border-color: #4caf50;
-  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
-}
-
-/* 滚动条样式 */
-.dropdown-options::-webkit-scrollbar {
-  width: 6px;
-}
-
-.dropdown-options::-webkit-scrollbar-track {
-  background: #2a2a2a;
-}
-
-.dropdown-options::-webkit-scrollbar-thumb {
-  background: #555;
-  border-radius: 3px;
-}
-
-.dropdown-options::-webkit-scrollbar-thumb:hover {
-  background: #666;
-}
-
-.user-info {
-  text-align: center;
-  padding: 40px 20px;
-}
-
-.nickname-display-container {
+.list-error {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 16px;
+  gap: 12px;
 }
-
-.nickname-display {
-  flex: 1;
-  color: #4caf50;
-  font-size: 1.4em;
-  font-weight: 600;
-  margin: 0;
-  padding: 15px;
-  background-color: rgba(76, 175, 80, 0.1);
-  border-radius: 8px;
-  border: 1px solid rgba(76, 175, 80, 0.3);
+.list-error span {
+  color: #ffb4ab;
+  font-size: 13px;
 }
-
-@media (max-width: 768px) {
-  .nickname-container {
-    padding: 0 16px;
+@media (max-width: 1050px) {
+  .setup-options {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
   }
-
-  .section-title {
-    font-size: 1.4em;
-    margin-bottom: 24px;
+  .setup-option + .setup-option {
+    padding: 28px 0 0;
+    border-left: 0;
+    border-top: 1px solid var(--border);
   }
-
-  .binding-section {
-    padding: 16px;
-    margin-bottom: 20px;
-  }
-
-  .form-row {
-    flex-direction: column;
-    gap: 12px;
-    align-items: stretch;
-  }
-
-  .custom-dropdown {
-    max-height: 250px;
-  }
-
-  .dropdown-options {
-    max-height: 200px;
-  }
-
-  .nickname-display {
-    font-size: 1.2em;
-    padding: 16px;
+}
+@media (max-width: 480px) {
+  .account-setup {
+    padding: 20px;
   }
 }
 </style>

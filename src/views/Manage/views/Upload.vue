@@ -379,7 +379,7 @@ onMounted(() => {
 .form-input,
 .form-select {
   width: 100%;
-  padding: 12px 16px;
+  padding-block: 12px;
   background-color: #333;
   border: 1px solid #444;
   border-radius: 8px;
@@ -387,6 +387,14 @@ onMounted(() => {
   font-size: 14px;
   transition: all 0.2s ease;
   box-sizing: border-box;
+}
+
+.form-input {
+  padding-inline: 16px;
+}
+
+.form-select {
+  --select-inline-padding: 16px;
 }
 
 .form-input::placeholder {
@@ -530,9 +538,13 @@ onMounted(() => {
   }
 
   .form-input,
-  .form-select,
   .form-textarea {
     padding: 10px 14px;
+  }
+
+  .form-select {
+    --select-inline-padding: 14px;
+    padding-block: 10px;
   }
 
   .submit-button {

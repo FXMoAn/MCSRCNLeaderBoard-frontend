@@ -1,6 +1,6 @@
 <template>
   <div class="secondary-nav-container">
-    <nav class="secondary-nav">
+    <nav class="secondary-nav" :aria-label="title">
       <div class="nav-links">
         <router-link
           v-for="item in navItems"
@@ -8,6 +8,7 @@
           :to="item.path"
           class="nav-item"
           :class="{ active: $route.path === item.path }"
+          :aria-current="$route.path === item.path ? 'page' : undefined"
         >
           <span class="nav-text">{{ item.label }}</span>
         </router-link>
@@ -90,6 +91,7 @@ const route = useRoute();
 
 .content-area {
   flex: 1;
+  min-width: 0;
   padding: 24px;
   min-height: calc(100vh - 80px);
   box-sizing: border-box;

@@ -1,10 +1,10 @@
-import { fileURLToPath, URL } from 'node:url'
+import { fileURLToPath, URL } from 'node:url';
 
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import path from 'path'
-import vueDevTools from 'vite-plugin-vue-devtools'
-import { createSvgIconsPlugin } from 'vite-plugin-svg-icons'
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import path from 'path';
+import vueDevTools from 'vite-plugin-vue-devtools';
+import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -15,11 +15,11 @@ export default defineConfig({
     createSvgIconsPlugin({
       iconDirs: [path.resolve(process.cwd(), 'src/assets/icons')],
       symbolId: 'icon-[dir]-[name]',
-    })
+    }),
   ],
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
   build: {
@@ -29,5 +29,14 @@ export default defineConfig({
         drop_debugger: true,
       },
     },
-  }
-})
+  },
+  server: {
+    proxy: {
+      '/api/player-stats/': {
+        target: 'https://wdkxjftlgidebtczszsq.supabase.co',
+        changeOrigin: true,
+        rewrite: (url) => url.replace(/^\/api\/player-stats\//, '/functions/v1/player-stats/'),
+      },
+    },
+  },
+});

@@ -1,5 +1,12 @@
 <template>
   <div class="user-container">
+    <BiliUidEditor
+      :users="userList"
+      :loading="userListLoading"
+      :load-error="userListError"
+      @refresh="getUserList"
+      @saved="handleBiliSaved"
+    />
     <div class="operation-section">
       <div class="section-subtitle">创建新用户</div>
       <div class="form-row">
@@ -45,6 +52,7 @@ import { useRouter } from 'vue-router';
 import { supabase } from '@/lib/supabaseClient';
 import { validateNickname, sanitizeInput } from '@/utils/security';
 import SearchSelect from '@/components/common/SearchSelect.vue';
+import BiliUidEditor from '../components/BiliUidEditor.vue';
 import PrimaryButton from '@/components/common/PrimaryButton.vue';
 import { showErrorNotification, showSuccessNotification } from '@/utils/notification';
 
@@ -55,6 +63,8 @@ const newUserNickname = ref('');
 
 // 修改用户名
 const userList = ref<any[]>([]);
+const userListLoading = ref(false);
+const userListError = ref('');
 const oldNickname = ref('');
 const newNickname = ref('');
 
@@ -90,15 +100,25 @@ const handleNewUserCreate = async () => {
 };
 
 const getUserList = async () => {
-  const { data, error } = await supabase.from('users').select('*');
-  if (error) {
-    showErrorNotification('获取用户列表失败');
-    return;
+  if (userListLoading.value) return;
+  userListLoading.value = true;
+  userListError.value = '';
+  try {
+    const { data, error } = await supabase.from('users').select('id,nickname,bili_id');
+    if (error) throw error;
+    userList.value = data ?? [];
+  } catch {
+    userListError.value = '获取用户列表失败';
+    showErrorNotification(userListError.value);
+  } finally {
+    userListLoading.value = false;
   }
-  userList.value = data.map((user) => ({
-    id: user.id,
-    nickname: user.nickname,
-  }));
+};
+
+const handleBiliSaved = (player: { id: number; nickname: string; bili_id: string | null }) => {
+  userList.value = userList.value.map((item) =>
+    item.id === player.id ? { ...item, ...player } : item
+  );
 };
 
 const handleUserSelect = (user: any) => {

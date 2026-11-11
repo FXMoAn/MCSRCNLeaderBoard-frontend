@@ -2,6 +2,8 @@
   <div class="search-select-container">
     <input
       type="text"
+      :id="inputId"
+      :aria-label="title"
       class="search-select-input"
       :placeholder="placeholder"
       v-model="searchKeyword"
@@ -44,6 +46,7 @@ import { ref, computed, watch } from 'vue';
  * 搜索选择器组件的属性定义
  */
 interface Props {
+  inputId?: string;
   /** 选项列表 */
   options: any[];
   /** 当前选中的值 */
