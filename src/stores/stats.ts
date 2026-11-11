@@ -91,26 +91,6 @@ export const useStatsStore = defineStore('stats', () => {
     }
   };
 
-  // A category may span several representative versions (e.g. RSG "1.16+"
-  // covers "1.16-1.19" and "1.20+"). Fetch each board and merge them with the
-  // site-wide ordering rule: leaderboard rows are ordered by igt as plain text.
-  const fetchBoards = async (version: string, type: string, status: string): Promise<Run[]> => {
-    const versions = version
-      .split(',')
-      .map((item) => item.trim())
-      .filter(Boolean);
-    if (versions.length <= 1) {
-      return getLeaderboard({ version: versions[0] ?? version, type, status });
-    }
-    const results = await Promise.all(
-      versions.map((item) => getLeaderboard({ version: item, type, status }))
-    );
-    return results
-      .flat()
-      .sort((a, b) => (a.igt < b.igt ? -1 : a.igt > b.igt ? 1 : 0))
-      .map((run, index) => ({ ...run, rank: index + 1 }));
-  };
-
   const getStats = async (
     version: string,
     type: string,
@@ -136,7 +116,7 @@ export const useStatsStore = defineStore('stats', () => {
     try {
       let request = inFlight.get(key);
       if (!request) {
-        request = fetchBoards(version, type, status)
+        request = getLeaderboard({ version, type, status })
           .then((data) => {
             const updatedAt = Date.now();
             cache.value.set(key, data);
