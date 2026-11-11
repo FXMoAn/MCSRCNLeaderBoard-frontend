@@ -82,3 +82,15 @@ SELECT public.docs_sync_backups('BB08J3', 5);
 `docs_sync_state()` 可查看 `last_error`、`next_attempt_at`、`last_success_at`、`dirty`、`lease_until` 及 `has_write_intent`。调整配置前先暂停，并等待活动租约结束；不要删除队列、快照或未完成写入记录来消除报错。
 
 遇到 `managed_page_changed`、`concurrent_document_edit`、`pending_write_conflict` 时，保留人工修改并核对前后快照，不直接把当前页当作新基线覆盖。遇到 `ambiguous_best_time_*` 或容量错误时，先处理绑定/容量问题再恢复。仅重新排队不能解决这些冲突。停用定时任务可用 `SELECT cron.unschedule('mcsrcn-tencent-docs-sync');`；这不会删除原页、自动页或私有快照。
+
+## 2026-11-09 日期格式排查
+
+数据库 `runs.date` 是文本：历史导入多为 `YYYY/M/D`，两个网页上传入口原先只替换分隔符，保留了原生日期输入的 `YYYY/MM/DD` 补零。网页各处和同步输出均直接显示原文，因此两边都能看到混用；同步没有额外加零。
+
+本次将两个上传入口及网页日期展示统一为 `YYYY/M/D`。同步 worker 复用 `parseDate` 仅规范输出日期，`sourceSignature` 与历史业务数据保持原值，避免仅格式变化造成原文档备注丢失。空日期不补造，无法解析的值不改写。
+
+发布进展：同步函数 v10 已部署，2026-11-09 北京时间 10:15:03 / 10:16:07 两个自动页重新同步成功，分别 310 / 20 位玩家，队列无积压、无错误。读回核对确认月日均不补零，原始两个文档页内容保持一致。
+
+前端代码已完成日期转换/备注保留验证、Vue 类型检查、Chrome 排行榜与成绩详情确认，并通过独立代码审查；前端已通过 PR #25 压缩合并到 main（0481aa5），Vercel 生产部署 READY，已在线上 `/run/637` 确认日期显示为 `2025/1/18`。历史数据库日期未批量改写。
+
+通用 UI 静态审计仍报告 15 项已有规范问题（原生控件归属声明、表单验证归属、文本框缩放规则）；该检查未通过，本次未扩展到这些既有界面规范。
