@@ -24,12 +24,43 @@
         >{{ igt }}</RouterLink
       >
     </div>
-    <div class="cell date-cell">{{ date }}</div>
+    <div class="cell date-cell">{{ formatRunDate(date) }}</div>
     <div class="cell version-cell">{{ version }}</div>
+    <div class="cell video-cell">
+      <a
+        v-if="videoUrl"
+        :href="videoUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        :aria-label="`${nickname} 的记录视频`"
+        class="video-link"
+        @click.stop
+        >观看 ↗</a
+      >
+      <span v-else class="no-video">—</span>
+    </div>
+    <details class="mobile-details" @click.stop>
+      <summary>日期与视频 <span aria-hidden="true">⌄</span></summary>
+      <div class="details-content">
+        <span>{{ formatRunDate(date) }}</span>
+        <span>{{ version }}</span>
+        <a
+          v-if="videoUrl"
+          :href="videoUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          :aria-label="`${nickname} 的记录视频`"
+          >观看视频 ↗</a
+        >
+        <span v-else class="no-video">暂无视频</span>
+      </div>
+    </details>
   </div>
 </template>
 
 <script setup lang="ts">
+import { formatRunDate } from '@/utils/date';
+import { validateVideoLink } from '@/utils/security';
 import { RouterLink } from 'vue-router';
 // 导入排名图标
 import firstPlaceIcon from '@/assets/icons/firstplace.png';
@@ -45,11 +76,15 @@ interface Props {
   igt: string;
   date: string;
   version: string;
+  videolink: string;
   runId: number;
   is_new_record: boolean;
 }
 
 const props = defineProps<Props>();
+const videoUrl = computed(() =>
+  validateVideoLink(props.videolink).isValid ? props.videolink.trim() : ''
+);
 
 // 定义 emits
 const emit = defineEmits<{
@@ -85,7 +120,9 @@ const isNewRecord = computed(() => {
   transition: background-color 0.2s ease;
   border-bottom: 1px solid var(--border);
   display: grid;
-  grid-template-columns: 64px minmax(0, 2fr) minmax(130px, 1.1fr) 108px 88px;
+  grid-template-columns: var(--leaderboard-columns);
+  column-gap: var(--leaderboard-column-gap);
+  padding: 0 12px;
   position: relative;
   color: var(--text-secondary);
 }
@@ -105,7 +142,7 @@ const isNewRecord = computed(() => {
 
 .cell {
   min-width: 0;
-  padding: 14px 8px;
+  padding: 14px 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -137,7 +174,6 @@ const isNewRecord = computed(() => {
   font-size: 1.1em;
   color: #fff;
   justify-content: flex-start;
-  padding-left: 12px;
 }
 
 .player-link {
@@ -184,11 +220,22 @@ const isNewRecord = computed(() => {
   font-variant-numeric: tabular-nums;
 }
 
+.video-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.mobile-details {
+  display: none;
+}
+
 @media (max-width: 780px) {
   .stats {
     display: grid;
-    grid-template-columns: 44px minmax(0, 1fr) 112px;
-    column-gap: 8px;
     padding: 0 12px;
   }
 
@@ -219,8 +266,40 @@ const isNewRecord = computed(() => {
 
   .date-cell,
   .version-cell,
+  .video-cell,
   .new-record-cell {
     display: none;
+  }
+
+  .mobile-details {
+    display: block;
+    grid-column: 2 / -1;
+    padding: 4px 0 12px;
+    font-size: 12px;
+    text-align: left;
+  }
+
+  .mobile-details summary {
+    cursor: pointer;
+    width: fit-content;
+    padding: 6px 0;
+  }
+
+  .mobile-details summary:focus-visible {
+    outline: 2px solid var(--accent-bright);
+    outline-offset: 2px;
+  }
+
+  .details-content {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    padding: 8px 0 0;
+  }
+
+  .details-content a {
+    color: var(--accent-bright);
   }
 
   .new-record-badge {
