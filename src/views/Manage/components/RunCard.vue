@@ -3,7 +3,7 @@
     <div class="player-cell" v-html="safeDisplay(props.nickname)"></div>
     <div class="version-cell info-cell">{{ props.version }}</div>
     <div class="type-cell info-cell">{{ props.type }}</div>
-    <div class="date-cell info-cell">{{ props.date }}</div>
+    <div class="date-cell info-cell">{{ formatRunDate(props.date) }}</div>
     <div class="igt-cell" v-html="safeDisplay(props.igt)"></div>
     <div class="status-cell info-cell" :style="{ color: statusColor }">{{ props.status }}</div>
     <div class="video-cell">
@@ -21,6 +21,7 @@
 </template>
 
 <script setup lang="ts">
+import { formatRunDate } from '@/utils/date';
 import { safeDisplay } from '@/utils/security';
 import SvgIcon from '@/components/icons/index.vue';
 import { useRouter } from 'vue-router';
