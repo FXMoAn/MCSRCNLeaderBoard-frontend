@@ -237,8 +237,8 @@ const handleBlur = () => {
 
 .search-select-input:focus {
   outline: none;
-  border-color: #00bcd4;
-  box-shadow: 0 0 0 2px rgba(0, 188, 212, 0.1);
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
 }
 
 .search-select-input:disabled {
@@ -300,8 +300,8 @@ const handleBlur = () => {
 }
 
 .dropdown-option.selected {
-  background-color: rgba(0, 188, 212, 0.1);
-  color: #00bcd4;
+  background-color: rgba(76, 175, 80, 0.1);
+  color: #4caf50;
 }
 
 .dropdown-option:last-child {

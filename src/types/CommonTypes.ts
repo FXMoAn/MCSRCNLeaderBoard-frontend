@@ -7,7 +7,6 @@ export interface RunInfo {
   igt: string;
   date: string;
   version: string;
-  subversion: string;
   type: string;
   videolink: string;
   remarks: string;

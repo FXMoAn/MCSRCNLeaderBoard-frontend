@@ -49,17 +49,17 @@ const router = createRouter({
       name: 'pending-run',
       component: () => import('../views/PendingRun.vue'),
     },
-    // 统计数据
+    // 公告
     {
-      path: '/stats',
-      name: 'stats',
-      component: () => import('../views/Stats/Stats.vue'),
+      path: '/announcements',
+      name: 'announcements',
+      component: () => import('../views/Announcements.vue'),
     },
-    // 年份对比
+    // 资源
     {
-      path: '/24to25',
-      name: '24to25',
-      component: () => import('../views/YearComparison.vue'),
+      path: '/resources',
+      name: 'resources',
+      component: () => import('../views/Resources.vue'),
     },
     // 用户资料(公开)
     {

@@ -377,7 +377,7 @@ onBeforeMount(() => {
 }
 
 .igt-value {
-  color: #00bcd4;
+  color: #4caf50;
   font-family: 'Courier New', monospace;
   font-weight: 600;
   font-size: 1.4em;
@@ -400,7 +400,7 @@ onBeforeMount(() => {
 }
 
 .edit-button {
-  background-color: #00bcd4;
+  background-color: #4caf50;
 }
 
 .action-button {

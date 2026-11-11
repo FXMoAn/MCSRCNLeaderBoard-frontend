@@ -1,12 +1,40 @@
 :root {
-  --bgcolor: #222;
-  --hovercolor: #333;
+  /* speedrun.com 风格绿色主题 */
+  --bgcolor: #131a15;
+  --panel: #1d2a21;
+  --panel-raised: #243428;
+  --hovercolor: #243428;
+  --border: #31463a;
+  --border-light: #3d5647;
+
+  --accent: #4caf50;
+  --accent-strong: #43a047;
+  --accent-bright: #66bb6a;
+  --accent-dark: #388e3c;
+  --nav-bg: #43a047;
+  --nav-bg-dark: #388e3c;
+
+  --text-primary: #ffffff;
+  --text-secondary: #b5c2b9;
+  --text-muted: #8fa096;
+
+  --danger: #f44336;
+  --warning: #ff9800;
 }
 
 * {
   padding: 0;
   margin: 0;
-  color: #fff;
+  color: var(--text-primary);
+}
+
+body {
+  background-color: var(--bgcolor);
+  background-image:
+    radial-gradient(1100px 560px at 75% -10%, rgba(76, 175, 80, 0.09), transparent 60%),
+    radial-gradient(900px 520px at -5% 105%, rgba(56, 142, 60, 0.07), transparent 60%);
+  background-attachment: fixed;
+  min-height: 100vh;
 }
 
 a {
@@ -15,15 +43,15 @@ a {
 }
 
 .router-link-active {
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .router-link-active:hover {
-  color: aqua;
+  color: var(--accent-bright);
 }
 
 a:hover {
-  color: aqua;
+  color: var(--accent-bright);
 }
 
 .leftfix {
@@ -41,10 +69,10 @@ a:hover {
 }
 
 .button-common {
-  border: 1px solid #fff;
+  border: 1px solid var(--text-primary);
   border-radius: 5px;
   padding: 0 10px;
-  background-color: #fff;
+  background-color: var(--text-primary);
   color: #000;
   cursor: pointer;
 }

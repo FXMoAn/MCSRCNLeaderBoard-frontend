@@ -45,7 +45,7 @@ const history = [
 
 // 为不同玩家定义颜色方案
 const playerColors = {
-  PluginL: '#00bcd4', // 青色 - 主要玩家
+  PluginL: '#4caf50', // 青色 - 主要玩家
   '-2x-': '#ff9800', // 橙色
   瑕玟: '#4caf50', // 绿色
   xbd15: '#9c27b0', // 紫色
@@ -80,7 +80,7 @@ function renderChart() {
     tooltip: {
       trigger: 'item',
       backgroundColor: '#444',
-      borderColor: '#00bcd4',
+      borderColor: '#4caf50',
       borderWidth: 1,
       textStyle: {
         color: '#fff',
@@ -184,10 +184,10 @@ function renderChart() {
       filterMode: 'none',
       type: 'inside',
       backgroundColor: '#444',
-      borderColor: '#00bcd4',
-      fillerColor: 'rgba(0, 188, 212, 0.1)',
+      borderColor: '#4caf50',
+      fillerColor: 'rgba(76, 175, 80, 0.1)',
       handleStyle: {
-        color: '#00bcd4',
+        color: '#4caf50',
       },
     },
     series: [

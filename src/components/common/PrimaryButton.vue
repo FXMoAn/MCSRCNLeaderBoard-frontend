@@ -107,14 +107,14 @@ const handleClick = () => {
 
 /* 主要按钮 - 青色渐变 */
 .btn-primary {
-  background: linear-gradient(135deg, #00bcd4, #0097a7);
+  background: linear-gradient(135deg, #4caf50, #388e3c);
   color: #fff;
 }
 
 .btn-primary:hover:not(.btn-disabled):not(.btn-loading) {
-  background: linear-gradient(135deg, #00acc1, #00838f);
+  background: linear-gradient(135deg, #43a047, #2e7d32);
   transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0, 188, 212, 0.3);
+  box-shadow: 0 4px 20px rgba(76, 175, 80, 0.3);
 }
 
 .btn-primary:active:not(.btn-disabled) {
@@ -186,7 +186,7 @@ const handleClick = () => {
 }
 
 .btn-primary.btn-loading {
-  background: linear-gradient(135deg, #0097a7, #00695f);
+  background: linear-gradient(135deg, #388e3c, #1b5e20);
 }
 
 .btn-secondary.btn-loading {

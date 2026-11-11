@@ -114,7 +114,7 @@ const hideDropdown = () => {
 .user-avatar {
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, #00bcd4, #0097a7);
+  background: linear-gradient(135deg, #4caf50, #388e3c);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -194,7 +194,7 @@ const hideDropdown = () => {
 }
 
 .dropdown-item:hover svg {
-  color: #00bcd4;
+  color: #4caf50;
 }
 
 .dropdown-divider {

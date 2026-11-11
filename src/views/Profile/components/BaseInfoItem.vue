@@ -83,7 +83,7 @@ const openLink = () => {
 
 .value-link {
   font-size: 14px;
-  color: #00bcd4;
+  color: #4caf50;
   cursor: pointer;
   text-decoration: none;
   word-break: break-all;
@@ -94,8 +94,8 @@ const openLink = () => {
 }
 
 .value-link:hover {
-  color: #00acc1;
-  background-color: rgba(0, 188, 212, 0.1);
+  color: #43a047;
+  background-color: rgba(76, 175, 80, 0.1);
   text-decoration: underline;
 }
 

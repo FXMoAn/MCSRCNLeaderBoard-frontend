@@ -39,7 +39,7 @@ const handleChange = (e: Event) => {
 }
 
 .primary-select:hover:not(:disabled) {
-  border-color: #00bcd4;
+  border-color: #4caf50;
 }
 
 .primary-select:disabled {
@@ -49,7 +49,7 @@ const handleChange = (e: Event) => {
 
 .primary-select:focus {
   outline: none;
-  border-color: #00bcd4;
-  box-shadow: 0 0 0 2px rgba(0, 188, 212, 0.1);
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
 }
 </style>

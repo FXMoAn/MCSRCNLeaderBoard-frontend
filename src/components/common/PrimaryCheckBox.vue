@@ -97,9 +97,9 @@ const toggle = (event: Event) => {
 }
 
 .primary-checkbox.is-checked .primary-checkbox__box {
-  background: linear-gradient(135deg, #00bcd4, #0097a7);
+  background: linear-gradient(135deg, #4caf50, #388e3c);
   border-color: transparent;
-  box-shadow: 0 6px 20px rgba(0, 188, 212, 0.35);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.35);
 }
 
 .primary-checkbox:hover:not(.is-disabled) .primary-checkbox__box {

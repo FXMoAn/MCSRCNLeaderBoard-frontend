@@ -98,15 +98,15 @@ const openVideo = (url: string) => {
   justify-content: center;
   width: 36px;
   height: 36px;
-  background-color: rgba(0, 188, 212, 0.1);
-  border: 1px solid rgba(0, 188, 212, 0.3);
+  background-color: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.3);
   border-radius: 8px;
   transition: all 0.2s ease;
 }
 
 .video-link:hover {
-  background-color: rgba(0, 188, 212, 0.2);
-  border-color: rgba(0, 188, 212, 0.5);
+  background-color: rgba(76, 175, 80, 0.2);
+  border-color: rgba(76, 175, 80, 0.5);
   transform: scale(1.05);
 }
 </style>

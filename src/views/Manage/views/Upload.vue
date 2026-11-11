@@ -6,12 +6,9 @@
         <div class="form-group">
           <label class="form-label" for="version">版本</label>
           <select class="form-select" id="version" v-model="version">
-            <option value="1.16.1">1.16-1.19</option>
-            <option value="1.20">1.20+</option>
-            <option value="1.15.2">1.13-1.15</option>
-            <option value="1.12.2">1.9-1.12</option>
-            <option value="1.8.9">1.8</option>
-            <option value="1.7.10">pre 1.8</option>
+            <option v-for="option in rangeOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
           </select>
         </div>
 
@@ -141,10 +138,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { supabase } from '@/lib/supabaseClient';
 import { formatRunDate } from '@/utils/date';
-import { TYPE_SELECTOR_OPTIONS } from '@/constants/common';
+import { TYPE_SELECTOR_OPTIONS, VERSION_RANGE_OPTIONS } from '@/constants/common';
 import {
   validateNickname,
   validateRemarks,
@@ -163,6 +160,12 @@ import {
 
 const version = ref('1.16.1');
 const type = ref('RSG');
+const rangeOptions = computed(() => VERSION_RANGE_OPTIONS[type.value] ?? VERSION_RANGE_OPTIONS.RSG);
+watch(type, () => {
+  if (!rangeOptions.value.some((option) => option.value === version.value)) {
+    version.value = '1.16.1';
+  }
+});
 const igtMinute = ref(0);
 const igtSecond = ref(0);
 const igtMillisecond = ref(0);
@@ -393,8 +396,8 @@ onMounted(() => {
 .form-input:focus,
 .form-select:focus {
   outline: none;
-  border-color: #00bcd4;
-  box-shadow: 0 0 0 2px rgba(0, 188, 212, 0.1);
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
 }
 
 .igt-inputs {
@@ -431,8 +434,8 @@ onMounted(() => {
 
 .form-textarea:focus {
   outline: none;
-  border-color: #00bcd4;
-  box-shadow: 0 0 0 2px rgba(0, 188, 212, 0.1);
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
 }
 
 .form-actions {
@@ -443,7 +446,7 @@ onMounted(() => {
 }
 
 .submit-button {
-  background: linear-gradient(135deg, #00bcd4, #0097a7);
+  background: linear-gradient(135deg, #4caf50, #388e3c);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -455,9 +458,9 @@ onMounted(() => {
 }
 
 .submit-button:hover {
-  background: linear-gradient(135deg, #00acc1, #00838f);
+  background: linear-gradient(135deg, #43a047, #2e7d32);
   transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0, 188, 212, 0.3);
+  box-shadow: 0 4px 20px rgba(76, 175, 80, 0.3);
 }
 
 .submit-button:active {
@@ -473,7 +476,7 @@ onMounted(() => {
 }
 
 .submit-button.submitting {
-  background: linear-gradient(135deg, #0097a7, #00695f);
+  background: linear-gradient(135deg, #388e3c, #1b5e20);
   cursor: wait;
 }
 

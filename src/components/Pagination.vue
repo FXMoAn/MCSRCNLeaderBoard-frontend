@@ -152,8 +152,8 @@ const handleJumpPage = () => {
   max-width: 1200px;
   margin-top: 20px;
   padding: 16px;
-  background-color: rgba(255, 255, 255, 0.02);
-  border: 1px solid #444;
+  background-color: var(--panel-raised);
+  border: 1px solid var(--border);
   border-radius: 12px;
 }
 .pagination-summary,
@@ -169,7 +169,7 @@ const handleJumpPage = () => {
   gap: 12px 24px;
 }
 .result-count {
-  color: #ccc;
+  color: var(--text-secondary);
   font-size: 14px;
 }
 .result-count span {
@@ -177,7 +177,7 @@ const handleJumpPage = () => {
 }
 .page-size {
   gap: 8px;
-  color: #ccc;
+  color: var(--text-secondary);
   font-size: 14px;
 }
 .page-size :deep(select) {
@@ -195,14 +195,14 @@ const handleJumpPage = () => {
   font-variant-numeric: tabular-nums;
 }
 .page-number {
-  color: #00bcd4;
+  color: var(--accent-bright);
   font-weight: 600;
 }
 .page-separator {
-  color: #999;
+  color: var(--text-muted);
 }
 .total-pages {
-  color: #ccc;
+  color: var(--text-secondary);
 }
 .page-jump {
   gap: 8px;
@@ -216,9 +216,9 @@ const handleJumpPage = () => {
   min-width: 40px;
   height: 40px;
   padding: 0 12px;
-  border: 1px solid #555;
+  border: 1px solid var(--border-light);
   border-radius: 8px;
-  background: #333;
+  background: var(--panel);
   color: #fff;
   font-size: 14px;
   cursor: pointer;
@@ -234,12 +234,12 @@ const handleJumpPage = () => {
 }
 .control:hover:not(:disabled),
 .jump-button:hover:not(:disabled) {
-  background: #444;
-  border-color: #00bcd4;
+  background: var(--border);
+  border-color: var(--accent);
 }
 .control:active:not(:disabled),
 .jump-button:active:not(:disabled) {
-  background: #222;
+  background: var(--bgcolor);
 }
 .control:disabled,
 .jump-button:disabled {
@@ -251,9 +251,9 @@ const handleJumpPage = () => {
   width: 64px;
   height: 40px;
   padding: 8px;
-  border: 1px solid #555;
+  border: 1px solid var(--border-light);
   border-radius: 8px;
-  background: #333;
+  background: var(--panel);
   color: #fff;
   text-align: center;
   font-size: 14px;
@@ -261,7 +261,7 @@ const handleJumpPage = () => {
 .control:focus-visible,
 .jump-button:focus-visible,
 .page-input:focus-visible {
-  outline: 2px solid #00bcd4;
+  outline: 2px solid var(--accent-bright);
   outline-offset: 3px;
 }
 .page-input:disabled {

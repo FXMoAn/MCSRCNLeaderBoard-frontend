@@ -86,8 +86,8 @@ const handleRefreshMCID = async () => {
 
 .form-input:focus {
   outline: none;
-  border-color: #00bcd4;
-  box-shadow: 0 0 0 2px rgba(0, 188, 212, 0.1);
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
 }
 
 .mcname-info {
@@ -103,14 +103,14 @@ const handleRefreshMCID = async () => {
 }
 
 .mcname-display {
-  color: #00bcd4;
+  color: #4caf50;
   font-size: 1.2em;
   font-weight: 600;
   margin: 0;
   padding: 16px;
-  background-color: rgba(0, 188, 212, 0.1);
+  background-color: rgba(76, 175, 80, 0.1);
   border-radius: 8px;
-  border: 1px solid rgba(0, 188, 212, 0.3);
+  border: 1px solid rgba(76, 175, 80, 0.3);
   flex: 1;
 }
 

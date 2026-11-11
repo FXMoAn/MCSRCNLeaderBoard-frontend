@@ -168,7 +168,7 @@ onMounted(() => {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: #00bcd4;
+  color: #4caf50;
 }
 
 .ranked-card-content {
@@ -217,7 +217,7 @@ onMounted(() => {
 .stat-count {
   font-size: 18px;
   font-weight: 600;
-  color: #00bcd4;
+  color: #4caf50;
 }
 
 .no-data {

@@ -1,22 +1,15 @@
 <template>
   <div class="upload-container">
-    <div class="upload-title">上传成绩记录</div>
+    <div class="upload-title">提交成绩</div>
     <form class="upload-form" @submit.prevent="uploadRun">
       <div class="form-grid">
         <div class="form-group">
-          <label class="form-label" for="version">版本</label>
-          <select class="form-select" id="version" v-model="version">
-            <option value="1.16.1">1.16-1.19</option>
-            <option value="1.20">1.20+</option>
-            <option value="1.15.2">1.13-1.15</option>
-            <option value="1.12.2">1.9-1.12</option>
-            <option value="1.8.9">1.8</option>
-            <option value="1.7.10">pre 1.8</option>
-          </select>
+          <span class="form-label" id="category-label">类别</span>
+          <div class="readonly-field" aria-labelledby="category-label">Any%</div>
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="type">类型</label>
+          <label class="form-label" for="type">种子类型</label>
           <select class="form-select" id="type" v-model="type">
             <option
               v-for="option in TYPE_SELECTOR_OPTIONS"
@@ -29,52 +22,49 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="nickname">用户名</label>
-          <input
-            class="form-input"
-            type="text"
-            id="nickname"
-            :placeholder="nickname"
-            autocomplete="off"
-            disabled
-          />
+          <label class="form-label" for="version">版本范围</label>
+          <select class="form-select" id="version" v-model="version">
+            <option v-for="r in rangeOptions" :key="r.value" :value="r.value">
+              {{ r.label }}
+            </option>
+          </select>
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="igt">游戏时间IGT</label>
-          <div class="igt-inputs">
+          <label class="form-label" for="igt-minute">IGT（游戏内时间）</label>
+          <div class="time-inputs">
             <input
-              class="form-input igt-input"
+              class="form-input time-input"
               type="number"
               id="igt-minute"
               v-model="igtMinute"
-              placeholder="分"
+              placeholder="0"
               min="0"
               autocomplete="off"
             />
-            <span class="igt-separator">分</span>
+            <span class="time-separator">分</span>
             <input
-              class="form-input igt-input"
+              class="form-input time-input"
               type="number"
               id="igt-second"
               v-model="igtSecond"
-              placeholder="秒"
+              placeholder="0"
               min="0"
               max="59"
               autocomplete="off"
             />
-            <span class="igt-separator">秒</span>
+            <span class="time-separator">秒</span>
             <input
-              class="form-input igt-input"
+              class="form-input time-input"
               type="number"
               id="igt-millisecond"
               v-model="igtMillisecond"
-              placeholder="毫秒"
+              placeholder="0"
               min="0"
               max="999"
               autocomplete="off"
             />
-            <span class="igt-separator">毫秒</span>
+            <span class="time-separator">毫秒</span>
           </div>
         </div>
 
@@ -95,25 +85,13 @@
           />
         </div>
 
-        <div class="form-group">
-          <label class="form-label" for="seed">种子</label>
-          <input
-            class="form-input"
-            type="text"
-            id="seed"
-            v-model="seed"
-            placeholder="请输入种子"
-            autocomplete="off"
-          />
-        </div>
-
         <div class="form-group full-width">
-          <label class="form-label" for="remarks">备注</label>
+          <label class="form-label" for="remarks">简介</label>
           <textarea
             class="form-textarea"
             id="remarks"
             v-model="remarks"
-            placeholder="请输入备注信息"
+            placeholder="请输入简介信息"
             rows="3"
             autocomplete="off"
           />
@@ -127,8 +105,8 @@
           :disabled="isSubmitting"
           :class="{ submitting: isSubmitting }"
         >
-          <span v-if="!isSubmitting">上传记录</span>
-          <span v-else>上传中...</span>
+          <span v-if="!isSubmitting">提交成绩</span>
+          <span v-else>提交中...</span>
         </button>
 
         <button type="button" class="clear-button" @click="clearForm" :disabled="isSubmitting">
@@ -140,19 +118,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { supabase } from '@/lib/supabaseClient';
 import { formatRunDate } from '@/utils/date';
-import {
-  validateNickname,
-  validateRemarks,
-  validateSeed,
-  validateVideoLink,
-  sanitizeInput,
-  sanitizeVideoLink,
-  sanitizeTextInput,
-} from '@/utils/security';
-import { TYPE_SELECTOR_OPTIONS } from '@/constants/common';
+import { validateVideoLink, sanitizeTextInput, sanitizeVideoLink } from '@/utils/security';
+import { TYPE_SELECTOR_OPTIONS, VERSION_RANGE_OPTIONS } from '@/constants/common';
 import { useUserStore } from '@/stores';
 import {
   showErrorNotification,
@@ -170,46 +140,45 @@ const igtMillisecond = ref(0);
 const date = ref(new Date().toISOString().split('T')[0]);
 const videoLink = ref('');
 const remarks = ref('');
-const seed = ref('');
 
-const userList = ref<any[]>([]);
-const nickname = ref(userStore.userInfo.nickname);
+const rangeOptions = computed(() => VERSION_RANGE_OPTIONS[type.value] ?? VERSION_RANGE_OPTIONS.RSG);
+
+watch(type, () => {
+  if (!rangeOptions.value.some((option) => option.value === version.value)) {
+    version.value = '1.16.1';
+  }
+});
 
 // 防重复提交状态
 const isSubmitting = ref(false);
 
-const igt = computed(() => {
+const formatTime = (minute: unknown, second: unknown, millisecond: unknown) => {
   return (
-    igtMinute.value.toString().padStart(2, '0') +
+    String(minute ?? 0).padStart(2, '0') +
     ':' +
-    igtSecond.value.toString().padStart(2, '0') +
+    String(second ?? 0).padStart(2, '0') +
     '.' +
-    igtMillisecond.value.toString().padStart(3, '0')
+    String(millisecond ?? 0).padStart(3, '0')
   );
-});
+};
+
+const igt = computed(() => formatTime(igtMinute.value, igtSecond.value, igtMillisecond.value));
 
 const checkRequiredInfo = () => {
   if (version.value === '') {
-    showErrorNotification('版本不能为空');
+    showErrorNotification('版本范围不能为空');
     return false;
   }
   if (type.value === '') {
-    showErrorNotification('类型不能为空');
+    showErrorNotification('种子类型不能为空');
     return false;
   }
-  if (igt.value === '') {
-    showErrorNotification('游戏时间不能为空');
+  if (igt.value === '00:00.000') {
+    showErrorNotification('IGT 不能为 0');
     return false;
   }
   if (date.value === '') {
     showErrorNotification('日期不能为空');
-    return false;
-  }
-
-  // 使用安全工具函数验证输入
-  const nicknameValidation = validateNickname(nickname.value);
-  if (!nicknameValidation.isValid) {
-    showErrorNotification(nicknameValidation.message);
     return false;
   }
 
@@ -222,23 +191,8 @@ const checkRequiredInfo = () => {
   return true;
 };
 
-const getUserList = async () => {
-  const { data, error } = await supabase.from('users').select('*');
-  if (error) {
-    showErrorNotification('获取用户列表失败');
-    return;
-  }
-  userList.value = data.map((user) => ({
-    id: user.id,
-    nickname: user.nickname,
-  }));
-};
-
-const insertVerifiedRun = async () => {
-  // 使用安全工具函数清理输入
-  const sanitizedNickname = sanitizeInput(nickname.value.trim());
+const insertRun = async () => {
   const sanitizedRemarks = sanitizeTextInput(remarks.value.trim());
-  const sanitizedSeed = sanitizeTextInput(seed.value.trim());
   const sanitizedVideoLink = sanitizeVideoLink(videoLink.value.trim());
 
   const userId = userStore.userInfo.id;
@@ -250,16 +204,16 @@ const insertVerifiedRun = async () => {
     date: formatRunDate(date.value),
     videolink: sanitizedVideoLink,
     remarks: sanitizedRemarks,
-    seed: sanitizedSeed,
     status: 'pending',
   });
   if (error) {
-    showErrorNotification('上传失败');
+    console.error('提交成绩失败', error);
+    showErrorNotification('提交失败，请稍后重试');
     return;
   }
-  showSuccessNotification('上传成功');
+  showSuccessNotification('提交成功，等待审核');
 
-  // 上传成功后清空表单
+  // 提交成功后清空表单
   clearForm();
 };
 
@@ -267,7 +221,6 @@ const insertVerifiedRun = async () => {
  * 清空所有表单输入
  */
 const clearForm = () => {
-  // 重置为默认值
   version.value = '1.16.1';
   type.value = 'RSG';
   igtMinute.value = 0;
@@ -276,13 +229,12 @@ const clearForm = () => {
   date.value = new Date().toISOString().split('T')[0];
   videoLink.value = '';
   remarks.value = '';
-  seed.value = '';
 };
 
 const uploadRun = async () => {
   // 防重复提交检查
   if (isSubmitting.value) {
-    showInfoNotification('正在上传中，请勿重复提交');
+    showInfoNotification('正在提交中，请勿重复提交');
     return;
   }
 
@@ -292,18 +244,14 @@ const uploadRun = async () => {
 
   try {
     isSubmitting.value = true; // 设置提交状态
-    await insertVerifiedRun();
+    await insertRun();
   } catch (error) {
-    console.error('上传过程中出现错误:', error);
-    showErrorNotification('上传失败，请重试');
+    console.error('提交过程中出现错误:', error);
+    showErrorNotification('提交失败，请重试');
   } finally {
     isSubmitting.value = false; // 重置提交状态
   }
 };
-
-onMounted(() => {
-  getUserList();
-});
 </script>
 
 <style scoped>
@@ -351,6 +299,15 @@ onMounted(() => {
   letter-spacing: 0.5px;
 }
 
+.readonly-field {
+  padding: 12px 16px;
+  background-color: rgba(76, 175, 80, 0.08);
+  border: 1px solid rgba(76, 175, 80, 0.35);
+  border-radius: 8px;
+  color: #4caf50;
+  font-weight: 600;
+}
+
 .form-input,
 .form-select {
   width: 100%;
@@ -371,25 +328,27 @@ onMounted(() => {
 .form-input:focus,
 .form-select:focus {
   outline: none;
-  border-color: #00bcd4;
-  box-shadow: 0 0 0 2px rgba(0, 188, 212, 0.1);
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
 }
 
-.igt-inputs {
+.time-inputs {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.igt-input {
-  width: 80px;
+.time-input {
+  width: 72px;
   text-align: center;
+  min-width: 0;
 }
 
-.igt-separator {
+.time-separator {
   color: #666;
   font-weight: 600;
-  font-size: 16px;
+  font-size: 14px;
+  white-space: nowrap;
 }
 
 .form-textarea {
@@ -409,8 +368,8 @@ onMounted(() => {
 
 .form-textarea:focus {
   outline: none;
-  border-color: #00bcd4;
-  box-shadow: 0 0 0 2px rgba(0, 188, 212, 0.1);
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
 }
 
 .form-actions {
@@ -421,7 +380,7 @@ onMounted(() => {
 }
 
 .submit-button {
-  background: linear-gradient(135deg, #00bcd4, #0097a7);
+  background: linear-gradient(135deg, #4caf50, #388e3c);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -433,9 +392,9 @@ onMounted(() => {
 }
 
 .submit-button:hover {
-  background: linear-gradient(135deg, #00acc1, #00838f);
+  background: linear-gradient(135deg, #43a047, #2e7d32);
   transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0, 188, 212, 0.3);
+  box-shadow: 0 4px 20px rgba(76, 175, 80, 0.3);
 }
 
 .submit-button:active {
@@ -451,7 +410,7 @@ onMounted(() => {
 }
 
 .submit-button.submitting {
-  background: linear-gradient(135deg, #0097a7, #00695f);
+  background: linear-gradient(135deg, #388e3c, #1b5e20);
   cursor: wait;
 }
 
@@ -482,7 +441,6 @@ onMounted(() => {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
-  box-shadow: none;
 }
 
 .clear-button:active:not(:disabled) {
@@ -508,6 +466,10 @@ onMounted(() => {
   .form-select,
   .form-textarea {
     padding: 10px 14px;
+  }
+
+  .time-inputs {
+    flex-wrap: wrap;
   }
 
   .submit-button {

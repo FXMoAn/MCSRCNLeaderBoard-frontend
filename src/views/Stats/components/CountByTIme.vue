@@ -104,7 +104,7 @@ function renderChart() {
         type: 'shadow',
       },
       backgroundColor: '#444',
-      borderColor: '#00bcd4',
+      borderColor: '#4caf50',
       borderWidth: 1,
       textStyle: {
         color: '#fff',
@@ -187,16 +187,16 @@ function renderChart() {
         data: values,
         itemStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: '#00bcd4' },
-            { offset: 1, color: '#0097a7' },
+            { offset: 0, color: '#4caf50' },
+            { offset: 1, color: '#388e3c' },
           ]),
           borderRadius: [4, 4, 0, 0],
         },
         emphasis: {
           itemStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: '#26c6da' },
-              { offset: 1, color: '#00acc1' },
+              { offset: 0, color: '#66bb6a' },
+              { offset: 1, color: '#43a047' },
             ]),
           },
         },

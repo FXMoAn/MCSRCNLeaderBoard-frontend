@@ -1,102 +1,134 @@
 <template>
-  <button class="year-comparison-btn" @click="navToYearComparison">
-    <div class="btn-content">
-      <span class="btn-icon">📊</span>
-      <span class="btn-text">
-        <span class="btn-line">点击查看</span>
-        <span class="btn-line">2025年</span>
-        <span class="btn-line">榜单变更</span>
-      </span>
-    </div>
-    <div class="btn-glow"></div>
-  </button>
-  <div class="control-container">
-    <VersionTypeSelector
-      @confirmFilter="handleSelectionChange"
-      :initialVersion="state.version"
-      :initialType="state.type"
-    />
-
-    <RankedFilter
-      @confirmFilter="handleConfirmFilter"
-      :initialIgt="state.igt"
-      :initialNickname="state.nickname"
-    />
-
-    <OtherFilter @confirmFilter="handleOtherConfirmFilter" :initialIsNewRecord="state.newRecord" />
-  </div>
-  <div class="content-container">
-    <div class="results-toolbar">
-      <div class="refresh-status" role="status" aria-live="polite">
-        <span v-if="isLoading">{{ statsdata.length ? '正在更新榜单…' : '正在加载榜单…' }}</span>
-        <span v-else-if="loadError" class="refresh-error">{{ loadError }}</span>
-        <span v-else-if="updatedTime">更新于 {{ updatedTime }}</span>
-      </div>
-      <PrimaryButton
-        variant="clear"
-        size="small"
-        class="refresh-button"
-        :loading="isLoading"
-        @click="handleRefresh"
-      >
-        {{ isLoading ? '刷新中…' : '刷新榜单' }}
-      </PrimaryButton>
-    </div>
-    <Loading v-if="isLoading && statsdata.length === 0" />
-    <div class="container" v-else :aria-busy="isLoading">
-      <div class="leaderboard" :class="{ 'is-empty': filteredData.length === 0 }">
-        <div class="leaderboard-head">
-          <div class="rank-cell">排名</div>
-          <div class="player-cell">玩家</div>
-          <div class="igt-cell">IGT</div>
-          <div class="date-cell">记录时间</div>
-          <div class="video-cell">记录视频</div>
+  <div class="page-layout">
+    <div class="main-column">
+      <!-- 游戏信息面板 -->
+      <section class="game-header">
+        <div class="game-cover">
+          <img :src="coverImage" alt="Minecraft: Java Edition 主视觉" class="cover-image" />
         </div>
-        <div class="leaderboard-body">
-          <div v-if="filteredData.length === 0" class="empty-state" role="status">
-            <strong>{{
-              loadError
-                ? '榜单加载失败'
-                : hasActiveFilters
-                  ? '没有符合条件的成绩'
-                  : '该分类暂无成绩'
-            }}</strong>
-            <p>
-              {{
-                loadError
-                  ? '请点击上方“刷新榜单”重试。'
-                  : hasActiveFilters
-                    ? '试试调整用户名、IGT 或新纪录筛选。'
-                    : '可以切换版本或类型查看其他榜单。'
-              }}
-            </p>
+        <div class="game-meta">
+          <h1 class="game-title">Minecraft: Java Edition</h1>
+          <p class="game-sub">我的世界：Java版</p>
+        </div>
+        <div class="game-actions" v-if="userStore.isBinding">
+          <router-link :to="`/profile/${userStore.userInfo.id}`" class="profile-btn"
+            >个人主页</router-link
+          >
+        </div>
+      </section>
+
+      <!-- 榜单面板 -->
+      <section class="board-panel">
+        <div class="category-bar">
+          <div class="cat-row">
+            <span class="cat-pill level1" :aria-current="true">Any%</span>
           </div>
-          <RankCard
-            v-for="info in slicedata"
-            :key="info.run_id"
-            :rank="info.rank"
-            :nickname="info.nickname"
-            :userId="Number(info.userid)"
-            :igt="info.igt"
-            :date="info.date"
-            :videolink="info.videolink"
-            :runId="info.run_id"
-            :is_new_record="info.is_new_record"
-            @click="navToRunDetail"
-            @video-click="openVideo"
-          />
+          <div class="filter-groups">
+            <div class="filter-group">
+              <span class="field-label">速通类型（Any%）</span>
+              <div class="filter-pills" role="tablist" aria-label="速通类型">
+                <button
+                  v-for="option in TYPE_SELECTOR_OPTIONS"
+                  :key="option.value"
+                  type="button"
+                  role="tab"
+                  class="cat-pill"
+                  :class="{ active: state.type === option.value }"
+                  :aria-selected="state.type === option.value"
+                  @click="setType(option.value)"
+                >
+                  {{ option.label }}
+                </button>
+              </div>
+            </div>
+            <div class="filter-group">
+              <label class="field-label" for="version-select">版本范围（{{ state.type }}）</label>
+              <select
+                id="version-select"
+                class="version-select"
+                :value="state.version"
+                aria-label="版本范围"
+                @change="setVersion(($event.target as HTMLSelectElement).value)"
+              >
+                <option v-for="v in versionOptions" :key="v.value" :value="v.value">
+                  {{ v.label }}
+                </option>
+              </select>
+            </div>
+          </div>
         </div>
-      </div>
+
+        <div class="actions-row">
+          <div class="refresh-status" role="status" aria-live="polite">
+            <span v-if="isLoading">{{ statsdata.length ? '正在更新榜单…' : '正在加载榜单…' }}</span>
+            <span v-else-if="loadError" class="refresh-error">{{ loadError }}</span>
+          </div>
+          <PrimaryButton
+            variant="clear"
+            size="small"
+            class="refresh-button"
+            :loading="isLoading"
+            @click="handleRefresh"
+            >{{ isLoading ? '刷新中…' : '刷新榜单' }}</PrimaryButton
+          >
+          <a
+            class="pill-btn"
+            href="https://wiki.mcspeedrun.cn"
+            target="_blank"
+            rel="noopener noreferrer"
+            >规则</a
+          >
+          <router-link to="/user-upload" class="pill-btn">提交成绩</router-link>
+        </div>
+        <Loading v-if="isLoading && statsdata.length === 0" />
+        <div class="container" v-else :aria-busy="isLoading">
+          <div class="leaderboard" :class="{ 'is-empty': statsdata.length === 0 }">
+            <div class="leaderboard-head">
+              <div class="rank-cell">#</div>
+              <div class="player-cell">玩家</div>
+              <div class="igt-cell">IGT</div>
+              <div class="date-cell">日期</div>
+              <div class="version-cell">版本</div>
+              <div class="video-cell">视频</div>
+            </div>
+            <div class="leaderboard-body">
+              <div v-if="statsdata.length === 0" class="empty-state" role="status">
+                <strong>{{ loadError ? '榜单加载失败' : '该分类暂无成绩' }}</strong>
+                <p>
+                  {{
+                    loadError ? '请点击上方“刷新榜单”重试。' : '可以切换版本或类型查看其他榜单。'
+                  }}
+                </p>
+              </div>
+              <RankCard
+                v-for="info in slicedata"
+                :key="info.run_id"
+                :rank="info.rank"
+                :nickname="info.nickname"
+                :userId="Number(info.userid)"
+                :igt="info.igt"
+                :date="info.date"
+                :version="info.version"
+                :videolink="info.videolink"
+                :runId="info.run_id"
+                :is_new_record="info.is_new_record"
+                @click="navToRunDetail"
+              />
+            </div>
+          </div>
+        </div>
+        <Pagination
+          class="board-pagination"
+          :currentPage="state.page"
+          :pageSize="state.pageSize"
+          :totalPages="pages"
+          :totalItems="statsdata.length"
+          :disabled="isLoading || !hasLoaded"
+          @update:currentPage="handlePageChange"
+          @update:pageSize="handlePageSizeChange"
+        />
+      </section>
     </div>
-    <Pagination
-      :currentPage="state.page"
-      :pageSize="state.pageSize"
-      :totalPages="pages"
-      :totalItems="filteredData.length"
-      :disabled="isLoading || !hasLoaded"
-      @update:currentPage="handlePageChange"
-      @update:pageSize="handlePageSizeChange"
-    />
   </div>
 </template>
 
@@ -107,21 +139,18 @@ import { LEADERBOARD_CACHE_TTL, useStatsStore } from '@/stores/stats.ts';
 import { createURLStateManager } from '@/utils/urlStateManage';
 import { showErrorNotification } from '@/utils/notification';
 import { DEFAULT_PAGE_SIZE, normalizePage, normalizePageSize } from '@/constants/pagination';
+import { TYPE_SELECTOR_OPTIONS, VERSION_RANGE_OPTIONS } from '@/constants/common';
 import { useRouter, useRoute } from 'vue-router';
-import RankedFilter from '@/components/RankedFilter.vue';
+import { useUserStore } from '@/stores';
 import Pagination from '@/components/Pagination.vue';
-import VersionTypeSelector from '@/components/VersionTypeSelector.vue';
 import Loading from '@/components/common/Loading.vue';
 import PrimaryButton from '@/components/common/PrimaryButton.vue';
 import RankCard from './components/RankCard.vue';
-import OtherFilter from '@/components/OtherFilter.vue';
+import coverImage from '@/assets/minecraft-cover.webp';
 
 interface RankState {
   version: string;
   type: string;
-  igt: string;
-  nickname: string;
-  newRecord: boolean;
   page: number;
   pageSize: number;
 }
@@ -130,13 +159,10 @@ const stateManager = createURLStateManager<RankState>({
   defaultState: {
     version: '1.16.1',
     type: 'RSG',
-    igt: '0,99',
-    nickname: '',
-    newRecord: false,
     page: 1,
     pageSize: DEFAULT_PAGE_SIZE,
   },
-  urlFields: ['version', 'type', 'igt', 'nickname', 'newRecord', 'page', 'pageSize'],
+  urlFields: ['version', 'type', 'page', 'pageSize'],
   transformers: {
     page: { toUrl: String, fromUrl: normalizePage },
     pageSize: { toUrl: String, fromUrl: normalizePageSize },
@@ -145,18 +171,30 @@ const stateManager = createURLStateManager<RankState>({
   storage: 'memory',
 });
 
+const rangesFor = (type: string) => VERSION_RANGE_OPTIONS[type] ?? [];
+const isValidType = (type: string) => TYPE_SELECTOR_OPTIONS.some((option) => option.value === type);
+
+// 旧链接与旧内存状态里存的是代表版本，需要映射到新区间；无法识别时回退第一项。
+const normalizeVersion = (type: string, version: string): string => {
+  const options = rangesFor(type);
+  if (options.some((option) => option.value === version)) return version;
+  if (version === '1.16.1,1.20' || (type === 'RSG' && version === '1.20')) return '1.16.1';
+  return options[0]?.value ?? '1.16.1';
+};
+
 const router = useRouter();
 const route = useRoute();
 const statsStore = useStatsStore();
+const userStore = useUserStore();
 const restoredState = stateManager.initialize();
 const state = stateManager.getState();
+const restoredType = isValidType(restoredState.type) ? restoredState.type : 'RSG';
 stateManager.setMultiple(
   {
+    type: restoredType,
+    version: normalizeVersion(restoredType, restoredState.version),
     page: normalizePage(restoredState.page),
     pageSize: normalizePageSize(restoredState.pageSize),
-    newRecord: restoredState.newRecord === true,
-    nickname: typeof restoredState.nickname === 'string' ? restoredState.nickname : '',
-    igt: typeof restoredState.igt === 'string' ? restoredState.igt : '0,99',
   },
   false
 );
@@ -165,39 +203,10 @@ const hasLoaded = ref(false);
 const isLoading = computed(() => statsStore.isLoading);
 const statsdata = computed(() => statsStore.currStats);
 const loadError = computed(() => statsStore.loadError);
-const updatedTime = computed(() => {
-  if (typeof statsStore.lastUpdatedAt !== 'number') return '';
-  return new Date(statsStore.lastUpdatedAt).toLocaleString('zh-CN', {
-    month: 'numeric',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  });
-});
-const hasActiveFilters = computed(
-  () => state.value.igt !== '0,99' || state.value.nickname !== '' || state.value.newRecord
-);
-const filteredData = computed(() => {
-  const { igt, nickname, newRecord } = state.value;
-  const [min, max] = igt.split(',').map(Number);
-  const query = nickname.toLowerCase();
-  return statsdata.value.filter((run) => {
-    const minutes = Number(run.igt.split(':')[0]);
-    return (
-      (igt === '0,99' || (minutes >= min && minutes < max)) &&
-      run.nickname.toLowerCase().includes(query) &&
-      (!newRecord || run.is_new_record)
-    );
-  });
-});
-const pages = computed(() =>
-  Math.max(1, Math.ceil(filteredData.value.length / state.value.pageSize))
-);
+const pages = computed(() => Math.max(1, Math.ceil(statsdata.value.length / state.value.pageSize)));
 const slicedata = computed(() => {
   const start = (state.value.page - 1) * state.value.pageSize;
-  return filteredData.value.slice(start, start + state.value.pageSize);
+  return statsdata.value.slice(start, start + state.value.pageSize);
 });
 
 const saveState = (updates: Partial<RankState>) => {
@@ -206,14 +215,30 @@ const saveState = (updates: Partial<RankState>) => {
 };
 
 const handleSelectionChange = async (version: string, type: string) => {
-  saveState({ version, type, page: 1, newRecord: false });
+  saveState({ version, type, page: 1 });
   await statsStore.getStats(version, type);
 };
 
-const handleRefresh = () => statsStore.refreshStats(state.value.version, state.value.type);
+// 切换类型时版本区间跟随变化：旧区间在新类型下无效则映射到最接近的区间。
+const setType = (type: string) => {
+  if (type === state.value.type) return;
+  const nextVersion = normalizeVersion(type, state.value.version);
+  void handleSelectionChange(nextVersion, type);
+};
+const setVersion = (version: string) => {
+  if (version !== state.value.version) void handleSelectionChange(version, state.value.type);
+};
+
+const versionOptions = computed(() => rangesFor(state.value.type));
+
+const handleRefresh = () => {
+  if (isLoading.value) return;
+  void statsStore.refreshStats(state.value.version, state.value.type);
+};
+
 const refreshIfStale = (allowRetry = false) => {
   if (!hasLoaded.value || document.hidden || !navigator.onLine || isLoading.value) return;
-  // A failed background request waits for a manual refresh or a return to the page.
+  // 后台更新失败后，等待手动刷新或返回页面再重试。
   if (loadError.value && !allowRetry) return;
   if (
     statsStore.lastUpdatedAt === null ||
@@ -232,17 +257,8 @@ const handlePageChange = (page: number) => {
 const handlePageSizeChange = (pageSize: number) => {
   saveState({ pageSize: normalizePageSize(pageSize), page: 1 });
 };
-const handleConfirmFilter = (filter: { igt: string; nickname: string }) => {
-  const changed = filter.igt !== state.value.igt || filter.nickname !== state.value.nickname;
-  saveState({ ...filter, ...(changed ? { page: 1 } : {}) });
-};
-const handleOtherConfirmFilter = (value: boolean) => {
-  saveState({ newRecord: value, page: 1 });
-};
 
 const navToRunDetail = (id: number) => router.push(`/run/${id}`);
-const navToYearComparison = () => router.push('/24to25');
-const openVideo = (url: string) => window.open(url, '_blank', 'noopener,noreferrer');
 
 onMounted(async () => {
   window.addEventListener('focus', handlePageReturn);
@@ -277,212 +293,278 @@ watch([pages, isLoading], () => {
 </script>
 
 <style scoped>
-.year-comparison-btn {
-  position: fixed;
-  left: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 100;
-  padding: 0;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: visible;
+.page-layout {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 16px 32px;
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
 }
 
-.btn-content {
-  position: relative;
-  padding: 16px 12px;
-  background: linear-gradient(135deg, rgba(0, 188, 212, 0.95), rgba(0, 151, 167, 0.95));
-  border: 2px solid rgba(0, 188, 212, 0.6);
-  border-radius: 12px;
-  box-shadow:
-    0 4px 20px rgba(0, 188, 212, 0.4),
-    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+.main-column {
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  min-width: 70px;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(10px);
 }
 
-.btn-icon {
-  font-size: 24px;
-  line-height: 1;
-  animation: float 3s ease-in-out infinite;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-}
-
-.btn-text {
+/* ---- 游戏信息面板 ---- */
+.game-header {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 2px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #fff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  line-height: 1.3;
-  letter-spacing: 0.5px;
+  gap: 20px;
+  padding: 20px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px 12px 0 0;
+  border-bottom: none;
 }
 
-.btn-line {
-  display: block;
-  white-space: nowrap;
+.game-cover {
+  flex: 0 0 96px;
+  width: 96px;
+  height: 96px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-light);
 }
 
-.btn-glow {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+.cover-image {
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle, rgba(0, 188, 212, 0.3) 0%, transparent 70%);
-  border-radius: 12px;
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  pointer-events: none;
-  z-index: -1;
+  display: block;
+  object-fit: cover;
 }
 
-.year-comparison-btn:hover .btn-content {
-  background: linear-gradient(135deg, rgba(0, 188, 212, 1), rgba(0, 151, 167, 1));
-  transform: translateX(8px) scale(1.05);
-  box-shadow:
-    0 8px 30px rgba(0, 188, 212, 0.6),
-    0 0 0 1px rgba(255, 255, 255, 0.2) inset;
-  border-color: rgba(0, 188, 212, 0.9);
+.game-meta {
+  flex: 1;
+  min-width: 0;
 }
 
-.year-comparison-btn:hover .btn-glow {
-  opacity: 1;
+.game-title {
+  font-size: 26px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: #fff;
 }
 
-.year-comparison-btn:hover .btn-icon {
-  animation:
-    float 1.5s ease-in-out infinite,
-    pulse 2s ease-in-out infinite;
+.game-sub {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin: 0;
 }
 
-.year-comparison-btn:active .btn-content {
-  transform: translateX(4px) scale(1.02);
+.game-actions {
+  flex: 0 0 auto;
 }
 
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-5px);
-  }
+.profile-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #0d1f0e;
+  font-weight: 700;
+  font-size: 14px;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+  box-shadow: 0 2px 10px rgba(76, 175, 80, 0.35);
 }
 
-@keyframes pulse {
-  0%,
-  100% {
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-  }
-  50% {
-    filter: drop-shadow(0 2px 8px rgba(0, 188, 212, 0.6));
-  }
+.profile-btn:hover {
+  background: var(--accent-bright);
+  color: #0d1f0e;
+  transform: translateY(-1px);
 }
 
-@media (max-width: 1400px) {
-  .year-comparison-btn {
-    position: static;
-    width: calc(100% - 32px);
-    max-width: 1200px;
-    margin-bottom: 16px;
-    transform: none;
-  }
-
-  .btn-content {
-    flex-direction: row;
-    justify-content: center;
-    padding: 8px 12px;
-    min-width: 0;
-    background: #333;
-    border: 1px solid #555;
-    border-radius: 8px;
-    box-shadow: none;
-  }
-
-  .btn-icon {
-    font-size: 16px;
-    animation: none;
-  }
-
-  .btn-text {
-    flex-direction: row;
-    gap: 4px;
-    font-size: 12px;
-  }
-
-  .year-comparison-btn:hover .btn-content,
-  .year-comparison-btn:active .btn-content {
-    transform: none;
-    background: #3a3a3a;
-    border-color: #00bcd4;
-    box-shadow: none;
-  }
-}
-
-.year-comparison-btn:focus-visible {
-  outline: 2px solid #00bcd4;
+.profile-btn:focus-visible {
+  outline: 2px solid var(--accent-bright);
   outline-offset: 3px;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .year-comparison-btn,
-  .btn-content,
-  .btn-glow {
-    transition: none;
-  }
-  .btn-icon,
-  .year-comparison-btn:hover .btn-icon {
-    animation: none;
-  }
-}
-
-.content-container {
-  box-sizing: border-box;
-  width: 100%;
-  height: 100%;
+/* ---- 榜单面板 ---- */
+.board-panel {
+  --leaderboard-columns: 52px minmax(0, 1fr) minmax(120px, 0.55fr) 112px 88px 72px;
+  --leaderboard-column-gap: 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 0 0 12px 12px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 20px 16px 100px;
 }
 
-.control-container {
+.category-bar {
   display: flex;
-  box-sizing: border-box;
-  width: calc(100% - 32px);
-  max-width: 1200px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.cat-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex-wrap: wrap;
-  gap: 16px;
-  justify-content: space-between;
 }
 
-.control-container > * {
-  margin-bottom: 0;
-  min-width: 0;
+/* 第二行：速通类型 + 版本范围两组并排，标签在控件上方（speedrun.com 样式）。 */
+.filter-groups {
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
+  flex-wrap: wrap;
 }
 
-.control-container :deep(.version-type-selector),
-.control-container :deep(.ranked-filter) {
-  flex: 1 1 340px;
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
 }
 
-.control-container :deep(.filter-group) {
-  min-width: 0;
-  flex: 1;
+.filter-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* 一级分类（Any%）固定为唯一项目，展示为常亮的绿色填充胶囊。 */
+.cat-pill.level1 {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0d1f0e;
+  cursor: default;
+}
+
+.cat-pill.level1:hover {
+  color: #0d1f0e;
+  border-color: var(--accent);
+}
+
+.cat-pill {
+  padding: 8px 20px;
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  background: var(--panel-raised);
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.cat-pill:hover {
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.cat-pill.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0d1f0e;
+}
+
+.cat-pill:focus-visible {
+  outline: 2px solid var(--accent-bright);
+  outline-offset: 2px;
+}
+
+.field-label {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.version-select {
+  padding: 8px 12px;
+  background: var(--panel-raised);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  min-width: 130px;
+}
+
+.version-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+/* ---- 刷新工具栏 ---- */
+.actions-row {
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 0;
+}
+
+.refresh-status {
+  margin-right: auto;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.refresh-error {
+  color: #ffb4ab;
+}
+
+.refresh-button {
+  min-width: 88px;
+  min-height: 36px;
+}
+
+.refresh-button:focus-visible {
+  outline: 2px solid var(--accent-bright);
+  outline-offset: 2px;
+}
+
+.pill-btn {
+  padding: 8px 20px;
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  background: var(--panel-raised);
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.pill-btn:hover {
+  color: #fff;
+  border-color: var(--accent);
+  background: rgba(76, 175, 80, 0.08);
+}
+
+.pill-btn:focus-visible {
+  outline: 2px solid var(--accent-bright);
+  outline-offset: 2px;
+}
+
+.container {
+  height: 100%;
+  width: 100%;
 }
 
 .empty-state {
@@ -495,78 +577,45 @@ watch([pages, isLoading], () => {
 }
 .empty-state p {
   margin-top: 12px;
-  color: #ccc;
+  color: var(--text-secondary);
   font-size: 14px;
 }
 
-.results-toolbar {
-  box-sizing: border-box;
-  width: 100%;
-  max-width: 1200px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.refresh-status {
-  color: #ccc;
-  font-size: 13px;
-  line-height: 1.5;
-  min-width: 0;
-}
-
-.refresh-error {
-  color: #ffb4a9;
-}
-
-.refresh-button {
-  min-width: 88px;
-  min-height: 40px;
-}
-
-.refresh-button:focus-visible {
-  outline: 2px solid #00bcd4;
-  outline-offset: 3px;
-}
-
-.container {
-  height: 100%;
-  width: 100%;
-  max-width: 1200px;
-}
-
-.button-group {
-  margin-top: 10px;
-}
-
+/* ---- 榜单表 ---- */
 .leaderboard {
   width: 100%;
-  color: white;
+  color: #fff;
   text-align: center;
-  background-color: #333;
-  border-radius: 12px;
+  background: var(--panel-raised);
+  border: 1px solid var(--border);
+  border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .leaderboard-head {
-  background-color: #444;
-  display: flex;
-  font-size: 1.1em;
-  height: 60px;
+  background: rgba(0, 0, 0, 0.25);
+  display: grid;
+  grid-template-columns: var(--leaderboard-columns);
+  column-gap: var(--leaderboard-column-gap);
+  padding: 0 12px;
+  font-size: 13px;
+  height: 44px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .leaderboard-head > div {
-  flex: 1;
-  padding: 16px 8px;
-  border-bottom: 2px solid #555;
+  min-width: 0;
+  padding: 12px 0;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.leaderboard-head .player-cell {
+  justify-content: flex-start;
 }
 
 .leaderboard-body {
@@ -582,25 +631,90 @@ watch([pages, isLoading], () => {
   display: none;
 }
 
+/* ---- 分页（嵌入面板） ---- */
+.board-pagination {
+  margin-top: 12px;
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  padding: 16px 0 0;
+}
+
+/* ---- 响应式 ---- */
 @media (max-width: 780px) {
-  .content-container {
-    padding: 16px 16px 80px;
+  .page-layout {
+    padding: 0 16px 24px;
+  }
+
+  .game-header {
+    flex-wrap: wrap;
+    padding: 16px;
+    gap: 14px;
+  }
+
+  .game-cover {
+    flex: 0 0 64px;
+    width: 64px;
+    height: 64px;
+  }
+
+  .category-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .game-title {
+    font-size: 20px;
+  }
+
+  .game-actions {
+    width: 100%;
+  }
+
+  .profile-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .board-panel {
+    --leaderboard-columns: 36px minmax(0, 1fr) 104px;
+    --leaderboard-column-gap: 8px;
+    padding: 12px;
+  }
+
+  .category-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-groups {
+    gap: 16px;
+  }
+
+  .version-select {
+    width: 100%;
+  }
+
+  .actions-row {
+    flex-wrap: wrap;
+  }
+
+  .refresh-status:not(:empty) {
+    flex-basis: 100%;
   }
 
   .leaderboard-head {
     display: grid;
-    grid-template-columns: 44px minmax(0, 1fr) 112px;
-    gap: 8px;
     padding: 0 12px;
     height: 48px;
-    border-bottom: 2px solid #555;
   }
 
   .leaderboard-head > div {
     min-width: 0;
     padding: 12px 0;
     font-size: 0.9em;
-    border: 0;
   }
 
   .leaderboard-head .player-cell {
@@ -608,17 +722,16 @@ watch([pages, isLoading], () => {
   }
 
   .leaderboard-head .date-cell,
+  .leaderboard-head .version-cell,
   .leaderboard-head .video-cell {
     display: none;
-  }
-
-  .refresh-status {
-    font-size: 12px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .refresh-button {
+  .cat-pill,
+  .pill-btn,
+  .profile-btn {
     transition: none;
   }
 }

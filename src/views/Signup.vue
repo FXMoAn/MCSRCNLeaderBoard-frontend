@@ -149,12 +149,12 @@ const handleSignup = async () => {
 
 .form-input:focus {
   outline: none;
-  border-color: #00bcd4;
-  box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
+  border-color: #4caf50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
 }
 
 .submit-button {
-  background: linear-gradient(135deg, #00bcd4, #0097a7);
+  background: linear-gradient(135deg, #4caf50, #388e3c);
   color: #fff;
   border: none;
   border-radius: 12px;
@@ -167,9 +167,9 @@ const handleSignup = async () => {
 }
 
 .submit-button:hover {
-  background: linear-gradient(135deg, #00acc1, #00838f);
+  background: linear-gradient(135deg, #43a047, #2e7d32);
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 188, 212, 0.3);
+  box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
 }
 
 .submit-button:active {
@@ -186,7 +186,7 @@ const handleSignup = async () => {
 }
 
 .login-link a {
-  color: #00bcd4;
+  color: #4caf50;
   text-decoration: none;
   font-weight: 500;
   margin-left: 4px;
@@ -194,7 +194,7 @@ const handleSignup = async () => {
 }
 
 .login-link a:hover {
-  color: #00acc1;
+  color: #43a047;
   text-decoration: underline;
 }
 

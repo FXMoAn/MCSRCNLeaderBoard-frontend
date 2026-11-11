@@ -52,10 +52,10 @@ onMounted(() => {
 
 .comparison-header h1 {
   font-size: 2.5em;
-  color: #00bcd4;
+  color: #4caf50;
   font-weight: 600;
   margin: 0;
-  text-shadow: 0 2px 10px rgba(0, 188, 212, 0.3);
+  text-shadow: 0 2px 10px rgba(76, 175, 80, 0.3);
 }
 
 .comparison-content {
@@ -84,8 +84,8 @@ onMounted(() => {
   font-weight: 600;
   margin: 0;
   padding: 12px 24px;
-  background: linear-gradient(135deg, rgba(0, 188, 212, 0.2), rgba(0, 151, 167, 0.2));
-  border: 1px solid rgba(0, 188, 212, 0.3);
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(56, 142, 60, 0.2));
+  border: 1px solid rgba(76, 175, 80, 0.3);
   border-radius: 8px;
   width: 100%;
   max-width: 100%;

@@ -2,7 +2,7 @@
   <div class="content">
     <Loading v-if="!runInfo" />
     <div v-else class="content">
-      <div class="video-container">
+      <div v-if="getPlayerUrl" class="video-container">
         <iframe
           class="video-iframe"
           :src="getPlayerUrl"
@@ -13,38 +13,69 @@
           allowfullscreen="true"
         ></iframe>
       </div>
-      <div class="info-container">
-        <div class="info-title">记录详情</div>
-        <div class="info-grid">
-          <div class="info-item">
-            <span class="info-label">玩家</span>
-            <span class="info-value">{{ runInfo.users.nickname }}</span>
+
+      <a
+        v-if="videoUrl"
+        :href="videoUrl"
+        class="original-video-link"
+        target="_blank"
+        rel="noopener noreferrer"
+        >观看原视频 ↗</a
+      >
+
+      <!-- 简介 -->
+      <section class="desc-panel">
+        <h2 class="panel-label">简介</h2>
+        <p class="desc-text">{{ runInfo.remarks || '无' }}</p>
+      </section>
+
+      <!-- 三列明细：项目 / 成绩 / 玩家 -->
+      <div class="detail-columns">
+        <section class="detail-col">
+          <h2 class="col-title">项目</h2>
+          <div class="info-card">
+            <span class="card-label">类别</span>
+            <span class="card-value">Any%</span>
           </div>
-          <div class="info-item">
-            <span class="info-label">日期</span>
-            <span class="info-value">{{ formatRunDate(runInfo.date) }}</span>
+          <div class="info-card">
+            <span class="card-label">种子类型</span>
+            <span class="card-value">{{ runInfo.type }}</span>
           </div>
-          <div class="info-item">
-            <span class="info-label">IGT</span>
-            <span class="info-value igt-value">{{ runInfo.igt }}</span>
+          <div class="info-card">
+            <span class="card-label">版本范围</span>
+            <span class="card-value">{{ versionRange }}</span>
           </div>
-          <div class="info-item">
-            <span class="info-label">版本</span>
-            <span class="info-value">{{ runInfo.version }}</span>
+          <div class="info-card">
+            <span class="card-label">版本</span>
+            <span class="card-value">{{ runInfo.version }}</span>
           </div>
-          <div class="info-item">
-            <span class="info-label">类型</span>
-            <span class="info-value">{{ runInfo.type }}</span>
+        </section>
+
+        <section class="detail-col">
+          <h2 class="col-title">成绩</h2>
+          <div class="info-card">
+            <span class="card-label">排名</span>
+            <span class="card-value rank-value">{{ rankText }}</span>
           </div>
-          <div class="info-item">
-            <span class="info-label">种子</span>
-            <span class="info-value">{{ runInfo.seed || '无' }}</span>
+          <div class="info-card">
+            <span class="card-label">IGT（游戏内时间）</span>
+            <span class="card-value igt-value">{{ runInfo.igt }}</span>
           </div>
-          <div class="info-item">
-            <span class="info-label">备注</span>
-            <span class="info-value">{{ runInfo.remarks || '无' }}</span>
+          <div class="info-card">
+            <span class="card-label">日期</span>
+            <span class="card-value">{{ formatRunDate(runInfo.date) }}</span>
           </div>
-        </div>
+        </section>
+
+        <section class="detail-col">
+          <h2 class="col-title">玩家</h2>
+          <div class="info-card player-card">
+            <span class="card-label">玩家</span>
+            <RouterLink :to="`/profile/${runInfo.userid}`" class="player-link">{{
+              runInfo.users?.nickname
+            }}</RouterLink>
+          </div>
+        </section>
       </div>
     </div>
   </div>
@@ -52,7 +83,10 @@
 
 <script setup lang="ts">
 import { formatRunDate } from '@/utils/date';
+import { validateVideoLink } from '@/utils/security';
+import { VERSION_RANGE_OPTIONS } from '@/constants/common';
 import { useRoute } from 'vue-router';
+import { RouterLink } from 'vue-router';
 import { supabase } from '@/lib/supabaseClient';
 import { onBeforeMount, ref, computed } from 'vue';
 import { extractBVId, buildPlayerUrl } from '@/utils/bilibili';
@@ -63,6 +97,8 @@ const route = useRoute();
 const id = route.params.id;
 
 const runInfo = ref<RunInfo>();
+// 该成绩在其分类（已验证）榜单中的名次；非验证状态或查询失败时为 null。
+const rank = ref<number | null>(null);
 
 const getRunInfo = async () => {
   try {
@@ -71,11 +107,44 @@ const getRunInfo = async () => {
       console.error(error);
     } else {
       runInfo.value = data[0];
+      await fetchRank();
     }
   } catch (error) {
     console.error(error);
   }
 };
+
+const fetchRank = async () => {
+  const run = runInfo.value;
+  if (!run || run.status !== 'verified') return;
+  try {
+    const { data, error } = await supabase.rpc('get_leaderboard', {
+      p_version: run.version,
+      p_type: run.type,
+      p_status: 'verified',
+    });
+    if (error) throw error;
+    const index = (data ?? []).findIndex((item: { run_id: number }) => item.run_id === run.id);
+    if (index >= 0) rank.value = index + 1;
+  } catch (error) {
+    console.error('get_leaderboard error', error);
+  }
+};
+
+const versionRange = computed(() => {
+  const run = runInfo.value;
+  return (
+    VERSION_RANGE_OPTIONS[run?.type ?? '']?.find((option) => option.value === run?.version)
+      ?.label ??
+    run?.version ??
+    '—'
+  );
+});
+const videoUrl = computed(() => {
+  const link = runInfo.value?.videolink ?? '';
+  return validateVideoLink(link).isValid ? link.trim() : '';
+});
+const rankText = computed(() => (rank.value !== null ? `第 ${rank.value} 名` : '—'));
 
 const getBVId = computed(() => {
   return extractBVId(runInfo.value?.videolink || '');
@@ -94,6 +163,17 @@ onBeforeMount(() => {
 </script>
 
 <style scoped>
+.original-video-link {
+  align-self: flex-start;
+  color: var(--accent-bright);
+  padding: 8px 0;
+}
+
+.original-video-link:focus-visible {
+  outline: 2px solid var(--accent-bright);
+  outline-offset: 3px;
+}
+
 .content {
   width: 100%;
   height: 100%;
@@ -102,19 +182,19 @@ onBeforeMount(() => {
   align-items: center;
   justify-content: flex-start;
   padding: 20px;
-  gap: 30px;
+  gap: 16px;
   box-sizing: border-box;
   overflow-x: hidden;
 }
 
 .video-container {
   width: 100%;
-  max-width: 900px;
+  max-width: 1000px;
   aspect-ratio: 16 / 9;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  border: 1px solid #444;
+  border: 1px solid var(--border);
   box-sizing: border-box;
 }
 
@@ -124,137 +204,139 @@ onBeforeMount(() => {
   border: none;
 }
 
-.info-container {
+/* ---- 简介 ---- */
+.desc-panel {
   width: 100%;
-  max-width: 900px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  max-width: 1000px;
   box-sizing: border-box;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 18px;
 }
 
-.info-title {
+.panel-label {
+  margin: 0 0 6px;
   color: #fff;
-  font-size: 1.8em;
-  font-weight: 600;
-  text-align: center;
-  margin: 0;
-  padding-bottom: 10px;
-  border-bottom: 2px solid #444;
+  font-size: 15px;
+  font-weight: 700;
 }
 
-.info-grid {
+.desc-text {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ---- 三列明细 ---- */
+.detail-columns {
+  width: 100%;
+  max-width: 1000px;
+  box-sizing: border-box;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
-  width: 100%;
-  box-sizing: border-box;
+  align-items: start;
 }
 
-.info-grid .info-item:nth-child(7) {
-  grid-column: 1 / -1;
-}
-
-.info-grid .info-item:nth-child(7) .info-value {
-  white-space: normal;
-  word-wrap: break-word;
-  overflow: visible;
-}
-
-.info-item {
-  background-color: #333;
-  border: 1px solid #444;
-  border-radius: 12px;
-  padding: 20px;
+.detail-col {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  transition: all 0.2s ease;
-  box-sizing: border-box;
+  gap: 10px;
   min-width: 0;
-  overflow: hidden;
 }
 
-.info-item:hover {
-  border-color: #555;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-}
-
-.info-label {
-  color: #999;
-  font-size: 0.9em;
-  font-weight: 500;
+.col-title {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 
-.info-value {
+.info-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+}
+
+.info-card:hover {
+  border-color: var(--border-light);
+}
+
+.card-label {
   color: #fff;
-  font-size: 1.2em;
-  font-weight: 500;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.card-value {
+  color: var(--text-secondary);
+  font-size: 14px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.card-value.muted {
+  color: var(--text-muted);
+}
+
+.rank-value {
+  color: var(--accent-bright);
+  font-weight: 600;
 }
 
 .igt-value {
-  color: #00bcd4;
+  color: var(--accent-bright);
   font-family: 'Courier New', monospace;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.player-card .player-link {
+  color: var(--accent-bright);
+  font-size: 15px;
   font-weight: 600;
-  font-size: 1.4em;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.player-card .player-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 860px) {
+  .detail-columns {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 768px) {
   .content {
     padding: 15px;
-    gap: 20px;
+    gap: 12px;
   }
 
   .video-container {
     max-width: 100%;
   }
-
-  .info-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .info-grid .info-item:nth-child(7) {
-    grid-column: 1;
-  }
-
-  .info-item {
-    padding: 16px;
-  }
-
-  .info-title {
-    font-size: 1.5em;
-  }
-
-  .info-value {
-    font-size: 1.1em;
-  }
-
-  .igt-value {
-    font-size: 1.3em;
-  }
 }
 
-@media (max-width: 480px) {
-  .content {
-    padding: 10px;
-  }
-
-  .info-item {
-    padding: 14px;
-  }
-
-  .info-title {
-    font-size: 1.3em;
+@media (prefers-reduced-motion: reduce) {
+  .info-card {
+    transition: none;
   }
 }
 </style>

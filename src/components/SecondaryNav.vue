@@ -79,9 +79,9 @@ const route = useRoute();
 }
 
 .nav-item.active {
-  color: #00bcd4;
-  background-color: rgba(0, 188, 212, 0.1);
-  border-left: 2px solid #00bcd4;
+  color: #4caf50;
+  background-color: rgba(76, 175, 80, 0.1);
+  border-left: 2px solid #4caf50;
 }
 
 .nav-text {
