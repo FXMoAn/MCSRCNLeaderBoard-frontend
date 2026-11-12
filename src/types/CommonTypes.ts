@@ -25,7 +25,7 @@ export interface UserInfo {
   ingamename: string;
   mc_uuid: string;
   nickname: string;
-  user_id: number;
+  user_id: string | null;
   role: string;
   bili_id: string | null;
   bili_name: string | null;

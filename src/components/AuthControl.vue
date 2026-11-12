@@ -10,16 +10,31 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from "vue-router";
+import { safeRedirect } from '@/auth/flow';
+import { useRouter } from 'vue-router';
 
 const router = useRouter();
 
 const navigateToSignin = () => {
-  router.push("/login");
+  router.push({
+    path: '/login',
+    query: {
+      redirect: safeRedirect(
+        router.currentRoute.value.query.redirect ?? router.currentRoute.value.fullPath
+      ),
+    },
+  });
 };
 
 const navigateToSignup = () => {
-  router.push("/signup");
+  router.push({
+    path: '/signup',
+    query: {
+      redirect: safeRedirect(
+        router.currentRoute.value.query.redirect ?? router.currentRoute.value.fullPath
+      ),
+    },
+  });
 };
 </script>
 
