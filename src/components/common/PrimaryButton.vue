@@ -3,6 +3,7 @@
   <button
     :class="buttonClass"
     :disabled="disabled || loading"
+    :aria-busy="loading || undefined"
     :type="type"
     :style="buttonStyle"
     @click="handleClick"

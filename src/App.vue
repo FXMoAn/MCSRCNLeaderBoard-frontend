@@ -26,7 +26,14 @@
         <div v-if="userStore.isAdmin">
           <router-link to="/manage/upload" class="nav-link">管理员</router-link>
         </div>
-        <UserPanel v-if="authStore.isLoggedIn" @signOut="authStore.logout" class="control-item" />
+        <span
+          v-if="!authStore.initialized"
+          class="auth-pending control-item"
+          role="status"
+          aria-label="正在恢复登录状态"
+          ><LoadingIcon aria-hidden="true"
+        /></span>
+        <UserPanel v-else-if="authStore.isLoggedIn" @signOut="handleLogout" class="control-item" />
         <AuthControl v-else class="control-item" />
       </div>
       <button
@@ -67,7 +74,14 @@
         ×
       </button>
       <div class="drawer-section" role="group" aria-label="账号">
-        <UserPanel v-if="authStore.isLoggedIn" @signOut="authStore.logout" class="control-item" />
+        <span
+          v-if="!authStore.initialized"
+          class="auth-pending control-item"
+          role="status"
+          aria-label="正在恢复登录状态"
+          ><LoadingIcon aria-hidden="true"
+        /></span>
+        <UserPanel v-else-if="authStore.isLoggedIn" @signOut="handleLogout" class="control-item" />
         <AuthControl v-else class="control-item" />
       </div>
       <div class="drawer-section" role="group" aria-label="站内导航">
@@ -131,7 +145,10 @@
 
 <script setup lang="ts">
 import '@/assets/main.css';
-import { ref, onMounted, watch } from 'vue';
+import { ref, watch } from 'vue';
+import { Loading as LoadingIcon } from '@element-plus/icons-vue';
+import { safeRedirect, authErrorMessage } from '@/auth/flow';
+import { showErrorNotification } from '@/utils/notification';
 import { useRouter } from 'vue-router';
 import { useWindowSize } from '@vueuse/core';
 import logoMark from '@/assets/end-podium.webp';
@@ -140,7 +157,6 @@ import AuthControl from '@/components/AuthControl.vue';
 import UserPanel from '@/components/UserPanel.vue';
 import Notification from '@/components/Notification.vue';
 import { useAuthStore, useUserStore } from '@/stores';
-import { eventBus, AUTH_EVENTS } from '@/stores/eventBus';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -159,29 +175,55 @@ watch(windowWidth, (width) => {
   if (width > NAV_BREAKPOINT) isDrawerOpen.value = false;
 });
 
-// 监听认证状态变化，自动更新用户信息
+const logoutPending = ref(false);
+async function handleLogout() {
+  if (logoutPending.value) return;
+  logoutPending.value = true;
+  try {
+    const { error } = await authStore.logout();
+    if (error) showErrorNotification(authErrorMessage(error));
+    else await router.replace('/rank');
+  } finally {
+    logoutPending.value = false;
+  }
+}
 watch(
-  () => authStore.isLoggedIn,
-  async (newValue) => {
-    if (newValue && authStore.user) {
-      // 用户登录后，通过事件总线通知用户信息初始化
-      eventBus.emit(AUTH_EVENTS.USER_LOGGED_IN, authStore.user);
+  () => authStore.user?.id,
+  (owner, previous) => {
+    if (!owner && previous && !logoutPending.value && router.currentRoute.value.meta.requiresAuth) {
+      void router.replace({
+        path: '/login',
+        query: { redirect: safeRedirect(router.currentRoute.value.fullPath) },
+      });
     }
   }
 );
-
-onMounted(async () => {
-  // 先初始化认证状态
-  await authStore.initializeAuth();
-
-  // 等待认证完成后再初始化用户信息
-  // if (authStore.isLoggedIn && authStore.user) {
-  //   eventBus.emit(AUTH_EVENTS.USER_LOGGED_IN, authStore.user);
-  // }
-});
 </script>
 
 <style scoped>
+.auth-pending {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 160px;
+  min-height: 44px;
+}
+.auth-pending svg {
+  width: 20px;
+  height: 20px;
+  animation: auth-spin 1s linear infinite;
+}
+@keyframes auth-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-pending svg {
+    animation: none;
+  }
+}
+
 .container {
   display: flex;
   flex-direction: column;
@@ -216,7 +258,9 @@ nav {
   text-decoration: none;
   padding: 8px 14px;
   border-radius: 6px;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
   position: relative;
   font-weight: 500;
   white-space: nowrap;
@@ -282,6 +326,7 @@ nav {
 }
 
 footer {
+  box-sizing: border-box;
   width: 100%;
   display: flex;
   flex-direction: column;

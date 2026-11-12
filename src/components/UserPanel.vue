@@ -69,7 +69,6 @@ const routeToBinding = () => {
 };
 
 const signOut = () => {
-  authStore.logout();
   emit('signOut');
 };
 

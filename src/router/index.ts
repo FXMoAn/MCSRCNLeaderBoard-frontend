@@ -25,28 +25,51 @@ const router = createRouter({
     {
       path: '/user-upload',
       name: 'user-upload',
+      meta: { requiresAuth: true, requiresProfile: true },
       component: () => import('../views/Upload/Upload.vue'),
     },
     // 账号管理
     {
       path: '/login',
       name: 'login',
+      meta: { guestOnly: true },
       component: () => import('../views/Login.vue'),
     },
     {
       path: '/signup',
       name: 'signup',
+      meta: { guestOnly: true },
       component: () => import('../views/Signup.vue'),
     },
     {
       path: '/reset-password',
       name: 'reset-password',
+      meta: { authPage: true },
       component: () => import('../views/ResetPassword.vue'),
+    },
+    {
+      path: '/verify-email',
+      name: 'verify-email',
+      meta: { authPage: true },
+      component: () => import('../views/auth/VerifyEmail.vue'),
+    },
+    {
+      path: '/forgot-password',
+      name: 'forgot-password',
+      meta: { authPage: true },
+      component: () => import('../views/auth/ForgotPassword.vue'),
+    },
+    {
+      path: '/auth/callback',
+      name: 'auth-callback',
+      meta: { authPage: true },
+      component: () => import('../views/auth/AuthCallback.vue'),
     },
     // 待审核成绩（管理员）
     {
       path: '/pending-run/:id',
       name: 'pending-run',
+      meta: { requiresAuth: true, requiresAdmin: true },
       component: () => import('../views/PendingRun.vue'),
     },
     // 公告
@@ -71,12 +94,14 @@ const router = createRouter({
     {
       path: '/space',
       name: 'space',
+      meta: { requiresAuth: true },
       component: () => import('../views/Space/Space.vue'),
       redirect: '/space/user-edit',
       children: [
         {
           path: 'user-runs',
           name: 'user-runs',
+          meta: { requiresProfile: true },
           component: () => import('../views/Space/views/UserRuns.vue'),
         },
         {
@@ -95,6 +120,7 @@ const router = createRouter({
     {
       path: '/manage',
       name: 'manage',
+      meta: { requiresAuth: true, requiresAdmin: true },
       component: () => import('../views/Manage/Manage.vue'),
       children: [
         {

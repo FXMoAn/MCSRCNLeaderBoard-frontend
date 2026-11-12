@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { supabase } from '@/lib/supabaseClient';
-import { eventBus, AUTH_EVENTS } from './eventBus';
+import { createProfileLoader, type ProfileStatus } from '@/auth/profile';
 import axios from 'axios';
 import {
   showErrorNotification,
@@ -11,44 +11,38 @@ import {
 import type { UserInfo } from '@/types/CommonTypes';
 
 const useUserStore = defineStore('user', () => {
-  const localUserId = ref<number | null>(null);
-
-  const userInfo = ref<UserInfo>(JSON.parse(localStorage.getItem('userInfo') ?? '{}'));
+  const localUserId = ref<string | null>(null);
+  const userInfo = ref<UserInfo>({} as UserInfo);
   const loading = ref(false);
-
-  const isBinding = computed(() => !!userInfo.value.user_id);
-  const isBindMinecraftId = computed(() => !!userInfo.value.mc_uuid);
-  const isAdmin = computed(() => {
-    // 确保用户已登录且角色为admin
-    return localUserId.value && userInfo.value.role === 'admin';
-  });
-
-  // 用于获取用户信息
-  const initUserInfo = async () => {
-    try {
-      loading.value = true;
-      if (!localUserId.value) {
-        console.log('用户ID不存在，跳过用户信息初始化');
-        return;
-      }
-
+  const profileStatus = ref<ProfileStatus>('idle');
+  const profileError = ref('');
+  const isBinding = computed(
+    () => !!localUserId.value && userInfo.value.user_id === localUserId.value
+  );
+  const isBindMinecraftId = computed(() => isBinding.value && !!userInfo.value.mc_uuid);
+  const isAdmin = computed(() => isBinding.value && userInfo.value.role === 'admin');
+  const profileLoader = createProfileLoader<UserInfo>(
+    async (owner) => {
       const { data, error } = await supabase
         .from('users')
         .select('*')
-        .eq('user_id', localUserId.value)
-        .single();
-      if (error) {
-        throw error;
-      }
-      userInfo.value = data;
-      localStorage.setItem('userInfo', JSON.stringify(userInfo.value));
-    } catch (error) {
-      console.error(error);
-      showErrorNotification('获取用户信息失败');
-    } finally {
-      loading.value = false;
+        .eq('user_id', owner)
+        .abortSignal(AbortSignal.timeout(15_000))
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    (state) => {
+      loading.value = state.status === 'loading';
+      profileStatus.value = state.status;
+      profileError.value = state.status === 'error' ? '资料暂时无法加载，请重试' : '';
+      userInfo.value = state.profile ?? ({} as UserInfo);
     }
+  );
+  const ensureUserInfo = async (force = false) => {
+    if (localUserId.value) await profileLoader.load(localUserId.value, force);
   };
+  const initUserInfo = () => ensureUserInfo(true);
 
   const bindUser = async (selectedUserId: number) => {
     try {
@@ -219,60 +213,35 @@ const useUserStore = defineStore('user', () => {
   };
 
   const setUserInfo = (info: UserInfo | null) => {
-    if (info) {
-      userInfo.value = info;
-      localStorage.setItem('userInfo', JSON.stringify(info));
-    } else {
-      userInfo.value = {} as UserInfo;
-      localStorage.removeItem('userInfo');
-    }
+    if (info && localUserId.value && info.user_id === localUserId.value)
+      profileLoader.seed(localUserId.value, info);
+    else profileLoader.setOwner(null);
   };
-
   const clearUserInfo = () => {
-    userInfo.value = {} as UserInfo;
-    localStorage.removeItem('userInfo');
-  };
-
-  // 设置用户ID（从事件总线接收）
-  const setUserId = (userId: number | null) => {
-    localUserId.value = userId;
-    if (!userId) {
-      clearUserInfo();
+    profileLoader.setOwner(null);
+    try {
+      localStorage.removeItem('userInfo');
+    } catch {
+      /* Legacy profile cache is optional. */
     }
   };
-
-  // 监听认证状态变化
-  const setupEventListeners = () => {
-    // 监听用户登录
-    eventBus.on(AUTH_EVENTS.USER_LOGGED_IN, (user: any) => {
-      console.log('用户登录事件:', user);
-      setUserId(user?.id || null);
-      if (user?.id) {
-        initUserInfo();
-      }
-    });
-
-    // 监听用户登出
-    eventBus.on(AUTH_EVENTS.USER_LOGGED_OUT, () => {
-      console.log('用户登出事件');
-      setUserId(null);
-      clearUserInfo();
-    });
-
-    // 监听session过期
-    eventBus.on(AUTH_EVENTS.SESSION_EXPIRED, () => {
-      console.log('Session过期事件');
-      setUserId(null);
-      clearUserInfo();
-    });
+  const setUserId = (userId: string | null) => {
+    if (localUserId.value === userId) return;
+    localUserId.value = userId;
+    profileLoader.setOwner(userId);
+    try {
+      localStorage.removeItem('userInfo');
+    } catch {
+      /* No credentials are stored here. */
+    }
   };
-
-  // 在store初始化时设置事件监听
-  setupEventListeners();
 
   return {
     userInfo,
     loading,
+    profileStatus,
+    profileError,
+    ensureUserInfo,
     isBinding,
     localUserId,
     isBindMinecraftId,

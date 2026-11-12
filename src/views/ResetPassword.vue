@@ -1,224 +1,133 @@
 <template>
-  <div class="reset-password-container">
-    <div class="form-card">
-      <div class="form-title">重置密码</div>
-      <form class="reset-password-form" @submit.prevent="handleResetPassword">
-        <div class="form-group">
-          <label for="new-password" class="form-label">新密码</label>
-          <input
-            class="form-input"
-            type="password"
-            id="new-password"
-            v-model="newPassword"
-            placeholder="请输入新密码"
-            required
-          />
-        </div>
-        <div class="form-group">
-          <label for="confirm-password" class="form-label">确认密码</label>
-          <input
-            class="form-input"
-            type="password"
-            id="confirm-password"
-            v-model="confirmPassword"
-            placeholder="请确认新密码"
-            required
-          />
-        </div>
-        <button class="submit-button" type="submit" :disabled="loading">
-          {{ loading ? '重置中...' : '重置密码' }}
-        </button>
-      </form>
-      <div class="login-link">
-        <span>密码重置成功？</span>
-        <a href="/login">去登录</a>
-      </div>
+  <AuthLayout :title="changed ? '密码已更新' : '重置密码'" :error="error">
+    <form
+      v-if="auth.recovery && auth.isLoggedIn && !changed"
+      class="auth-form"
+      novalidate
+      :aria-busy="busy"
+      @submit.prevent="submit"
+      @keydown.enter="guardComposition"
+    >
+      <PrimaryInput
+        id="reset-password"
+        v-model="password"
+        name="password"
+        label="新密码"
+        type="password"
+        autocomplete="new-password"
+        :placeholder="`至少 ${MIN_PASSWORD_LENGTH} 位`"
+        layout="stacked"
+        password-toggle
+        :disabled="busy"
+        :error="errors['reset-password']"
+        @input="clear('reset-password')"
+      />
+      <PrimaryInput
+        id="reset-confirm"
+        v-model="confirmation"
+        name="password-confirmation"
+        label="确认新密码"
+        type="password"
+        autocomplete="new-password"
+        placeholder="再次输入新密码"
+        layout="stacked"
+        password-toggle
+        :disabled="busy"
+        :error="errors['reset-confirm']"
+        @input="clear('reset-confirm')"
+      />
+      <PrimaryButton type="submit" class="auth-submit" :loading="busy"
+        ><LoadingIcon v-if="busy" aria-hidden="true" />更新密码</PrimaryButton
+      >
+    </form>
+    <div v-else-if="changed" class="auth-form">
+      <p class="auth-text">密码已更新。请退出当前登录后重新登录。</p>
+      <PrimaryButton class="auth-submit" :loading="busy" @click="run(finishLogout)"
+        >退出并重新登录</PrimaryButton
+      >
     </div>
-  </div>
+    <div v-else class="auth-form">
+      <p class="auth-text">请从有效的密码重置邮件进入此页面。</p>
+      <RouterLink class="reset-link" :to="{ path: '/forgot-password', query: { redirect } }"
+        >重新申请重置邮件</RouterLink
+      >
+    </div>
+    <template #footer
+      ><RouterLink :to="{ path: '/login', query: { redirect } }">返回登录</RouterLink></template
+    >
+  </AuthLayout>
 </template>
-
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { computed, ref } from 'vue';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
+import { Loading as LoadingIcon } from '@element-plus/icons-vue';
 import useAuthStore from '@/stores/auth';
-import { useRouter } from 'vue-router';
-import { supabase } from '@/lib/supabaseClient';
-import { showErrorNotification, showSuccessNotification } from '@/utils/notification';
-
-const newPassword = ref('');
-const confirmPassword = ref('');
-const loading = ref(false);
-
-const checkPassword = () => {
-  if (newPassword.value !== confirmPassword.value) {
-    showErrorNotification('密码不一致');
-    return false;
-  }
-  if (newPassword.value.length < 6) {
-    showErrorNotification('密码长度至少6位');
-    return false;
-  }
-  return true;
-};
-
+import {
+  MIN_PASSWORD_LENGTH,
+  authErrorMessage,
+  passwordError,
+  safeRedirect,
+  clearCallbackParameters,
+} from '@/auth/flow';
+import { useAuthForm } from '@/composables/useAuthForm';
+import AuthLayout from '@/components/auth/AuthLayout.vue';
+import PrimaryInput from '@/components/common/PrimaryInput.vue';
+import PrimaryButton from '@/components/common/PrimaryButton.vue';
+const auth = useAuthStore();
+const route = useRoute();
 const router = useRouter();
-
-const handleReset = async () => {
-  const { error } = await supabase.auth.updateUser({ password: newPassword.value });
-  if (error) return showErrorNotification(error.message);
-  showSuccessNotification('密码已重置，请重新登录');
-  await supabase.auth.signOut();
-  router.replace('/login');
-};
-
-const handleResetPassword = async () => {
-  if (checkPassword()) {
-    loading.value = true;
-    try {
-      await handleReset();
-    } finally {
-      loading.value = false;
+const redirect = computed(() => safeRedirect(route.query.redirect));
+const password = ref('');
+const confirmation = ref('');
+const changed = ref(false);
+const { busy, error, errors, clear, validate, run, guardComposition } = useAuthForm();
+clearCallbackParameters();
+async function finishLogout() {
+  const { error: reason } = await auth.logout();
+  if (reason) {
+    error.value = '密码已更新，退出登录失败，请重试';
+    return;
+  }
+  await router.replace({ path: '/login', query: { passwordReset: '1', redirect: redirect.value } });
+}
+async function submit() {
+  if (
+    busy.value ||
+    !(await validate({
+      'reset-password': passwordError(password.value, true),
+      'reset-confirm':
+        confirmation.value && confirmation.value === password.value ? '' : '两次输入的密码不一致',
+    }))
+  )
+    return;
+  await run(async () => {
+    const { error: reason } = await auth.updatePassword(password.value);
+    if (reason) {
+      error.value = authErrorMessage(reason);
+      return;
     }
-  }
-};
-
-onMounted(async () => {
-  // 当用户通过邮件进来时，URL 中带有 access_token，Supabase 会自动把 session 换好
-  const { data } = await supabase.auth.getSession();
-  if (!data.session) {
-    showErrorNotification('链接已失效，请重新申请');
-    router.replace('/login');
-  }
-});
+    password.value = '';
+    confirmation.value = '';
+    changed.value = true;
+    await finishLogout();
+  });
+}
 </script>
-
 <style scoped>
-.reset-password-container {
+.reset-link {
   display: flex;
-  justify-content: center;
   align-items: center;
-  min-height: calc(100vh - 80px);
-  padding: 20px;
-  background-color: var(--bgcolor);
+  justify-content: center;
+  min-height: 44px;
+  background: var(--accent-dark);
+  border-radius: 8px;
 }
-
-.form-card {
-  background-color: #333;
-  border-radius: 16px;
-  padding: 40px;
-  width: 100%;
-  max-width: 400px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  border: 1px solid #444;
+.reset-link:hover {
+  background: var(--accent-strong);
+  color: var(--text-primary);
 }
-
-.form-title {
-  text-align: center;
-  margin-bottom: 32px;
-  font-size: 28px;
-  font-weight: 600;
-  color: #fff;
-}
-
-.reset-password-form {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.form-label {
-  font-size: 14px;
-  font-weight: 500;
-  color: #ccc;
-  margin-left: 4px;
-}
-
-.form-input {
-  width: 100%;
-  padding: 16px;
-  background-color: #222;
-  border: 2px solid #444;
-  border-radius: 12px;
-  color: #fff;
-  font-size: 16px;
-  transition: all 0.3s ease;
-  box-sizing: border-box;
-}
-
-.form-input::placeholder {
-  color: #666;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: #4caf50;
-  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
-}
-
-.submit-button {
-  background: linear-gradient(135deg, #4caf50, #388e3c);
-  color: #fff;
-  border: none;
-  border-radius: 12px;
-  padding: 16px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 8px;
-}
-
-.submit-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #43a047, #2e7d32);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
-}
-
-.submit-button:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.submit-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.login-link {
-  text-align: center;
-  margin-top: 24px;
-  padding-top: 24px;
-  border-top: 1px solid #444;
-  color: #999;
-  font-size: 14px;
-}
-
-.login-link a {
-  color: #4caf50;
-  text-decoration: none;
-  font-weight: 500;
-  margin-left: 4px;
-  transition: color 0.3s ease;
-}
-
-.login-link a:hover {
-  color: #43a047;
-  text-decoration: underline;
-}
-
-@media (max-width: 480px) {
-  .form-card {
-    padding: 24px;
-    margin: 16px;
-  }
-
-  .form-title {
-    font-size: 24px;
-  }
+.reset-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 </style>

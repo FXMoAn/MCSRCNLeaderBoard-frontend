@@ -11,6 +11,10 @@
       </RouterLink>
     </header>
     <Loading v-if="userStore.loading && !userStore.isBinding" />
+    <div v-else-if="userStore.profileStatus === 'error'" class="profile-load-error" role="alert">
+      <p>{{ userStore.profileError }}</p>
+      <PrimaryButton @click="userStore.initUserInfo">重新加载</PrimaryButton>
+    </div>
     <Nickname v-else-if="!userStore.isBinding" />
     <form
       v-else
@@ -87,7 +91,8 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onScopeDispose, reactive, ref, watch } from 'vue';
-import { onBeforeRouteLeave } from 'vue-router';
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
+import { safeRedirect } from '@/auth/flow';
 import { ElMessageBox } from 'element-plus';
 import { TopRight } from '@element-plus/icons-vue';
 import useUserStore from '@/stores/user';
@@ -102,6 +107,15 @@ import MCName from '../components/MCName.vue';
 import BiliName from '../components/BiliName.vue';
 
 const userStore = useUserStore();
+const route = useRoute();
+const router = useRouter();
+watch(
+  () => userStore.profileStatus,
+  (status) => {
+    if (status === 'ready' && route.query.setup === '1')
+      void router.replace(safeRedirect(route.query.redirect));
+  }
+);
 const saving = ref(false);
 const accountBusy = ref(false);
 const saveError = ref('');
@@ -220,6 +234,12 @@ onScopeDispose(() => window.removeEventListener('beforeunload', beforeUnload));
 </script>
 
 <style scoped>
+.profile-load-error {
+  display: grid;
+  gap: 16px;
+  justify-items: start;
+  padding: 24px;
+}
 .profile-settings {
   width: 100%;
   padding-bottom: 24px;

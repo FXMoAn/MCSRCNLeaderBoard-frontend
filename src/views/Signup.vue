@@ -1,211 +1,120 @@
 <template>
-  <div class="signup-container">
-    <div class="form-card">
-      <div class="form-title">注册</div>
-      <form class="signup-form" @submit.prevent="handleSignup">
-        <div class="form-group">
-          <label for="email" class="form-label">邮箱</label>
-          <input
-            class="form-input"
-            type="email"
-            id="email"
-            v-model="email"
-            placeholder="请输入邮箱"
-            required
-          />
-        </div>
-        <div class="form-group">
-          <label for="password" class="form-label">密码</label>
-          <input
-            class="form-input"
-            type="password"
-            id="password"
-            v-model="password"
-            placeholder="请输入密码"
-            required
-          />
-        </div>
-        <div class="form-group">
-          <label for="confirm-password" class="form-label">确认密码</label>
-          <input
-            class="form-input"
-            type="password"
-            id="confirm-password"
-            v-model="confirmPassword"
-            placeholder="请确认密码"
-            required
-          />
-        </div>
-        <button class="submit-button" type="submit">注册</button>
-      </form>
-      <div class="login-link">
-        <span>已有账号？</span>
-        <a href="/login">去登录</a>
-      </div>
-    </div>
-  </div>
+  <AuthLayout title="注册账号" :error="error">
+    <form
+      class="auth-form"
+      novalidate
+      :aria-busy="busy"
+      @submit.prevent="submit"
+      @keydown.enter="guardComposition"
+    >
+      <PrimaryInput
+        id="signup-email"
+        v-model="email"
+        label="邮箱"
+        name="email"
+        type="email"
+        input-mode="email"
+        autocomplete="username"
+        placeholder="请输入邮箱"
+        layout="stacked"
+        :disabled="busy"
+        :error="errors['signup-email']"
+        @input="clear('signup-email')"
+      />
+      <PrimaryInput
+        id="signup-password"
+        v-model="password"
+        label="密码"
+        name="password"
+        type="password"
+        autocomplete="new-password"
+        :placeholder="`至少 ${MIN_PASSWORD_LENGTH} 位`"
+        layout="stacked"
+        password-toggle
+        :disabled="busy"
+        :error="errors['signup-password']"
+        @input="clear('signup-password')"
+      />
+      <PrimaryInput
+        id="signup-confirm"
+        v-model="confirmation"
+        label="确认密码"
+        name="password-confirmation"
+        type="password"
+        autocomplete="new-password"
+        placeholder="再次输入密码"
+        layout="stacked"
+        password-toggle
+        :disabled="busy"
+        :error="errors['signup-confirm']"
+        @input="clear('signup-confirm')"
+      />
+      <PrimaryButton type="submit" class="auth-submit" :loading="busy" :disabled="remaining > 0"
+        ><LoadingIcon v-if="busy" aria-hidden="true" />{{
+          remaining > 0 ? `注册（${remaining}秒）` : '注册'
+        }}</PrimaryButton
+      >
+    </form>
+    <template #footer
+      ><RouterLink :to="{ path: '/login', query: { redirect } }"
+        >已有账号？去登录</RouterLink
+      ></template
+    >
+  </AuthLayout>
 </template>
-
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
+import { useNow } from '@vueuse/core';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
+import { Loading as LoadingIcon } from '@element-plus/icons-vue';
 import useAuthStore from '@/stores/auth';
-import { useRouter } from 'vue-router';
-import { showErrorNotification, showSuccessNotification } from '@/utils/notification';
-
-const email = ref('');
-const password = ref('');
-const confirmPassword = ref('');
-
-const checkPassword = () => {
-  if (password.value !== confirmPassword.value) {
-    showErrorNotification('密码不一致');
-    return false;
-  }
-  return true;
-};
-
-const authStore = useAuthStore();
+import {
+  MIN_PASSWORD_LENGTH,
+  authErrorMessage,
+  emailError,
+  passwordError,
+  safeRedirect,
+} from '@/auth/flow';
+import { authenticatedDestination } from '@/auth/navigation';
+import { useAuthForm } from '@/composables/useAuthForm';
+import AuthLayout from '@/components/auth/AuthLayout.vue';
+import PrimaryInput from '@/components/common/PrimaryInput.vue';
+import PrimaryButton from '@/components/common/PrimaryButton.vue';
+const auth = useAuthStore();
+const route = useRoute();
 const router = useRouter();
-
-const signUpNewUser = async () => {
-  const { data, error } = await authStore.signup(email.value, password.value);
-  if (error) {
-    showErrorNotification(error.message);
-  } else {
-    showSuccessNotification('注册成功');
-    router.push('/login');
-  }
-};
-
-const handleSignup = async () => {
-  if (checkPassword()) {
-    await signUpNewUser();
-  }
-};
+const email = ref(auth.emailContext?.email ?? '');
+const password = ref('');
+const confirmation = ref('');
+const redirect = computed(() => safeRedirect(route.query.redirect));
+const now = useNow({ interval: 1000 });
+const remaining = computed(() => auth.retrySeconds(email.value, 'signup', now.value.getTime()));
+const { busy, error, errors, clear, validate, run, guardComposition } = useAuthForm();
+async function submit() {
+  if (
+    busy.value ||
+    remaining.value ||
+    !(await validate({
+      'signup-email': emailError(email.value),
+      'signup-password': passwordError(password.value, true),
+      'signup-confirm':
+        confirmation.value === password.value && !!confirmation.value ? '' : '两次输入的密码不一致',
+    }))
+  )
+    return;
+  await run(async () => {
+    const result = await auth.signup(email.value, password.value, redirect.value);
+    if (result.error) {
+      error.value = authErrorMessage(result.error);
+      return;
+    }
+    password.value = '';
+    confirmation.value = '';
+    await router.replace(
+      result.data?.session
+        ? await authenticatedDestination(redirect.value)
+        : { path: '/verify-email', query: { redirect: redirect.value } }
+    );
+  });
+}
 </script>
-
-<style scoped>
-.signup-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: calc(100vh - 80px);
-  padding: 20px;
-  background-color: var(--bgcolor);
-}
-
-.form-card {
-  background-color: #333;
-  border-radius: 16px;
-  padding: 40px;
-  width: 100%;
-  max-width: 400px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  border: 1px solid #444;
-}
-
-.form-title {
-  text-align: center;
-  margin-bottom: 32px;
-  font-size: 28px;
-  font-weight: 600;
-  color: #fff;
-}
-
-.signup-form {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.form-label {
-  font-size: 14px;
-  font-weight: 500;
-  color: #ccc;
-  margin-left: 4px;
-}
-
-.form-input {
-  width: 100%;
-  padding: 16px;
-  background-color: #222;
-  border: 2px solid #444;
-  border-radius: 12px;
-  color: #fff;
-  font-size: 16px;
-  transition: all 0.3s ease;
-  box-sizing: border-box;
-}
-
-.form-input::placeholder {
-  color: #666;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: #4caf50;
-  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
-}
-
-.submit-button {
-  background: linear-gradient(135deg, #4caf50, #388e3c);
-  color: #fff;
-  border: none;
-  border-radius: 12px;
-  padding: 16px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 8px;
-}
-
-.submit-button:hover {
-  background: linear-gradient(135deg, #43a047, #2e7d32);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
-}
-
-.submit-button:active {
-  transform: translateY(0);
-}
-
-.login-link {
-  text-align: center;
-  margin-top: 24px;
-  padding-top: 24px;
-  border-top: 1px solid #444;
-  color: #999;
-  font-size: 14px;
-}
-
-.login-link a {
-  color: #4caf50;
-  text-decoration: none;
-  font-weight: 500;
-  margin-left: 4px;
-  transition: color 0.3s ease;
-}
-
-.login-link a:hover {
-  color: #43a047;
-  text-decoration: underline;
-}
-
-@media (max-width: 480px) {
-  .form-card {
-    padding: 24px;
-    margin: 16px;
-  }
-
-  .form-title {
-    font-size: 24px;
-  }
-}
-</style>
